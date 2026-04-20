@@ -2,9 +2,9 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const mobileNavItems = [
-  { name: 'Home', icon: 'auto_awesome', path: '/dashboard' },
-  { name: 'Path', icon: 'map', path: '/dashboard/learning-path' },
-  { name: 'Tutor', icon: 'psychology', path: '/dashboard/ai-tutor' },
+  { name: 'Assistant', icon: 'auto_awesome', path: '/dashboard' },
+  { name: 'Practice', icon: 'fitness_center', path: '/dashboard/practice' },
+  { name: 'Learning', icon: 'map', path: '/dashboard/learning-path' },
   { name: 'Feed', icon: 'forum', path: '/dashboard/community' },
   { name: 'Profile', icon: 'account_circle', path: '/dashboard/profile' },
 ];

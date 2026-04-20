@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
 import StudentDashboard from './pages/StudentDashboard';
+import PracticePage from './pages/PracticePage';
 import LearningPath from './pages/LearningPath';
 import AdaptiveQuiz from './pages/AdaptiveQuiz';
 import StudentAnalytics from './pages/StudentAnalytics';
@@ -27,6 +28,7 @@ function App() {
         {/* Dashboard Routes */}
         <Route path="/dashboard" element={<Layout />}>
           <Route index element={<StudentDashboard />} />
+          <Route path="practice" element={<PracticePage />} />
           <Route path="learning-path" element={<LearningPath />} />
           <Route path="ai-tutor" element={<AdaptiveQuiz />} />
           <Route path="analytics" element={<StudentAnalytics />} />

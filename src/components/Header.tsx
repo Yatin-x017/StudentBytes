@@ -1,13 +1,16 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useUserStore } from '../hooks/useUserStore';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { store } = useUserStore();
 
   const getPageTitle = () => {
     const path = location.pathname;
     if (path === '/dashboard') return 'AI Assistant';
+    if (path === '/dashboard/practice') return 'Practice Lab';
     if (path === '/dashboard/learning-path') return 'Learning Path';
     if (path === '/dashboard/ai-tutor') return 'AI Tutor';
     if (path === '/dashboard/analytics') return 'Analytics';
@@ -36,20 +39,21 @@ const Header: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="w-10 h-10 flex items-center justify-center text-outline hover:text-primary hover:bg-primary/5 rounded-xl transition-all">
-          <span className="material-symbols-outlined">notifications</span>
-        </button>
-        <button className="w-10 h-10 flex items-center justify-center text-outline hover:text-primary hover:bg-primary/5 rounded-xl transition-all">
-          <span className="material-symbols-outlined">search</span>
-        </button>
+        <div className="hidden sm:flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/10">
+            <span className="material-symbols-outlined text-primary text-sm">bolt</span>
+            <span className="text-sm font-black">{store.xp} XP</span>
+        </div>
+
         <div className="w-px h-6 bg-outline-variant/20 mx-2"></div>
-        <div className="flex items-center gap-3 pl-2">
+
+        <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
                 <p className="text-xs font-black tracking-tight">Alex Rivera</p>
-                <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Pro Student</p>
+                <p className="text-[10px] font-black text-primary uppercase tracking-widest leading-none">{store.level} Lv.</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center font-black text-primary border border-outline-variant/20">
+            <div className="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center font-black text-primary border border-outline-variant/20 relative group">
                 AR
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white"></div>
             </div>
         </div>
       </div>

@@ -1,11 +1,9 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useUserStore } from '../hooks/useUserStore';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { store } = useUserStore();
 
   const getPageTitle = () => {
     const path = location.pathname;
@@ -20,40 +18,35 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-background/80 backdrop-blur-xl border-b border-outline-variant/10 sticky top-0 z-40 flex justify-between items-center w-full px-6 py-4">
+    <header className="bg-white/40 backdrop-blur-xl border-b border-neutral-100 sticky top-0 z-30 flex justify-between items-center w-full px-8 py-5">
       <div className="flex items-center gap-4">
         <div
             onClick={() => navigate('/')}
             className="flex items-center gap-2 lg:hidden cursor-pointer"
         >
-            <div className="w-8 h-8 ai-pulse-gradient rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                 <span className="material-symbols-outlined text-white text-xl">terminal</span>
             </div>
-            <span className="text-xl font-black tracking-tighter">SB</span>
         </div>
 
-        <h1 className="text-lg font-black tracking-tight text-on-surface flex items-center gap-2">
-           <span className="w-1.5 h-6 bg-primary rounded-full"></span>
+        <h1 className="text-sm font-black uppercase tracking-[0.2em] text-neutral-400 flex items-center gap-3">
+           <span className="w-1 h-1 bg-neutral-300 rounded-full"></span>
            {getPageTitle()}
         </h1>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="hidden sm:flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/10">
-            <span className="material-symbols-outlined text-primary text-sm">bolt</span>
-            <span className="text-sm font-black">{store.xp} XP</span>
-        </div>
-
-        <div className="w-px h-6 bg-outline-variant/20 mx-2"></div>
-
+      <div className="flex items-center gap-6">
         <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-                <p className="text-xs font-black tracking-tight">Alex Rivera</p>
-                <p className="text-[10px] font-black text-primary uppercase tracking-widest leading-none">{store.level} Lv.</p>
+                <p className="text-sm font-bold text-neutral-900">Alex Rivera</p>
+                <p className="text-[10px] font-black text-primary uppercase tracking-[0.1em] leading-none">Beginner Lv.</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center font-black text-primary border border-outline-variant/20 relative group">
-                AR
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white"></div>
+            <div className="w-10 h-10 rounded-2xl bg-neutral-50 flex items-center justify-center font-black text-primary border border-neutral-100 relative group overflow-hidden">
+                <img
+                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
             </div>
         </div>
       </div>

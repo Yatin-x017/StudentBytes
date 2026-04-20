@@ -2,30 +2,31 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const mobileNavItems = [
-  { name: 'Home', icon: 'home', path: '/' },
-  { name: 'Path', icon: 'rebase_edit', path: '/learning-path' },
-  { name: 'Tutor', icon: 'auto_awesome', path: '/ai-tutor' },
-  { name: 'Feed', icon: 'forum', path: '/community' },
-  { name: 'Profile', icon: 'account_circle', path: '/profile' },
+  { name: 'Home', icon: 'auto_awesome', path: '/dashboard' },
+  { name: 'Path', icon: 'map', path: '/dashboard/learning-path' },
+  { name: 'Tutor', icon: 'psychology', path: '/dashboard/ai-tutor' },
+  { name: 'Feed', icon: 'forum', path: '/dashboard/community' },
+  { name: 'Profile', icon: 'account_circle', path: '/dashboard/profile' },
 ];
 
 const BottomNav: React.FC = () => {
   return (
-    <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-t border-white/20 lg:hidden z-[100] rounded-t-[1.5rem] shadow-[0_-12px_40px_rgba(26,28,31,0.08)]">
+    <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-t border-outline-variant/10 lg:hidden z-[100] rounded-t-[2rem] shadow-[0_-12px_40px_rgba(26,28,31,0.08)]">
       {mobileNavItems.map((item) => (
         <NavLink
           key={item.name}
           to={item.path}
+          end={item.path === '/dashboard'}
           className={({ isActive }) =>
-            `flex flex-col items-center justify-center p-2 rounded-2xl transition-transform active:scale-90 ${
+            `flex flex-col items-center justify-center p-3 rounded-2xl transition-all active:scale-90 ${
               isActive
-                ? 'bg-gradient-to-br from-primary/10 to-secondary/10 text-primary dark:text-[#68d3ff]'
-                : 'text-slate-400 dark:text-slate-500'
+                ? 'bg-primary/5 text-primary'
+                : 'text-outline'
             }`
           }
         >
-          <span className="material-symbols-outlined text-lg">{item.icon}</span>
-          <span className="text-[10px] font-bold uppercase tracking-widest mt-1">{item.name}</span>
+          <span className="material-symbols-outlined text-xl">{item.icon}</span>
+          <span className="text-[10px] font-black uppercase tracking-widest mt-1">{item.name}</span>
         </NavLink>
       ))}
     </nav>

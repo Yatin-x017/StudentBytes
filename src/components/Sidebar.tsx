@@ -2,19 +2,24 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const navItems = [
-  { name: 'Dashboard', icon: 'dashboard', path: '/' },
-  { name: 'Learning Path', icon: 'route', path: '/learning-path' },
-  { name: 'AI Tutor', icon: 'psychology', path: '/ai-tutor' },
-  { name: 'Community', icon: 'groups', path: '/community' },
-  { name: 'Analytics', icon: 'analytics', path: '/analytics' },
+  { name: 'AI Assistant', icon: 'auto_awesome', path: '/dashboard' },
+  { name: 'Learning Path', icon: 'map', path: '/dashboard/learning-path' },
+  { name: 'AI Tutor', icon: 'psychology', path: '/dashboard/ai-tutor' },
+  { name: 'Community', icon: 'forum', path: '/dashboard/community' },
+  { name: 'Analytics', icon: 'analytics', path: '/dashboard/analytics' },
 ];
 
 const Sidebar: React.FC = () => {
   return (
-    <aside className="bg-surface-container-low dark:bg-slate-900 h-screen w-64 fixed left-0 top-0 hidden lg:flex flex-col p-6 gap-2 z-40">
-      <div className="mb-10 px-2">
-        <span className="text-xl font-black text-on-background dark:text-white tracking-tighter">EduAdapt</span>
-        <p className="text-[10px] uppercase tracking-[0.2em] text-outline font-bold">Intelligent Atelier</p>
+    <aside className="bg-surface-container-low dark:bg-slate-900 h-screen w-64 fixed left-0 top-0 hidden lg:flex flex-col p-6 gap-2 z-40 border-r border-outline-variant/10">
+      <div className="mb-10 px-2 flex items-center gap-2">
+        <div className="w-8 h-8 ai-pulse-gradient rounded-lg flex items-center justify-center">
+            <span className="material-symbols-outlined text-white text-xl">terminal</span>
+        </div>
+        <div>
+            <span className="text-xl font-black text-on-background dark:text-white tracking-tighter block leading-none">Student Bytes</span>
+            <span className="text-[9px] uppercase tracking-[0.2em] text-primary font-black">CS Edition</span>
+        </div>
       </div>
 
       <nav className="flex-1 flex flex-col gap-2">

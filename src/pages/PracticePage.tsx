@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useUserStore } from '../hooks/useUserStore';
+import { cn, animations } from '../lib/utils';
 
 interface PracticeQuestion {
   id: string;
@@ -77,89 +79,124 @@ const PracticePage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 pb-32">
-      <header>
-        <h1 className="text-4xl font-black tracking-tighter">Practice Lab</h1>
-        <p className="text-on-surface-variant font-medium mt-2">Test your knowledge and earn XP.</p>
+    <div className="flex flex-col gap-10 p-6 md:p-10 max-w-[1200px] mx-auto min-h-screen relative z-10">
+      <header className="space-y-2">
+        <h1 className="text-4xl font-black tracking-tight text-neutral-900">Practice Lab</h1>
+        <p className="text-neutral-500 font-medium">Challenge yourself and sharpen your CS intuition.</p>
       </header>
 
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-3">
         {['all', 'arrays', 'linked-lists', 'dp'].map(t => (
-          <button
+          <motion.button
             key={t}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => { setSelectedTopic(t); setCurrentQuestionIdx(0); setFeedback(null); }}
-            className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${
-              selectedTopic === t ? 'ai-pulse-gradient text-white shadow-lg' : 'bg-surface-container-low text-outline hover:bg-surface-container-highest'
-            }`}
+            className={cn(
+                "px-8 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-premium",
+                selectedTopic === t
+                    ? "bg-neutral-900 text-white shadow-xl shadow-neutral-900/10"
+                    : "bg-white border border-neutral-100 text-neutral-400 hover:text-neutral-900"
+            )}
           >
             {t}
-          </button>
+          </motion.button>
         ))}
       </div>
 
-      {currentQuestion ? (
-        <div className="glass-panel ambient-shadow rounded-[3rem] p-10 border border-white/40 space-y-8">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 ${
-                currentQuestion.difficulty === 'Easy' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-              }`}>
-                {currentQuestion.difficulty}
+      <AnimatePresence mode="wait">
+        {currentQuestion ? (
+          <motion.div
+            key={currentQuestion.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="bg-white/70 backdrop-blur-2xl border border-white/40 rounded-[3rem] p-10 shadow-[0_20px_50px_rgba(0,0,0,0.05)] space-y-10"
+          >
+            <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+              <div className="space-y-4">
+                <div className={cn(
+                  "inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                  currentQuestion.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                )}>
+                  <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", currentQuestion.difficulty === 'Easy' ? 'bg-emerald-500' : 'bg-amber-500')} />
+                  {currentQuestion.difficulty}
+                </div>
+                <h2 className="text-4xl font-black tracking-tight text-neutral-900">{currentQuestion.title}</h2>
               </div>
-              <h2 className="text-3xl font-black tracking-tighter">{currentQuestion.title}</h2>
+              <div className="bg-neutral-50 px-6 py-4 rounded-[2rem] border border-neutral-100">
+                  <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">XP Reward</p>
+                  <p className="text-3xl font-black text-primary">+{currentQuestion.xpReward}</p>
+              </div>
             </div>
-            <div className="text-right">
-                <p className="text-[10px] font-black text-outline uppercase tracking-widest">Potential Reward</p>
-                <p className="text-2xl font-black text-primary">+{currentQuestion.xpReward} XP</p>
+
+            <div className="bg-neutral-50/50 p-8 rounded-[2rem] border border-neutral-100 shadow-inner">
+              <p className="text-xl font-medium leading-relaxed text-neutral-800 tracking-tight">{currentQuestion.description}</p>
             </div>
-          </div>
 
-          <div className="bg-surface-container-low p-8 rounded-3xl border border-outline-variant/10">
-            <p className="text-lg font-medium leading-relaxed">{currentQuestion.description}</p>
-          </div>
-
-          <div className="space-y-4">
-             <label className="text-xs font-black uppercase tracking-widest text-outline ml-4">Your Answer</label>
-             <input
-                type="text"
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                placeholder="Type result here..."
-                className="w-full bg-surface-container-low border border-outline-variant/20 rounded-2xl py-5 px-8 outline-none focus:border-primary/40 transition-colors font-black text-xl"
-             />
-          </div>
-
-          {feedback && (
-            <div className={`p-6 rounded-2xl animate-fade-in flex items-center gap-4 ${
-                feedback.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
-            }`}>
-                <span className="material-symbols-outlined">{feedback.type === 'success' ? 'check_circle' : 'error'}</span>
-                <p className="font-bold">{feedback.message}</p>
+            <div className="space-y-4">
+               <label className="text-[11px] font-black uppercase tracking-[0.2em] text-neutral-400 ml-4">Your Answer</label>
+               <div className="relative group">
+                 <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-indigo-500/10 rounded-[2rem] blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                 <input
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
+                    placeholder="Type result here..."
+                    className="relative w-full bg-white border border-neutral-100 rounded-[2rem] py-6 px-10 outline-none focus:border-primary/30 transition-premium font-black text-2xl placeholder:text-neutral-200"
+                 />
+               </div>
             </div>
-          )}
 
-          <div className="flex gap-4">
-             <button
-                onClick={handleCheck}
-                className="flex-1 ai-pulse-gradient text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95"
-             >
-                Check Answer
-             </button>
-             {feedback?.type === 'success' && (
-                <button
-                    onClick={nextQuestion}
-                    className="flex-1 bg-on-background text-white py-5 rounded-2xl font-black text-lg hover:scale-[1.02] transition-transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                    Next Question <span className="material-symbols-outlined">arrow_forward</span>
-                </button>
-             )}
+            {feedback && (
+              <motion.div
+                {...animations.fadeInUp}
+                className={cn(
+                    "p-6 rounded-[2rem] flex items-center gap-4 border",
+                    feedback.type === 'success' ? 'bg-emerald-50/50 text-emerald-800 border-emerald-100' : 'bg-rose-50/50 text-rose-800 border-rose-100'
+                )}
+              >
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center",
+                    feedback.type === 'success' ? 'bg-emerald-100' : 'bg-rose-100'
+                  )}>
+                    <span className="material-symbols-outlined text-xl">{feedback.type === 'success' ? 'check_circle' : 'error'}</span>
+                  </div>
+                  <p className="font-bold text-lg">{feedback.message}</p>
+              </motion.div>
+            )}
+
+            <div className="flex flex-col md:flex-row gap-4 pt-4">
+               <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleCheck}
+                  className="flex-1 bg-neutral-900 text-white py-6 rounded-[2rem] font-black text-lg shadow-xl shadow-neutral-900/10 hover:bg-neutral-800 transition-premium"
+               >
+                  Check Answer
+               </motion.button>
+               {feedback?.type === 'success' && (
+                  <motion.button
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={nextQuestion}
+                      className="flex-1 bg-primary text-white py-6 rounded-[2rem] font-black text-lg shadow-xl shadow-primary/20 flex items-center justify-center gap-3 hover:bg-indigo-600 transition-premium"
+                  >
+                      Next Challenge <span className="material-symbols-outlined">arrow_forward</span>
+                  </motion.button>
+               )}
+            </div>
+          </motion.div>
+        ) : (
+          <div className="text-center py-24 bg-white/50 backdrop-blur-xl rounded-[3rem] border border-dashed border-neutral-200">
+              <span className="material-symbols-outlined text-5xl text-neutral-300 mb-4 block">science</span>
+              <p className="text-neutral-400 font-bold text-lg uppercase tracking-widest">More challenges coming soon</p>
           </div>
-        </div>
-      ) : (
-        <div className="text-center py-20 bg-surface-container-low rounded-[3rem] border border-dashed border-outline-variant/40">
-            <p className="text-outline font-bold">No questions available for this topic yet.</p>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -14,7 +14,18 @@ export interface StructuredResponse {
     options: QuizOption[];
   };
   topicId: string;
+  difficulty?: 'Beginner' | 'Intermediate' | 'Advanced';
+  confidence?: number;
 }
+
+const PERSONALITY_PHRASES = [
+  "Let's break this down.",
+  "Good question!",
+  "This is a common interview topic.",
+  "Great choice! Let's dive in.",
+  "I've got a clear explanation for this.",
+  "This concept is fundamental for competitive programming."
+];
 
 const RESPONSES: Record<string, StructuredResponse> = {
   'arrays': {
@@ -39,7 +50,9 @@ const RESPONSES: Record<string, StructuredResponse> = {
         { id: '2', text: 'O(n)', isCorrect: false },
         { id: '3', text: 'O(log n)', isCorrect: false }
       ]
-    }
+    },
+    difficulty: 'Beginner',
+    confidence: 0.98
   },
   'two-sum': {
     topicId: 'arrays',
@@ -63,7 +76,9 @@ const RESPONSES: Record<string, StructuredResponse> = {
         { id: '2', text: 'O(n)', isCorrect: true },
         { id: '3', text: 'O(n^2)', isCorrect: false }
       ]
-    }
+    },
+    difficulty: 'Intermediate',
+    confidence: 0.95
   },
   'linked-lists': {
     topicId: 'linked-lists',
@@ -87,7 +102,9 @@ const RESPONSES: Record<string, StructuredResponse> = {
         { id: '2', text: 'Poor random access speed', isCorrect: true },
         { id: '3', text: 'Harder to insert at the front', isCorrect: false }
       ]
-    }
+    },
+    difficulty: 'Beginner',
+    confidence: 0.99
   },
   'dp': {
     topicId: 'dp',
@@ -111,12 +128,14 @@ const RESPONSES: Record<string, StructuredResponse> = {
         { id: '2', text: 'Contiguous memory and fast access', isCorrect: false },
         { id: '3', text: 'Optimal substructure and overlapping subproblems', isCorrect: true }
       ]
-    }
+    },
+    difficulty: 'Advanced',
+    confidence: 0.92
   }
 };
 
 const DEFAULT_RESPONSE: StructuredResponse = {
-  topicId: 'arrays',
+  topicId: 'general',
   explanation: "That's a great question! I'm still learning about that specific detail, but generally in Computer Science, we focus on efficiency, clarity, and scalability.",
   keyPoints: ["Identify the core problem", "Choose the right data structure", "Analyze Time & Space complexity"],
   example: "A simple example is searching for a book in a library by its ID versus looking through every shelf.",
@@ -128,24 +147,35 @@ const DEFAULT_RESPONSE: StructuredResponse = {
       { id: '2', text: 'To make the code run faster on my local machine', isCorrect: false },
       { id: '3', text: 'Because it sounds professional', isCorrect: false }
     ]
-  }
+  },
+  difficulty: 'Intermediate',
+  confidence: 0.85
 };
 
 export const queryAI = async (query: string): Promise<StructuredResponse> => {
-  // Simple keyword matching for the mock engine
   const normalized = query.toLowerCase();
-  if (normalized.includes('array') || normalized.includes('index')) return RESPONSES['arrays'];
-  if (normalized.includes('two sum') || normalized.includes('target')) return RESPONSES['two-sum'];
-  if (normalized.includes('linked list') || normalized.includes('node')) return RESPONSES['linked-lists'];
-  if (normalized.includes('dp') || normalized.includes('dynamic programming') || normalized.includes('fibonacci')) return RESPONSES['dp'];
+  let baseResponse: StructuredResponse;
 
-  return DEFAULT_RESPONSE;
+  if (normalized.includes('array') || normalized.includes('index')) baseResponse = RESPONSES['arrays'];
+  else if (normalized.includes('two sum') || normalized.includes('target')) baseResponse = RESPONSES['two-sum'];
+  else if (normalized.includes('linked list') || normalized.includes('node')) baseResponse = RESPONSES['linked-lists'];
+  else if (normalized.includes('dp') || normalized.includes('dynamic programming') || normalized.includes('fibonacci')) baseResponse = RESPONSES['dp'];
+  else baseResponse = DEFAULT_RESPONSE;
+
+  // Add personality and variation
+  const phrase = PERSONALITY_PHRASES[Math.floor(Math.random() * PERSONALITY_PHRASES.length)];
+  return {
+    ...baseResponse,
+    explanation: `${phrase} ${baseResponse.explanation}`
+  };
 };
 
 export const simulateStreaming = async (text: string, onToken: (token: string) => void) => {
   const words = text.split(' ');
   for (let i = 0; i < words.length; i++) {
     onToken(words.slice(0, i + 1).join(' '));
-    await new Promise(resolve => setTimeout(resolve, 30));
+    // Variable delay for more realistic feel
+    const delay = 30 + Math.random() * 40;
+    await new Promise(resolve => setTimeout(resolve, delay));
   }
 };

@@ -12,11 +12,21 @@ const StudentDashboard: React.FC = () => {
 
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('Analyzing your question...');
   const [messages, setMessages] = useState<any[]>([]);
   const [streamingText, setStreamingText] = useState('');
   const [activeQuiz, setActiveQuiz] = useState<string | null>(null);
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  const placeholders = ["Explain Binary Search", "What is a stack?", "Help me with recursion", "Explain Big O", "What is DP?"];
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIdx((prev) => (prev + 1) % placeholders.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -36,13 +46,22 @@ const StudentDashboard: React.FC = () => {
     setMessages(prev => [...prev, userMsg]);
     setQuery('');
     setIsLoading(true);
+    setLoadingText('Analyzing your question...');
     setStreamingText('');
+
+    const thinkingPhrases = ['Analyzing your question...', 'Breaking it down...', 'Retrieving CS concepts...', 'Preparing your lesson...'];
+    let phraseIdx = 0;
+    const thinkingInterval = setInterval(() => {
+      phraseIdx = (phraseIdx + 1) % thinkingPhrases.length;
+      setLoadingText(thinkingPhrases[phraseIdx]);
+    }, 800);
 
     const response = await queryAI(text);
     addToHistory(text, response.topicId);
     addXP(2);
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    clearInterval(thinkingInterval);
     setIsLoading(false);
 
     await simulateStreaming(response.explanation, (token) => {
@@ -69,7 +88,7 @@ const StudentDashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 p-6 md:p-10 max-w-[1600px] mx-auto min-h-screen">
+    <div className="flex flex-col lg:flex-row gap-8 p-6 md:p-10 max-w-[1600px] mx-auto min-h-screen relative z-10">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col gap-10">
 
@@ -86,7 +105,7 @@ const StudentDashboard: React.FC = () => {
             <p className="text-neutral-500 font-medium mt-1">Master your CS concepts with AI-powered precision.</p>
           </div>
 
-          <div className="flex items-center gap-4 bg-white p-2 pr-6 rounded-full border border-neutral-100 shadow-sm">
+          <div className="flex items-center gap-4 bg-white/60 backdrop-blur-md p-2 pr-6 rounded-full border border-white/40 shadow-sm">
             <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
               <span className="material-symbols-outlined text-primary">bolt</span>
             </div>
@@ -121,8 +140,8 @@ const StudentDashboard: React.FC = () => {
               className="absolute -inset-2 bg-gradient-to-r from-primary/10 to-indigo-500/10 rounded-[3rem] blur-3xl"
             />
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-indigo-500/20 rounded-[2.5rem] blur-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
-            <div className="relative bg-white rounded-[2.5rem] border border-neutral-100 shadow-xl shadow-neutral-200/40 p-3 flex items-center gap-4">
-              <div className="w-12 h-12 flex items-center justify-center text-neutral-400">
+            <div className="relative bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-3 flex items-center gap-4 group-focus-within:border-primary/30 transition-colors duration-500">
+              <div className="w-12 h-12 flex items-center justify-center text-neutral-400 group-focus-within:text-primary transition-colors">
                 <span className="material-symbols-outlined text-2xl">search</span>
               </div>
               <input
@@ -130,15 +149,15 @@ const StudentDashboard: React.FC = () => {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleQuery(query)}
-                placeholder="Ask anything about DSA..."
-                className="flex-1 bg-transparent border-none outline-none font-bold text-xl placeholder:text-neutral-300"
+                placeholder={placeholders[placeholderIdx]}
+                className="flex-1 bg-transparent border-none outline-none font-bold text-xl placeholder:text-neutral-300 transition-all duration-500"
               />
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(99, 102, 241, 0.4)" }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleQuery(query)}
                 disabled={!query.trim() || isLoading}
-                className="h-14 px-8 bg-neutral-900 text-white rounded-[1.75rem] font-black text-sm uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                className="h-14 px-8 bg-neutral-900 text-white rounded-[1.75rem] font-black text-sm uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-800 transition-all disabled:opacity-50"
               >
                 {isLoading ? 'Thinking...' : 'Analyze'}
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
@@ -167,9 +186,13 @@ const StudentDashboard: React.FC = () => {
                 {...animations.fadeInUp}
                 className="flex flex-col items-center justify-center py-20 text-center"
               >
-                <div className="w-24 h-24 bg-neutral-50 rounded-[2.5rem] flex items-center justify-center mb-6">
-                  <span className="material-symbols-outlined text-4xl text-neutral-300">chat_bubble</span>
-                </div>
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center mb-6"
+                >
+                  <span className="material-symbols-outlined text-4xl text-indigo-300">psychology</span>
+                </motion.div>
                 <h3 className="text-xl font-black text-neutral-900 tracking-tight">Your knowledge loop starts here</h3>
                 <p className="text-neutral-500 font-medium max-w-xs mt-2">Ask a question above to generate structured lessons and practice tasks.</p>
               </motion.div>
@@ -196,16 +219,16 @@ const StudentDashboard: React.FC = () => {
                 {...animations.fadeInUp}
                 className="w-full flex flex-col gap-8"
               >
-                <div className="bg-white border border-neutral-100 p-10 rounded-[3rem] shadow-sm flex flex-col gap-6">
+                <div className="bg-white/80 backdrop-blur-md border border-white/40 p-10 rounded-[3rem] shadow-sm flex flex-col gap-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/5 rounded-2xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center">
                       <motion.div
                         animate={{ rotate: 360 }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                         className="material-symbols-outlined text-primary text-xl"
-                      >refresh</motion.div>
+                      >autorenew</motion.div>
                     </div>
-                    <span className="text-[11px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">Thinking...</span>
+                    <span className="text-[11px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">{loadingText}</span>
                   </div>
                   <div className="space-y-4">
                     <div className="h-6 w-3/4 bg-neutral-100 rounded-full animate-pulse" />
@@ -238,7 +261,8 @@ const StudentDashboard: React.FC = () => {
       <aside className="w-full lg:w-80 flex flex-col gap-8">
         <motion.div
           {...animations.fadeInUp}
-          className="bg-white p-8 rounded-[2.5rem] border border-neutral-100 shadow-sm"
+          whileHover={{ y: -5 }}
+          className="bg-white/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-[0_10px_30px_rgba(0,0,0,0.03)] transition-premium"
         >
           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 mb-6 flex items-center gap-2">
             <span className="material-symbols-outlined text-lg text-primary">analytics</span>
@@ -276,7 +300,8 @@ const StudentDashboard: React.FC = () => {
 
         <motion.div
           {...animations.fadeInUp}
-          className="bg-white p-8 rounded-[2.5rem] border border-neutral-100 shadow-sm"
+          whileHover={{ y: -5 }}
+          className="bg-white/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-[0_10px_30px_rgba(0,0,0,0.03)] transition-premium"
         >
           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 mb-6 flex items-center gap-2">
             <span className="material-symbols-outlined text-lg">history</span>
@@ -331,18 +356,38 @@ const StructuredAIResponse = ({ response, onQuizAnswer, isStreaming = false }: {
             <motion.div
               {...cardVariants(0)}
               whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              className="bg-white border border-neutral-100 p-10 rounded-[3rem] shadow-sm relative overflow-hidden"
+              className="bg-white/80 backdrop-blur-xl border border-white/40 p-10 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] relative overflow-hidden"
             >
-                <div className="flex items-center gap-3 mb-8">
-                    <div className="w-10 h-10 bg-primary/5 rounded-2xl flex items-center justify-center">
-                        <span className="material-symbols-outlined text-primary text-xl">psychology</span>
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center">
+                            <span className="material-symbols-outlined text-primary text-xl">psychology</span>
+                        </div>
+                        <span className="text-[11px] font-black text-primary uppercase tracking-[0.2em]">Conceptual Insight</span>
                     </div>
-                    <span className="text-[11px] font-black text-primary uppercase tracking-[0.2em]">Conceptual Insight</span>
+                    {response.difficulty && (
+                        <div className="flex items-center gap-2 px-3 py-1 bg-neutral-100 rounded-full">
+                            <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
+                            <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">{response.difficulty}</span>
+                        </div>
+                    )}
                 </div>
 
                 <p className="text-xl md:text-2xl font-medium leading-relaxed text-neutral-900 tracking-tight">
                     {response.explanation}
                 </p>
+
+                {response.confidence && (
+                    <div className="mt-8 pt-6 border-t border-neutral-100 flex items-center justify-between">
+                        <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">AI Confidence</span>
+                        <div className="flex items-center gap-2">
+                             <div className="w-24 h-1 bg-neutral-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-emerald-400" style={{ width: `${response.confidence * 100}%` }}></div>
+                             </div>
+                             <span className="text-[10px] font-black text-emerald-500">{Math.round(response.confidence * 100)}%</span>
+                        </div>
+                    </div>
+                )}
             </motion.div>
 
             {!isStreaming && (
@@ -352,7 +397,7 @@ const StructuredAIResponse = ({ response, onQuizAnswer, isStreaming = false }: {
                         <motion.div
                           {...cardVariants(1)}
                           whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                          className="bg-neutral-50/50 border border-neutral-100 p-8 rounded-[2.5rem]"
+                          className="bg-neutral-50/70 backdrop-blur-sm border border-white/40 p-8 rounded-[2.5rem]"
                         >
                             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 mb-6">📌 Key Takeaways</h4>
                             <ul className="space-y-4">
@@ -371,10 +416,10 @@ const StructuredAIResponse = ({ response, onQuizAnswer, isStreaming = false }: {
                         <motion.div
                           {...cardVariants(2)}
                           whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                          className="bg-white border border-neutral-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col"
+                          className="bg-white/80 backdrop-blur-md border border-white/40 p-8 rounded-[2.5rem] shadow-sm flex flex-col"
                         >
                             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 mb-6">💡 Example Case</h4>
-                            <div className="flex-1 flex items-center justify-center bg-neutral-50 rounded-2xl p-6 text-sm font-bold text-neutral-600 italic leading-relaxed border border-neutral-100">
+                            <div className="flex-1 flex items-center justify-center bg-neutral-50 rounded-2xl p-6 text-sm font-bold text-neutral-600 italic leading-relaxed border border-white/10">
                                 "{response.example}"
                             </div>
                         </motion.div>
@@ -433,14 +478,14 @@ const StructuredAIResponse = ({ response, onQuizAnswer, isStreaming = false }: {
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="bg-white border border-neutral-100 text-neutral-500 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:text-neutral-900 transition-colors shadow-sm"
+                            className="bg-white/70 backdrop-blur-md border border-white/40 text-neutral-500 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:text-neutral-900 transition-premium shadow-sm"
                         >
                             Explain Simpler
                         </motion.button>
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="bg-white border border-neutral-100 text-neutral-500 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:text-neutral-900 transition-colors shadow-sm"
+                            className="bg-white/70 backdrop-blur-md border border-white/40 text-neutral-500 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:text-neutral-900 transition-premium shadow-sm"
                         >
                             Try Harder
                         </motion.button>

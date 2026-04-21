@@ -1,32 +1,43 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const mobileNavItems = [
-  { name: 'Assistant', icon: 'auto_awesome', path: '/dashboard' },
+  { name: 'Home', icon: 'grid_view', path: '/dashboard' },
   { name: 'Practice', icon: 'fitness_center', path: '/dashboard/practice' },
-  { name: 'Learning', icon: 'map', path: '/dashboard/learning-path' },
+  { name: 'Route', icon: 'map', path: '/dashboard/learning-path' },
   { name: 'Feed', icon: 'forum', path: '/dashboard/community' },
   { name: 'Profile', icon: 'account_circle', path: '/dashboard/profile' },
 ];
 
 const BottomNav: React.FC = () => {
   return (
-    <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-t border-outline-variant/10 lg:hidden z-[100] rounded-t-[2rem] shadow-[0_-12px_40px_rgba(26,28,31,0.08)]">
+    <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-white/40 backdrop-blur-2xl border-t border-white/40 lg:hidden z-[100] rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.05)]">
       {mobileNavItems.map((item) => (
         <NavLink
           key={item.name}
           to={item.path}
           end={item.path === '/dashboard'}
           className={({ isActive }) =>
-            `flex flex-col items-center justify-center p-3 rounded-2xl transition-all active:scale-90 ${
+            `flex flex-col items-center justify-center p-3 rounded-2xl transition-all relative ${
               isActive
-                ? 'bg-primary/5 text-primary'
-                : 'text-outline'
+                ? 'text-primary'
+                : 'text-neutral-400'
             }`
           }
         >
-          <span className="material-symbols-outlined text-xl">{item.icon}</span>
-          <span className="text-[10px] font-black uppercase tracking-widest mt-1">{item.name}</span>
+          {({ isActive }) => (
+            <>
+              <span className="material-symbols-outlined text-2xl relative z-10">{item.icon}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="bottom-nav-active"
+                  className="absolute inset-0 bg-primary/5 rounded-2xl"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
+            </>
+          )}
         </NavLink>
       ))}
     </nav>

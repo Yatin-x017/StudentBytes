@@ -1,79 +1,29 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #6366f1; /* Indigo 500 */
-  --color-secondary: #a855f7; /* Purple 500 */
-  --color-accent: #0ea5e9; /* Sky 500 */
-  --color-background: #ffffff;
-  --color-surface: #fafafa;
-  --color-on-surface: #0f172a;
-  --color-neutral-subtle: #94a3b8;
-
-  --radius-2xl: 1rem;
-  --radius-3xl: 1.5rem;
-  --radius-4xl: 2.5rem;
-
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --color-bg: #0f0f13;
+  --color-surface: #1a1a24;
+  --color-surface-2: #22222f;
+  --color-border: #2e2e3d;
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+  --font-body: 'Inter', sans-serif;
 }
 
 @layer base {
   :root {
-    --material-symbols-outlined-fill: 0;
-    --material-symbols-outlined-wght: 400;
-    --material-symbols-outlined-grad: 0;
-    --material-symbols-outlined-opsz: 24;
-  }
-
-  body {
-    @apply bg-white text-slate-900 antialiased selection:bg-indigo-100 selection:text-indigo-700;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
   }
 }
 
-.material-symbols-outlined {
-  font-variation-settings:
-    'FILL' var(--material-symbols-outlined-fill),
-    'wght' var(--material-symbols-outlined-wght),
-    'GRAD' var(--material-symbols-outlined-grad),
-    'opsz' var(--material-symbols-outlined-opsz);
-  display: inline-block;
-  line-height: 1;
-}
-
-/* Premium UI Utilities */
-.glass-card {
-  @apply bg-white/70 backdrop-blur-2xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.04)];
-}
-
-.premium-gradient {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-}
-
-.text-glow {
-  text-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-/* Custom transitions */
-.transition-premium {
-  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
-::-webkit-scrollbar-thumb {
-  @apply bg-neutral-200 rounded-full hover:bg-neutral-300 transition-colors;
+@layer components {
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg;
+  }
 }

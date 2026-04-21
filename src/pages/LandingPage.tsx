@@ -1,332 +1,270 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../lib/utils';
+import { motion } from 'framer-motion';
+import {
+  MessageSquare,
+  GraduationCap,
+  FileText,
+  ArrowRight,
+  Terminal,
+  Sparkles,
+  ShieldCheck,
+  Users,
+  CheckCircle2
+} from 'lucide-react';
+import { ROUTES } from '@/lib/constants';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
 
   return (
-    <div className="bg-white text-slate-900 font-sans overflow-x-hidden selection:bg-indigo-100 selection:text-indigo-700">
-      {/* Background Ambient Glows */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-secondary/5 blur-[120px] rounded-full" />
+    <div className="flex flex-col -mt-8">
+      {/* Hero Section */}
+      <section className="relative pt-20 pb-32 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-black uppercase tracking-widest mb-8 animate-pulse">
+              <Sparkles size={14} className="fill-primary" /> The Future of CS Study
+            </div>
+
+            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tight mb-8 leading-[1.1] bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent">
+              Your AI Tutor for CS.
+            </h1>
+
+            <p className="text-lg md:text-xl text-text-muted max-w-3xl mx-auto mb-12 leading-relaxed font-medium">
+              Master DSA, OS, DBMS, and more with Byte — <br className="hidden md:block" />
+              an AI tutor that explains, quizzes, and adapts to you.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+              <Button size="lg" className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl shadow-2xl shadow-primary/30" onClick={() => navigate(ROUTES.STUDY)}>
+                Start Learning Free <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="lg"
+                className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl border-white/10 hover:border-white/20 gap-2"
+                onClick={() => {
+                  document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                See how it works ↓
+              </Button>
+            </div>
+
+            <div className="flex flex-col items-center gap-4 mb-20">
+              <p className="text-xs text-text-muted font-bold tracking-tight">
+                No account needed. Your data stays on your device.
+              </p>
+            </div>
+
+            {/* Mock UI / Hero Image Area */}
+            <div className="relative max-w-5xl mx-auto">
+               <div className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-success rounded-[2.5rem] blur-xl opacity-20" />
+               <Card className="relative overflow-hidden border-white/10 glass-card p-2 rounded-[2.5rem] shadow-3xl">
+                  <div className="rounded-[2rem] overflow-hidden bg-black/40 aspect-video md:aspect-[16/9] relative border border-white/5">
+                    {/* Mock Content Placeholder */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                       <div className="w-full h-full p-8 flex flex-col gap-4 text-left">
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-3 h-3 rounded-full bg-error/50" />
+                            <div className="w-3 h-3 rounded-full bg-amber-500/50" />
+                            <div className="w-3 h-3 rounded-full bg-success/50" />
+                          </div>
+                          <div className="w-[40%] h-4 bg-white/10 rounded-full" />
+                          <div className="w-[60%] h-4 bg-white/5 rounded-full" />
+                          <div className="w-[80%] h-24 bg-primary/10 border border-primary/20 rounded-2xl mt-4 flex items-center justify-center">
+                             <div className="text-primary font-mono text-xs opacity-50"># Byte: Generating Concept Visualization...</div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-4 mt-auto">
+                             <div className="h-20 bg-white/5 rounded-xl" />
+                             <div className="h-20 bg-white/5 rounded-xl" />
+                             <div className="h-20 bg-white/5 rounded-xl" />
+                          </div>
+                       </div>
+                    </div>
+                  </div>
+               </Card>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Ambient background glows */}
+        <div className="absolute top-0 left-1/4 w-full max-w-4xl h-96 bg-primary/10 blur-[150px] rounded-full -z-10" />
+        <div className="absolute bottom-0 right-1/4 w-full max-w-4xl h-96 bg-accent/10 blur-[150px] rounded-full -z-10" />
+      </section>
+
+      {/* Trust bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 mb-12 relative z-20">
+        <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 py-8 px-12 rounded-[2rem] bg-surface/50 border border-white/5 backdrop-blur-xl">
+           <div className="flex items-center gap-2 grayscale opacity-50">
+              <ShieldCheck size={20} />
+              <span className="text-xs font-bold uppercase tracking-widest">End-to-End Encrypted</span>
+           </div>
+           <div className="flex items-center gap-2 grayscale opacity-50">
+              <Users size={20} />
+              <span className="text-xs font-bold uppercase tracking-widest">Local-First Privacy</span>
+           </div>
+           <div className="flex items-center gap-2 grayscale opacity-50">
+              <CheckCircle2 size={20} />
+              <span className="text-xs font-bold uppercase tracking-widest">Open Source Core</span>
+           </div>
+        </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/40 backdrop-blur-xl border-b border-white/40">
-        <div className="flex items-center justify-between px-8 py-5 max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-              <span className="material-symbols-outlined text-white text-2xl">terminal</span>
-            </div>
-            <div>
-              <span className="text-xl font-black tracking-tighter block leading-none">Student Bytes</span>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-primary/60 font-bold">Premium</span>
-            </div>
-          </div>
-
-          <div className="hidden md:flex items-center gap-10 text-sm font-bold text-slate-500">
-            <a href="#features" className="hover:text-primary transition-colors">Features</a>
-            <a href="#how-it-works" className="hover:text-primary transition-colors">How it Works</a>
-            <div className="w-px h-4 bg-slate-200"></div>
-            <button onClick={() => navigate('/login')} className="hover:text-primary transition-colors">Log in</button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/signup')}
-              className="bg-neutral-900 text-white px-8 py-3 rounded-2xl shadow-xl shadow-neutral-900/10 hover:bg-neutral-800 transition-colors"
-            >
-              Get Started
-            </motion.button>
-          </div>
-
-          <button
-            className="md:hidden material-symbols-outlined text-slate-900"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? 'close' : 'menu'}
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-slate-100 p-8 space-y-6 shadow-2xl shadow-slate-200/50"
-            >
-              <a href="#features" className="block text-xl font-black text-slate-900" onClick={() => setIsMenuOpen(false)}>Features</a>
-              <a href="#how-it-works" className="block text-xl font-black text-slate-900" onClick={() => setIsMenuOpen(false)}>How it Works</a>
-              <hr className="border-slate-100" />
-              <button onClick={() => navigate('/login')} className="block text-xl font-black text-slate-900">Log in</button>
-              <button
-                onClick={() => navigate('/signup')}
-                className="w-full bg-primary text-white py-5 rounded-[2rem] font-black text-lg shadow-xl shadow-primary/20"
-              >
-                Get Started
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
-
-      {/* Hero Section */}
-      <header className="relative pt-48 pb-32 md:pt-64 md:pb-80 px-8 max-w-7xl mx-auto z-10">
-        <div className="text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-3 bg-white/60 backdrop-blur-md border border-white/40 px-6 py-2.5 rounded-full mb-12 shadow-sm"
-          >
-            <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">The AI Study Assistant for CS Students</span>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-6xl md:text-9xl font-black tracking-tight leading-[0.95] mb-12 max-w-6xl mx-auto text-slate-900"
-          >
-            Ask anything. Get <span className="text-primary italic">instant</span>, clear explanations.
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl md:text-3xl text-slate-500 max-w-3xl mx-auto mb-16 font-medium leading-relaxed"
-          >
-            Master Data Structures, Algorithms, and coding concepts with a personalized AI tutor that adapts to your learning level.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col sm:row items-center justify-center gap-6"
-          >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/signup')}
-              className="w-full sm:w-auto bg-neutral-900 text-white px-14 py-6 rounded-[2.5rem] font-black text-xl shadow-2xl shadow-neutral-900/10 flex items-center justify-center gap-4 hover:bg-neutral-800 transition-premium"
-            >
-              Try Now <span className="material-symbols-outlined font-black">arrow_forward</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/dashboard?demo=true')}
-              className="w-full sm:w-auto bg-white border border-slate-100 px-14 py-6 rounded-[2.5rem] font-black text-xl hover:bg-slate-50 transition-premium flex items-center justify-center gap-4 shadow-sm"
-            >
-              See Demo <span className="material-symbols-outlined font-black">play_circle</span>
-            </motion.button>
-          </motion.div>
-        </div>
-
-        {/* Visual Mockup */}
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 1 }}
-          className="mt-48 relative"
-        >
-          <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 rounded-[4rem] blur-3xl -z-10" />
-          <div className="glass-card rounded-[3.5rem] p-6 shadow-2xl">
-            <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-inner">
-               {/* UI Mockup Header */}
-              <div className="h-16 bg-slate-50/50 border-b border-slate-100 flex items-center px-8 gap-4">
-                <div className="flex gap-2">
-                  <div className="w-3.5 h-3.5 rounded-full bg-slate-200" />
-                  <div className="w-3.5 h-3.5 rounded-full bg-slate-200" />
-                  <div className="w-3.5 h-3.5 rounded-full bg-slate-200" />
-                </div>
-                <div className="ml-6 flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-slate-100">
-                  <span className="material-symbols-outlined text-[14px] text-slate-300">lock</span>
-                  <div className="w-48 h-2 bg-slate-100 rounded-full"></div>
-                </div>
-              </div>
-              {/* UI Mockup Content */}
-              <div className="grid grid-cols-12 gap-10 p-12">
-                <div className="col-span-3 space-y-5">
-                  {[1,2,3,4,5].map(i => (
-                    <div key={i} className={cn(
-                      "h-14 rounded-2xl w-full",
-                      i === 1 ? "bg-primary/5 border border-primary/10" : "bg-slate-50"
-                    )}></div>
-                  ))}
-                </div>
-                <div className="col-span-9 space-y-10">
-                  <div className="bg-slate-900 text-white p-8 rounded-[2rem] rounded-tr-none shadow-xl max-w-2xl ml-auto">
-                    <p className="text-lg font-bold">Can you explain Quick Sort using an analogy?</p>
-                  </div>
-                  <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm max-w-3xl space-y-6">
-                    <div className="flex items-center gap-4 mb-8">
-                      <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                        <span className="material-symbols-outlined text-primary">bolt</span>
-                      </div>
-                      <div>
-                        <span className="block text-xs font-black text-primary uppercase tracking-widest">AI Response</span>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Confidence: 98%</span>
-                      </div>
-                    </div>
-                    <div className="space-y-6">
-                      <h4 className="font-black text-2xl text-slate-900">The "Library Organizer" Analogy</h4>
-                      <p className="text-slate-600 font-medium leading-relaxed text-lg">Imagine you're organizing a messy shelf of books. You pick one book as your <strong>pivot</strong>. Every book thinner than the pivot goes to the left, and every book thicker goes to the right...</p>
-                      <div className="h-48 bg-slate-50 rounded-[2rem] flex flex-col items-center justify-center gap-4 border border-slate-100 border-dashed">
-                         <span className="material-symbols-outlined text-primary/20 text-6xl animate-float">psychology</span>
-                         <span className="text-[11px] font-black text-slate-300 uppercase tracking-widest">Interactive Visualization</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </header>
-
       {/* Features Grid */}
-      <section id="features" className="py-48 relative">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="max-w-3xl mb-32">
-            <h2 className="text-5xl md:text-7xl font-black tracking-tight mb-10 leading-[0.95] text-slate-900">Everything you need to master your CS curriculum.</h2>
-            <p className="text-xl md:text-2xl text-slate-500 font-medium leading-relaxed">Forget endless searching. Get high-quality, personalized study materials instantly.</p>
+      <section id="features" className="py-32 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-20">
+            <h2 className="text-4xl md:text-5xl font-black mb-6">Everything you need to excel.</h2>
+            <p className="text-text-muted text-lg">We've built a suite of tools that bridge the gap between lecture hall theory and production-ready skills.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <motion.div
+            variants={container}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-8"
+          >
             <FeatureCard
-              icon="psychology"
-              title="Adaptive Tutoring"
-              description="Our AI tracks your progress and adapts explanations. Whether you're a beginner or an expert, we've got you covered."
-              accent="primary"
+              variants={item}
+              icon={<MessageSquare className="text-primary" />}
+              title="Interactive AI Tutor"
+              description="Chat with Byte about any CS topic. From Assembly to Z-buffers, get clear analogies and code."
             />
             <FeatureCard
-              icon="terminal"
-              title="Code Visualizer"
-              description="See how algorithms work line-by-line with our interactive execution tool. No more guessing how pointers move."
-              accent="secondary"
+              variants={item}
+              icon={<GraduationCap className="text-primary" />}
+              title="Dynamic Quizzes"
+              description="Transform any session into a mastery quiz. Test your edge and identify knowledge gaps."
             />
             <FeatureCard
-              icon="history_edu"
-              title="Exam Prep Mode"
-              description="Generate mock questions based on your specific university syllabus and past papers. Practice until perfect."
-              accent="accent"
+              variants={item}
+              icon={<FileText className="text-primary" />}
+              title="Knowledge Base"
+              description="Automatically format and save key takeaways from your chats into a personal library."
             />
-          </div>
+            <FeatureCard
+              variants={item}
+              icon={<ShieldCheck className="text-primary" />}
+              title="Privacy First"
+              description="Fully local-first architecture. You own your data and your AI interactions."
+            />
+          </motion.div>
         </div>
       </section>
 
-      {/* How it Works */}
-      <section id="how-it-works" className="py-48 bg-slate-50/50">
-        <div className="max-w-7xl mx-auto px-8 text-center mb-32">
-          <h2 className="text-5xl md:text-7xl font-black tracking-tight text-slate-900">From stuck to clear in 3 steps.</h2>
-        </div>
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-32 bg-surface/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-20">
+            <h2 className="text-4xl md:text-5xl font-black mb-6">How it works.</h2>
+            <p className="text-text-muted text-lg">Three steps to mastering your curriculum.</p>
+          </div>
 
-        <div className="max-w-6xl mx-auto px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-20">
-            <StepCard
-              number="1"
-              icon="search"
-              title="Ask Anything"
-              description="Type a question, paste a coding problem, or ask for a concept breakdown."
-            />
-            <StepCard
-              number="2"
-              icon="auto_awesome"
-              title="AI Generation"
-              description="Our engine analyzes your level and generates a structured, easy-to-follow lesson."
-            />
-            <StepCard
-              number="3"
-              icon="verified"
-              title="Interactive Mastery"
-              description="Solve practice questions and earn XP as you master each new concept."
-            />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+             <div className="text-center space-y-6">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-2xl mx-auto border border-primary/20">1</div>
+                <h3 className="text-xl font-bold">Pick a Subject</h3>
+                <p className="text-text-muted text-sm leading-relaxed">Choose from DSA, OS, DBMS, or any CS topic you're currently struggling with.</p>
+             </div>
+             <div className="text-center space-y-6">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-2xl mx-auto border border-primary/20">2</div>
+                <h3 className="text-xl font-bold">Chat with Byte</h3>
+                <p className="text-text-muted text-sm leading-relaxed">Ask questions, get analogies, and see code examples. Byte adapts to your knowledge level.</p>
+             </div>
+             <div className="text-center space-y-6">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-2xl mx-auto border border-primary/20">3</div>
+                <h3 className="text-xl font-bold">Prove Mastery</h3>
+                <p className="text-text-muted text-sm leading-relaxed">Generate a quiz based on your conversation to ensure you actually understand the core concepts.</p>
+             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-32 px-8 border-t border-slate-100 z-10 relative bg-white">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
-            <div className="col-span-1 md:col-span-2 space-y-8">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                        <span className="material-symbols-outlined text-white text-2xl">terminal</span>
-                    </div>
-                    <span className="text-2xl font-black tracking-tighter">Student Bytes</span>
-                </div>
-                <p className="max-w-sm text-slate-500 font-medium leading-relaxed text-lg">
-                    Making computer science education personalized, interactive, and accessible for everyone.
-                </p>
+      <footer className="py-20 border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div className="col-span-1 md:col-span-2">
+               <div className="flex items-center gap-3 mb-6">
+                 <div className="bg-primary p-2 rounded-xl">
+                   <Terminal size={24} className="text-white" />
+                 </div>
+                 <span className="text-2xl font-black tracking-tighter">Student Bytes</span>
+               </div>
+               <p className="text-text-muted max-w-sm mb-8 leading-relaxed">
+                 Transforming the CS student experience with AI. Built for the next generation of engineers.
+               </p>
+               <div className="flex items-center gap-4">
+                 <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all text-text-muted hover:text-white">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                 </a>
+               </div>
             </div>
-            <div className="space-y-8">
-                <h4 className="font-black text-xs uppercase tracking-[0.2em] text-slate-400">Product</h4>
-                <ul className="space-y-4 font-bold text-slate-500">
-                    <li><a href="#" className="hover:text-primary transition-colors">Features</a></li>
-                    <li><a href="#" className="hover:text-primary transition-colors">Pricing</a></li>
-                    <li><a href="#" className="hover:text-primary transition-colors">Roadmap</a></li>
-                </ul>
+            <div>
+              <h4 className="font-bold mb-6 text-sm uppercase tracking-widest text-primary">Product</h4>
+              <ul className="space-y-4 text-sm font-medium text-text-muted">
+                <li><button onClick={() => navigate(ROUTES.STUDY)} className="hover:text-white transition-all">AI Tutor</button></li>
+                <li><button onClick={() => navigate(ROUTES.QUIZ)} className="hover:text-white transition-all">Quiz Gen</button></li>
+                <li><button onClick={() => navigate(ROUTES.COMMUNITY)} className="hover:text-white transition-all">Community</button></li>
+                <li><button onClick={() => navigate(ROUTES.ANALYTICS)} className="hover:text-white transition-all">Analytics</button></li>
+              </ul>
             </div>
-            <div className="space-y-8">
-                <h4 className="font-black text-xs uppercase tracking-[0.2em] text-slate-400">Connect</h4>
-                <ul className="space-y-4 font-bold text-slate-500">
-                    <li><a href="#" className="hover:text-primary transition-colors">Twitter</a></li>
-                    <li><a href="#" className="hover:text-primary transition-colors">Discord</a></li>
-                    <li><a href="#" className="hover:text-primary transition-colors">Contact</a></li>
-                </ul>
+            <div>
+              <h4 className="font-bold mb-6 text-sm uppercase tracking-widest text-primary">Legal</h4>
+              <ul className="space-y-4 text-sm font-medium text-text-muted">
+                <li><a href="#" className="hover:text-white transition-all">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-white transition-all">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-white transition-all">Security</a></li>
+              </ul>
             </div>
-        </div>
-        <div className="max-w-7xl mx-auto pt-10 border-t border-slate-100 flex flex-col md:row items-center justify-between gap-6">
-            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">© 2025 Student Bytes. Premium Edition.</p>
-            <div className="flex gap-10 font-bold text-xs uppercase tracking-widest text-slate-400">
-                <a href="#" className="hover:text-slate-900 transition-colors">Privacy</a>
-                <a href="#" className="hover:text-slate-900 transition-colors">Terms</a>
-            </div>
+          </div>
+          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-bold text-text-muted uppercase tracking-widest">
+            <p>© 2024 Student Bytes. All rights reserved.</p>
+            <p>Built with ❤️ by students, for students.</p>
+          </div>
         </div>
       </footer>
     </div>
   );
 };
 
-const FeatureCard = ({ icon, title, description, accent }: { icon: string, title: string, description: string, accent: 'primary' | 'secondary' | 'accent' }) => (
-  <motion.div
-    whileHover={{ y: -8 }}
-    className="group bg-white p-12 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-premium"
-  >
-    <div className={cn(
-        "w-16 h-16 rounded-2xl flex items-center justify-center mb-10 transition-premium group-hover:scale-110",
-        accent === 'primary' ? "bg-primary/10 text-primary" :
-        accent === 'secondary' ? "bg-secondary/10 text-secondary" :
-        "bg-accent/10 text-accent"
-    )}>
-      <span className="material-symbols-outlined text-3xl">{icon}</span>
-    </div>
-    <h3 className="text-3xl font-black mb-6 tracking-tight text-slate-900">{title}</h3>
-    <p className="text-slate-500 leading-relaxed font-medium text-lg">{description}</p>
+const FeatureCard = ({ icon, title, description, variants }: any) => (
+  <motion.div variants={variants}>
+    <Card className="h-full p-8 bg-surface-2/30 border-white/5 hover:border-primary/20 transition-all group relative overflow-hidden">
+      <div className="bg-primary/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-500">
+        {React.cloneElement(icon as React.ReactElement)}
+      </div>
+      <h3 className="text-2xl font-black mb-4">{title}</h3>
+      <p className="text-text-muted leading-relaxed font-medium">
+        {description}
+      </p>
+    </Card>
   </motion.div>
 );
 
-const StepCard = ({ number, icon, title, description }: { number: string, icon: string, title: string, description: string }) => (
-  <div className="text-center group">
-    <div className="relative mb-12">
-        <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-xl border border-slate-100 flex items-center justify-center mx-auto transition-premium group-hover:scale-110 group-hover:border-primary/20">
-            <span className="material-symbols-outlined text-primary text-4xl">{icon}</span>
-        </div>
-        <div className="absolute -top-3 -right-3 w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-black text-sm z-10 shadow-xl">
-            {number}
-        </div>
-    </div>
-    <h4 className="text-3xl font-black mb-6 tracking-tight text-slate-900">{title}</h4>
-    <p className="text-slate-500 font-medium leading-relaxed text-lg">{description}</p>
-  </div>
-);
 
 export default LandingPage;

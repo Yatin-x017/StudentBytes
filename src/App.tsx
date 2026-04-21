@@ -1,47 +1,49 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Layout from './components/Layout';
-import LandingPage from './pages/LandingPage';
-import StudentDashboard from './pages/StudentDashboard';
-import PracticePage from './pages/PracticePage';
-import LearningPath from './pages/LearningPath';
-import AdaptiveQuiz from './pages/AdaptiveQuiz';
-import StudentAnalytics from './pages/StudentAnalytics';
-import CommunityFeed from './pages/CommunityFeed';
-import StudentProfile from './pages/StudentProfile';
-import AdminIntegrations from './pages/AdminIntegrations';
-import AdminUserManagement from './pages/AdminUserManagement';
-import AdminAnalytics from './pages/AdminAnalytics';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AppProvider } from '@/context/AppContext';
+import { Layout } from '@/components/layout/Layout';
+import { ROUTES } from '@/lib/constants';
+import { Spinner } from '@/components/ui/Spinner';
 
-function App() {
+// Pages
+const LandingPage = lazy(() => import('@/pages/LandingPage'));
+const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const StudyPage = lazy(() => import('@/pages/StudyPage'));
+const QuizPage = lazy(() => import('@/pages/QuizPage'));
+const NotesPage = lazy(() => import('@/pages/NotesPage'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+const AnalyticsPage = lazy(() => import('@/pages/AnalyticsPage'));
+const CommunityPage = lazy(() => import('@/pages/CommunityPage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+
+const App: React.FC = () => {
   return (
-    <Router>
-      <Routes>
-        {/* Landing Page Route */}
-        <Route path="/" element={<LandingPage />} />
+    <AppProvider>
+      <BrowserRouter>
+        <Suspense fallback={
+          <div className="h-screen w-full flex items-center justify-center bg-bg">
+            <Spinner size={32} className="text-primary" />
+          </div>
+        }>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<LandingPage />} />
+              <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
+              <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+              <Route path={ROUTES.STUDY} element={<StudyPage />} />
+              <Route path={ROUTES.QUIZ} element={<QuizPage />} />
+              <Route path={ROUTES.NOTES} element={<NotesPage />} />
+              <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
+              <Route path={ROUTES.COMMUNITY} element={<CommunityPage />} />
+              <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+            </Route>
 
-        {/* Mock Login/Signup Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-
-        {/* Dashboard Routes */}
-        <Route path="/dashboard" element={<Layout />}>
-          <Route index element={<StudentDashboard />} />
-          <Route path="practice" element={<PracticePage />} />
-          <Route path="learning-path" element={<LearningPath />} />
-          <Route path="ai-tutor" element={<AdaptiveQuiz />} />
-          <Route path="analytics" element={<StudentAnalytics />} />
-          <Route path="community" element={<CommunityFeed />} />
-          <Route path="profile" element={<StudentProfile />} />
-
-          <Route path="admin" element={<AdminAnalytics />} />
-          <Route path="admin/integrations" element={<AdminIntegrations />} />
-          <Route path="admin/users" element={<AdminUserManagement />} />
-        </Route>
-      </Routes>
-    </Router>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </AppProvider>
   );
-}
+};
 
 export default App;

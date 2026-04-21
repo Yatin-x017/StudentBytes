@@ -12,6 +12,7 @@
     "@tailwindcss/postcss": "^4.2.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "@vitejs/plugin-react-swc": "^4.3.0",
     "autoprefixer": "^10.5.0",
     "postcss": "^8.5.10",
@@ -20,9 +21,15 @@
     "vite": "^8.0.9"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
     "lucide-react": "^1.8.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-router-dom": "^7.14.1"
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.14.1",
+    "react-syntax-highlighter": "^16.1.1",
+    "tailwind-merge": "^3.5.0"
   }
 }

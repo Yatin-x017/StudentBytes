@@ -112,6 +112,8 @@ const StudyPage: React.FC = () => {
     }
 
     await streamMessage(sessionId, message);
+    // scroll to bottom to make error visible if one occurred or for long streams
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleSaveNote = (content: string) => {

@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { getAnthropicClient, SYSTEM_PROMPT, QUIZ_PROMPT } from '@/lib/anthropic';
 import { streamGeminiMessage, generateGeminiQuiz } from '@/lib/gemini';
-import type { Message, QuizQuestion, Session } from '@/lib/types';
+import type { Message, QuizQuestion } from '@/lib/types';
 
 export function useAI() {
   const { state, dispatch } = useAppContext();
@@ -33,16 +33,18 @@ export function useAI() {
         timestamp: Date.now()
       };
 
-      const updatedSession: Session = {
-        ...session,
-        messages: [...session.messages, newUserMessage],
-        updatedAt: Date.now()
-      };
-
-      dispatch({ type: 'UPDATE_SESSION', payload: updatedSession });
+      const messagesWithUser = [...session.messages, newUserMessage];
+      dispatch({
+        type: 'UPDATE_SESSION',
+        payload: { ...session, messages: messagesWithUser, updatedAt: Date.now() }
+      });
 
       try {
-        const assistantMsgId = (Date.now() + 1).toString();
+        const assistantMsgId = `msg_${Date.now()}`;
+
+        console.log('[useAI] Sending to', state.settings.provider, 'model: claude-sonnet-4-5');
+        console.log('[useAI] API key present:', state.settings.provider === 'gemini' ? !!state.settings.geminiApiKey : !!state.apiKey);
+        console.log('[useAI] Messages count:', messagesWithUser.length);
 
         if (state.settings.provider === 'gemini') {
           const geminiKey = state.settings.geminiApiKey;
@@ -53,14 +55,15 @@ export function useAI() {
           }
           await streamGeminiMessage(
             geminiKey,
-            updatedSession.messages,
+            messagesWithUser,
             (text) => {
               dispatch({
                 type: 'UPDATE_SESSION',
                 payload: {
-                  ...updatedSession,
+                  ...session,
+                  updatedAt: Date.now(),
                   messages: [
-                    ...updatedSession.messages,
+                    ...messagesWithUser,
                     { id: assistantMsgId, role: 'assistant', content: text, timestamp: Date.now() }
                   ]
                 }
@@ -71,10 +74,10 @@ export function useAI() {
         } else {
           const client = getAnthropicClient(state.apiKey);
           const stream = await client.messages.create({
-            model: 'claude-3-5-sonnet-20241022',
+            model: 'claude-sonnet-4-5',
             max_tokens: 1024,
             system: SYSTEM_PROMPT,
-            messages: updatedSession.messages.map((msg) => ({
+            messages: messagesWithUser.map((msg) => ({
               role: msg.role,
               content: msg.content,
             })),
@@ -87,18 +90,20 @@ export function useAI() {
             if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
               fullText += event.delta.text;
 
-              const assistantMessage: Message = {
-                id: assistantMsgId,
-                role: 'assistant',
-                content: fullText,
-                timestamp: Date.now()
-              };
-
               dispatch({
                 type: 'UPDATE_SESSION',
                 payload: {
-                  ...updatedSession,
-                  messages: [...updatedSession.messages, assistantMessage]
+                  ...session,
+                  updatedAt: Date.now(),
+                  messages: [
+                    ...messagesWithUser,
+                    {
+                      id: assistantMsgId,
+                      role: 'assistant',
+                      content: fullText,
+                      timestamp: Date.now()
+                    }
+                  ]
                 }
               });
 
@@ -107,16 +112,19 @@ export function useAI() {
           }
         }
       } catch (err: any) {
-        console.error('AI Error:', err);
+        console.error('[useAI] Full error:', err);
+        console.error('[useAI] Error status:', err.status);
+        console.error('[useAI] Error message:', err.message);
         const errorMessage = err.message || 'Failed to get response from AI.';
         setError(errorMessage);
 
         dispatch({
           type: 'UPDATE_SESSION',
           payload: {
-            ...updatedSession,
+            ...session,
+            updatedAt: Date.now(),
             messages: [
-              ...updatedSession.messages,
+              ...messagesWithUser,
               {
                 id: Date.now().toString(),
                 role: 'assistant',
@@ -157,7 +165,7 @@ export function useAI() {
         } else {
           const client = getAnthropicClient(state.apiKey);
           const response = await client.messages.create({
-            model: 'claude-3-5-sonnet-20241022',
+            model: 'claude-sonnet-4-5',
             max_tokens: 2048,
             messages: [
               {

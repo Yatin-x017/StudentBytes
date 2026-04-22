@@ -36,7 +36,7 @@ export const PROVIDERS = [
   {
     id: 'anthropic',
     name: 'Anthropic (Claude)',
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-sonnet-4-5',
     description: 'Most capable model. $5 free credits for new users.',
     link: 'https://console.anthropic.com',
     linkLabel: 'Get Anthropic key →',

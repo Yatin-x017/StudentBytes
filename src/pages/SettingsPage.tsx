@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Key, Globe, Trash2, Eye, EyeOff, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
+import { Key, Globe, Trash2, Eye, EyeOff, CheckCircle2, AlertCircle, ExternalLink, Loader2, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
 import { DEFAULT_LANGUAGES, PROVIDERS } from '@/lib/constants';
+import { getAnthropicClient } from '@/lib/anthropic';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
@@ -17,6 +19,9 @@ const SettingsPage: React.FC = () => {
   const [showKey, setShowKey] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  const [testError, setTestError] = useState('');
 
   const handleSaveKey = () => {
     if (state.settings.provider === 'gemini') {
@@ -31,6 +36,41 @@ const SettingsPage: React.FC = () => {
   const handleLanguageChange = (lang: string) => {
     dispatch({ type: 'UPDATE_SETTINGS', payload: { defaultLanguage: lang as any } });
   };
+
+  async function testAnthropicKey(key: string) {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const client = getAnthropicClient(key);
+      await client.messages.create({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Say hi' }],
+      });
+      setTestResult('success');
+    } catch (err: any) {
+      setTestResult('error');
+      setTestError(err.message || 'Invalid key');
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  async function testGeminiKey(key: string) {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const genAI = new GoogleGenerativeAI(key);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      await model.generateContent('Say hi');
+      setTestResult('success');
+    } catch (err: any) {
+      setTestResult('error');
+      setTestError(err.message || 'Invalid key');
+    } finally {
+      setTesting(false);
+    }
+  }
 
   const handleClearData = () => {
     localStorage.clear();
@@ -155,9 +195,41 @@ const SettingsPage: React.FC = () => {
                 </a>
               </p>
 
-              <Button onClick={handleSaveKey} className="w-full md:w-auto py-6 px-8 rounded-2xl shadow-xl shadow-primary/20 font-black uppercase tracking-widest text-xs">
-                Save {state.settings.provider === 'gemini' ? 'Gemini' : 'Anthropic'} Key
-              </Button>
+              <div className="flex flex-col md:flex-row gap-3">
+                <Button onClick={handleSaveKey} className="flex-1 md:flex-none py-6 px-8 rounded-2xl shadow-xl shadow-primary/20 font-black uppercase tracking-widest text-xs">
+                  Save {state.settings.provider === 'gemini' ? 'Gemini' : 'Anthropic'} Key
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={testing}
+                  onClick={() => state.settings.provider === 'gemini' ? testGeminiKey(geminiApiKey) : testAnthropicKey(apiKey)}
+                  className="flex-1 md:flex-none py-6 px-8 rounded-2xl font-black uppercase tracking-widest text-xs gap-2"
+                >
+                  {testing && <Loader2 size={16} className="animate-spin" />}
+                  {testing ? 'Testing...' : 'Test Connection'}
+                </Button>
+              </div>
+
+              <AnimatePresence>
+                {testResult === 'success' && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs font-bold text-success flex items-center gap-2"
+                  >
+                    <CheckCircle2 size={14} /> Connected — key works!
+                  </motion.p>
+                )}
+                {testResult === 'error' && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs font-bold text-error flex items-center gap-2"
+                  >
+                    <XCircle size={14} /> Failed: {testError}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </Card>

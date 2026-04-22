@@ -31,8 +31,36 @@ export interface QuizQuestion {
   explanation: string;
 }
 
+export interface CanvasCourse {
+  id: number;
+  name: string;
+  course_code: string;
+  workflow_state: string;
+}
+
+export interface CanvasAssignment {
+  id: number;
+  name: string;
+  due_at: string | null;
+  points_possible: number;
+  course_id: number;
+  html_url: string;
+  submission_types: string[];
+  description: string | null;
+}
+
+export interface CanvasAnnouncement {
+  id: number;
+  title: string;
+  message: string;
+  posted_at: string;
+  course_id: number;
+}
+
 export interface AppSettings {
   defaultLanguage: 'Python' | 'JavaScript' | 'Java' | 'C++';
+  provider: 'anthropic' | 'gemini';
+  geminiApiKey: string;
 }
 
 export interface User {

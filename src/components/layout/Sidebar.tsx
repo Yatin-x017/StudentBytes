@@ -27,6 +27,7 @@ export const Sidebar: React.FC = () => {
     { label: 'Study AI', icon: MessageSquare, path: ROUTES.STUDY },
     { label: 'Mastery Quiz', icon: GraduationCap, path: ROUTES.QUIZ },
     { label: 'Knowledge', icon: FileText, path: ROUTES.NOTES },
+    { label: 'Canvas', icon: GraduationCap, path: ROUTES.CANVAS },
   ];
 
   const secondaryNav = [

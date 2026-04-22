@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Key, Globe, Trash2, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Key, Globe, Trash2, Eye, EyeOff, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
-import { DEFAULT_LANGUAGES } from '@/lib/constants';
+import { DEFAULT_LANGUAGES, PROVIDERS } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
@@ -13,12 +13,17 @@ import { cn } from '@/lib/utils';
 const SettingsPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const [apiKey, setApiKey] = useState(state.apiKey);
+  const [geminiApiKey, setGeminiApiKey] = useState(state.settings.geminiApiKey);
   const [showKey, setShowKey] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
   const handleSaveKey = () => {
-    dispatch({ type: 'SET_API_KEY', payload: apiKey });
+    if (state.settings.provider === 'gemini') {
+      dispatch({ type: 'UPDATE_SETTINGS', payload: { geminiApiKey } });
+    } else {
+      dispatch({ type: 'SET_API_KEY', payload: apiKey });
+    }
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
   };
@@ -61,46 +66,99 @@ const SettingsPage: React.FC = () => {
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
               <Key size={20} />
             </div>
-            <h2 className="text-xl font-bold">API Configuration</h2>
-            {state.apiKey && (
-              <Badge variant="success" className="ml-auto">
-                <CheckCircle2 size={12} className="mr-1" /> Connected
-              </Badge>
-            )}
+            <h2 className="text-xl font-bold">Model Provider</h2>
           </div>
 
-          <div className="space-y-4">
-            <div className="relative">
-              <Input
-                label="Anthropic API Key"
-                type={showKey ? 'text' : 'password'}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-ant-api..."
-              />
-              <button
-                onClick={() => setShowKey(!showKey)}
-                className="absolute right-3 top-[34px] text-text-muted hover:text-text transition-colors"
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            {PROVIDERS.map((p) => (
+              <div
+                key={p.id}
+                onClick={() => dispatch({ type: 'UPDATE_SETTINGS', payload: { provider: p.id as any } })}
+                className={cn(
+                  "cursor-pointer p-5 rounded-2xl border-2 transition-all flex flex-col relative overflow-hidden group",
+                  state.settings.provider === p.id
+                    ? 'border-primary bg-primary/5'
+                    : 'border-white/5 bg-surface hover:border-white/10'
+                )}
               >
-                {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+                <div className="flex items-center justify-between mb-3 relative z-10">
+                  <span className="font-bold text-sm tracking-tight">{p.name}</span>
+                  <span className={cn(
+                    "text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter",
+                    p.badge === 'Free'
+                      ? 'bg-success/20 text-success'
+                      : 'bg-amber-500/20 text-amber-400'
+                  )}>{p.badge}</span>
+                </div>
+                <p className="text-xs text-text-muted leading-relaxed mb-4 relative z-10">{p.description}</p>
+                <a
+                  href={p.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1 hover:underline mt-auto relative z-10"
+                  onClick={e => e.stopPropagation()}
+                >
+                  {p.linkLabel}
+                  <ExternalLink size={10} />
+                </a>
+
+                {state.settings.provider === p.id && (
+                  <div className="absolute top-2 right-2 flex justify-end mt-2">
+                    <CheckCircle2 size={16} className="text-primary" />
+                  </div>
+                )}
+
+                {/* Decorative background glow */}
+                {state.settings.provider === p.id && (
+                  <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-primary/20 blur-3xl rounded-full" />
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-6 border-t border-white/5">
+            <div className="flex items-center gap-3 mb-6">
+              <h3 className="font-bold text-sm uppercase tracking-widest text-text-muted">API Configuration</h3>
+              {(state.settings.provider === 'gemini' ? state.settings.geminiApiKey : state.apiKey) && (
+                <Badge variant="success" className="ml-auto">
+                  <CheckCircle2 size={12} className="mr-1" /> Connected
+                </Badge>
+              )}
             </div>
 
-            <p className="text-xs text-text-muted">
-              Your key is stored locally in your browser. Get one at{' '}
-              <a
-                href="https://console.anthropic.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                console.anthropic.com
-              </a>
-            </p>
+            <div className="space-y-4">
+              <div className="relative">
+                <Input
+                  label={state.settings.provider === 'gemini' ? "Google Gemini API Key" : "Anthropic API Key"}
+                  type={showKey ? 'text' : 'password'}
+                  value={state.settings.provider === 'gemini' ? geminiApiKey : apiKey}
+                  onChange={(e) => state.settings.provider === 'gemini' ? setGeminiApiKey(e.target.value) : setApiKey(e.target.value)}
+                  placeholder={state.settings.provider === 'gemini' ? "Paste Gemini key..." : "sk-ant-api..."}
+                />
+                <button
+                  onClick={() => setShowKey(!showKey)}
+                  className="absolute right-3 top-[34px] text-text-muted hover:text-text transition-colors"
+                >
+                  {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
 
-            <Button onClick={handleSaveKey} className="w-full md:w-auto">
-              Save API Key
-            </Button>
+              <p className="text-xs text-text-muted">
+                Your key is stored locally in your browser. Get one at{' '}
+                <a
+                  href={state.settings.provider === 'gemini' ? "https://aistudio.google.com/" : "https://console.anthropic.com/"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  {state.settings.provider === 'gemini' ? "aistudio.google.com" : "console.anthropic.com"}
+                </a>
+              </p>
+
+              <Button onClick={handleSaveKey} className="w-full md:w-auto py-6 px-8 rounded-2xl shadow-xl shadow-primary/20 font-black uppercase tracking-widest text-xs">
+                Save {state.settings.provider === 'gemini' ? 'Gemini' : 'Anthropic'} Key
+              </Button>
+            </div>
           </div>
         </Card>
 

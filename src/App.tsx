@@ -15,6 +15,7 @@ const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
 const AnalyticsPage = lazy(() => import('@/pages/AnalyticsPage'));
 const CommunityPage = lazy(() => import('@/pages/CommunityPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+const CanvasPage = lazy(() => import('@/pages/CanvasPage'));
 
 const App: React.FC = () => {
   return (
@@ -36,6 +37,7 @@ const App: React.FC = () => {
               <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
               <Route path={ROUTES.COMMUNITY} element={<CommunityPage />} />
               <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+              <Route path={ROUTES.CANVAS} element={<CanvasPage />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

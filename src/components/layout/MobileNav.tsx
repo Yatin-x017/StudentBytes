@@ -3,9 +3,9 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   BookOpen,
-  Zap,
   FileText,
-  Settings
+  Settings,
+  GraduationCap
 } from 'lucide-react';
 import { ROUTES } from '@/lib/constants';
 
@@ -13,7 +13,7 @@ export const MobileNav: React.FC = () => {
   const navItems = [
     { to: ROUTES.DASHBOARD, icon: LayoutDashboard, label: 'Home' },
     { to: ROUTES.STUDY, icon: BookOpen, label: 'Study' },
-    { to: ROUTES.QUIZ, icon: Zap, label: 'Quiz' },
+    { to: ROUTES.CANVAS, icon: GraduationCap, label: 'Canvas' },
     { to: ROUTES.NOTES, icon: FileText, label: 'Notes' },
     { to: ROUTES.SETTINGS, icon: Settings, label: 'Settings' },
   ];

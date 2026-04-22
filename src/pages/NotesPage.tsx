@@ -10,6 +10,8 @@ import {
   BookOpen
 } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useDatabase } from '@/hooks/useDatabase';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -19,6 +21,8 @@ import { ROUTES } from '@/lib/constants';
 
 const NotesPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { user } = useAuth();
+  const db = useDatabase(user?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredNotes = state.notes.filter(note =>
@@ -26,8 +30,9 @@ const NotesPage: React.FC = () => {
     note.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const deleteNote = (id: string) => {
+  const deleteNote = async (id: string) => {
     dispatch({ type: 'DELETE_NOTE', payload: id });
+    await db.deleteNote(id);
   };
 
   if (state.notes.length === 0) {

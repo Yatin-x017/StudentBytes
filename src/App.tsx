@@ -4,9 +4,11 @@ import { AppProvider } from '@/context/AppContext';
 import { Layout } from '@/components/layout/Layout';
 import { ROUTES } from '@/lib/constants';
 import { Spinner } from '@/components/ui/Spinner';
+import { useAuth } from '@/hooks/useAuth';
 
 // Pages
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
+const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const StudyPage = lazy(() => import('@/pages/StudyPage'));
 const QuizPage = lazy(() => import('@/pages/QuizPage'));
@@ -21,30 +23,50 @@ const App: React.FC = () => {
   return (
     <AppProvider>
       <BrowserRouter>
-        <Suspense fallback={
-          <div className="h-screen w-full flex items-center justify-center bg-bg">
-            <Spinner size={32} className="text-primary" />
-          </div>
-        }>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<LandingPage />} />
-              <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
-              <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
-              <Route path={ROUTES.STUDY} element={<StudyPage />} />
-              <Route path={ROUTES.QUIZ} element={<QuizPage />} />
-              <Route path={ROUTES.NOTES} element={<NotesPage />} />
-              <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
-              <Route path={ROUTES.COMMUNITY} element={<CommunityPage />} />
-              <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
-              <Route path={ROUTES.CANVAS} element={<CanvasPage />} />
-            </Route>
-
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+        <AppContent />
       </BrowserRouter>
     </AppProvider>
+  );
+};
+
+const AppContent: React.FC = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-bg">
+        <Spinner size={32} className="text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <Suspense fallback={
+      <div className="h-screen w-full flex items-center justify-center bg-bg">
+        <Spinner size={32} className="text-primary" />
+      </div>
+    }>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={
+          user ? <Navigate to={ROUTES.DASHBOARD} replace /> : <LoginPage />
+        } />
+
+        <Route element={user ? <Layout /> : <Navigate to="/login" replace />}>
+          <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+          <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
+          <Route path={ROUTES.STUDY} element={<StudyPage />} />
+          <Route path={ROUTES.QUIZ} element={<QuizPage />} />
+          <Route path={ROUTES.NOTES} element={<NotesPage />} />
+          <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
+          <Route path={ROUTES.COMMUNITY} element={<CommunityPage />} />
+          <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+          <Route path={ROUTES.CANVAS} element={<CanvasPage />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 };
 

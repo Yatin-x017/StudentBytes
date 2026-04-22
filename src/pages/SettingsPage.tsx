@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Key, Globe, Trash2, Eye, EyeOff, CheckCircle2, AlertCircle, ExternalLink, Loader2, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Key, Globe, Trash2, Eye, EyeOff, CheckCircle2, AlertCircle, ExternalLink, Loader2, XCircle, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useDatabase } from '@/hooks/useDatabase';
 import { DEFAULT_LANGUAGES, PROVIDERS } from '@/lib/constants';
 import { getAnthropicClient } from '@/lib/anthropic';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -13,7 +16,10 @@ import { Modal } from '@/components/ui/Modal';
 import { cn } from '@/lib/utils';
 
 const SettingsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { state, dispatch } = useAppContext();
+  const { user, signOut } = useAuth();
+  const db = useDatabase(user?.id || '');
   const [apiKey, setApiKey] = useState(state.apiKey);
   const [geminiApiKey, setGeminiApiKey] = useState(state.settings.geminiApiKey);
   const [showKey, setShowKey] = useState(false);
@@ -23,18 +29,28 @@ const SettingsPage: React.FC = () => {
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
   const [testError, setTestError] = useState('');
 
-  const handleSaveKey = () => {
+  const handleSaveKey = async () => {
     if (state.settings.provider === 'gemini') {
       dispatch({ type: 'UPDATE_SETTINGS', payload: { geminiApiKey } });
     } else {
       dispatch({ type: 'SET_API_KEY', payload: apiKey });
     }
+
+    // Persist settings (excluding keys) to DB
+    await db.upsertSettings({
+      default_language: state.settings.defaultLanguage,
+      provider: state.settings.provider,
+      xp: state.user.xp,
+      level: state.user.level,
+    });
+
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
   };
 
-  const handleLanguageChange = (lang: string) => {
+  const handleLanguageChange = async (lang: string) => {
     dispatch({ type: 'UPDATE_SETTINGS', payload: { defaultLanguage: lang as any } });
+    await db.upsertSettings({ default_language: lang });
   };
 
   async function testAnthropicKey(key: string) {
@@ -280,6 +296,30 @@ const SettingsPage: React.FC = () => {
             onClick={() => setShowClearModal(true)}
           >
             Clear All Data
+          </Button>
+        </Card>
+
+        <Card className="p-8 border-white/5 bg-surface">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-white/5 rounded-lg text-text-muted">
+              <LogOut size={20} />
+            </div>
+            <h2 className="text-xl font-bold">Session</h2>
+          </div>
+
+          <p className="text-sm text-text-muted mb-6 leading-relaxed">
+            Signed in as <span className="text-white font-bold">{user?.email}</span>
+          </p>
+
+          <Button
+            variant="secondary"
+            onClick={async () => {
+              await signOut();
+              navigate('/login');
+            }}
+            className="text-error border-error/20 hover:bg-error/10 hover:border-error/40 transition-all font-bold"
+          >
+            Sign Out
           </Button>
         </Card>
       </section>

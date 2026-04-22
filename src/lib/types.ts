@@ -69,6 +69,44 @@ export interface User {
   level: number;
 }
 
+export interface DbSession {
+  id: string;
+  user_id: string;
+  topic: string;
+  subject_id?: string;
+  messages: Message[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DbNote {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  topic: string;
+  created_at: string;
+}
+
+export interface DbQuizHistory {
+  id: string;
+  user_id: string;
+  topic: string;
+  score: number;
+  total: number;
+  xp_earned: number;
+  created_at: string;
+}
+
+export interface UserSettings {
+  user_id: string;
+  default_language: string;
+  provider: 'anthropic' | 'gemini';
+  xp: number;
+  level: number;
+  updated_at: string;
+}
+
 export interface AppState {
   apiKey: string;
   notes: Note[];
@@ -80,9 +118,12 @@ export interface AppState {
 export type AppAction =
   | { type: 'SET_API_KEY'; payload: string }
   | { type: 'ADD_NOTE'; payload: Note }
+  | { type: 'SET_NOTES'; payload: Note[] }
   | { type: 'DELETE_NOTE'; payload: string }
   | { type: 'ADD_SESSION'; payload: Session }
+  | { type: 'SET_SESSIONS'; payload: Session[] }
   | { type: 'UPDATE_SESSION'; payload: Session }
+  | { type: 'UPSERT_SESSION'; payload: Session }
   | { type: 'DELETE_SESSION'; payload: string }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<AppSettings> }
   | { type: 'UPDATE_USER'; payload: Partial<User> }

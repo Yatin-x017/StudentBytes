@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Clock,
@@ -14,14 +14,48 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { ROUTES } from '@/lib/constants';
+import { useAuth } from '@/hooks/useAuth';
+import { useDatabase } from '@/hooks/useDatabase';
+import { useRealtime } from '@/hooks/useRealtime';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 const DashboardPage: React.FC = () => {
-  const { state } = useAppContext();
+  const { state, dispatch } = useAppContext();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const db = useDatabase(user?.id || '');
+  useRealtime(user?.id);
+
+  useEffect(() => {
+    async function loadData() {
+      if (!user) return;
+      try {
+        const [sessions, notes, settings] = await Promise.all([
+          db.fetchSessions(),
+          db.fetchNotes(),
+          db.fetchSettings(),
+        ]);
+        dispatch({ type: 'SET_SESSIONS', payload: sessions });
+        dispatch({ type: 'SET_NOTES', payload: notes });
+        if (settings) {
+          dispatch({ type: 'UPDATE_SETTINGS', payload: {
+            defaultLanguage: settings.default_language as any,
+            provider: settings.provider,
+          }});
+          dispatch({ type: 'UPDATE_USER', payload: {
+            xp: settings.xp,
+            level: settings.level,
+          }});
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+      }
+    }
+    loadData();
+  }, [user, db, dispatch]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();

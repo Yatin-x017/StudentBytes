@@ -15,6 +15,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
 import { useAI } from '@/hooks/useAI';
+import { useAuth } from '@/hooks/useAuth';
+import { useDatabase } from '@/hooks/useDatabase';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -44,6 +46,8 @@ interface QuizState {
 const QuizPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { generateQuiz, loading } = useAI();
+  const { user } = useAuth();
+  const db = useDatabase(user?.id || '');
   const navigate = useNavigate();
 
   const [topic, setTopic] = useState('');
@@ -111,23 +115,18 @@ const QuizPage: React.FC = () => {
       const score = newAnswers.filter((ans, idx) => ans === quizState.questions[idx].correctIndex).length;
       const xpGained = score * 50;
 
+      const newXp = state.user.xp + xpGained;
       dispatch({
         type: 'UPDATE_USER',
         payload: {
-          xp: state.user.xp + xpGained,
-          level: Math.floor((state.user.xp + xpGained) / 1000) + 1
+          xp: newXp,
+          level: Math.floor(newXp / 1000) + 1
         }
       });
 
       // Save to quiz history
-      const history = JSON.parse(localStorage.getItem('sb_quiz_history') || '[]');
-      history.push({
-        topic: quizState.topic,
-        score,
-        total: quizState.questions.length,
-        date: Date.now()
-      });
-      localStorage.setItem('sb_quiz_history', JSON.stringify(history));
+      db.insertQuizResult(quizState.topic, score, quizState.questions.length, xpGained).catch(console.error);
+      db.upsertSettings({ xp: newXp, level: Math.floor(newXp / 1000) + 1 }).catch(console.error);
 
       setLastXP(xpGained);
       setShowXP(true);

@@ -13,6 +13,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
 import { useAI } from '@/hooks/useAI';
+import { useAuth } from '@/hooks/useAuth';
+import { useDatabase } from '@/hooks/useDatabase';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -25,6 +27,8 @@ import { TopicSelector } from '@/components/study/TopicSelector';
 const StudyPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { streamMessage, loading, error } = useAI();
+  const { user } = useAuth();
+  const db = useDatabase(user?.id || '');
   const location = useLocation();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(() => {
      return localStorage.getItem('sb_last_active_session');
@@ -75,20 +79,28 @@ const StudyPage: React.FC = () => {
     }
   }, [activeSession?.messages, loading]);
 
-  const handleNewSession = () => {
+  // Persist session to DB
+  useEffect(() => {
+    if (!activeSession || !user) return;
+    const timer = setTimeout(() => {
+      db.upsertSession(activeSession).catch(console.error);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [activeSession?.messages.length, activeSession, user, db]);
+
+  const handleNewSession = async () => {
     const id = Date.now().toString();
-    dispatch({
-      type: 'ADD_SESSION',
-      payload: {
-        id,
-        topic: 'New Study Session',
-        subjectId: selectedSubject.toLowerCase(),
-        messages: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }
-    });
+    const session = {
+      id,
+      topic: 'New Study Session',
+      subjectId: selectedSubject.toLowerCase(),
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    dispatch({ type: 'ADD_SESSION', payload: session });
     setActiveSessionId(id);
+    await db.upsertSession(session);
   };
 
   const handleSendMessage = async (message: string) => {
@@ -131,9 +143,10 @@ const StudyPage: React.FC = () => {
     setShowToast(true);
   };
 
-  const deleteSession = (id: string, e: React.MouseEvent) => {
+  const deleteSession = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     dispatch({ type: 'DELETE_SESSION', payload: id });
+    await db.deleteSession(id);
     if (activeSessionId === id) {
       const nextId = state.sessions.find(s => s.id !== id)?.id || null;
       setActiveSessionId(nextId);

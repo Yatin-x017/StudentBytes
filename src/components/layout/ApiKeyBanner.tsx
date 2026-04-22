@@ -10,7 +10,11 @@ export const ApiKeyBanner: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
-  if (state.apiKey) return null;
+  const hasKey = state.settings.provider === 'gemini'
+    ? !!state.settings.geminiApiKey
+    : !!state.apiKey;
+
+  if (hasKey) return null;
 
   return (
     <>
@@ -30,10 +34,14 @@ export const ApiKeyBanner: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    Byte needs an Anthropic API key to respond.
+                    {state.settings.provider === 'gemini'
+                      ? "Byte needs a Gemini API key."
+                      : "Byte needs an Anthropic API key."}
                   </h3>
                   <p className="text-xs text-text-muted mt-0.5 flex items-center gap-1.5">
-                    It's free to get one from the Anthropic Console.
+                    {state.settings.provider === 'gemini'
+                      ? "It's completely free to get one."
+                      : "$5 free credits to start."}
                     <ShieldCheck size={12} className="text-success opacity-50" />
                   </p>
                 </div>
@@ -41,7 +49,7 @@ export const ApiKeyBanner: React.FC = () => {
 
               <div className="flex items-center gap-2">
                 <a
-                  href="https://console.anthropic.com"
+                  href={state.settings.provider === 'gemini' ? "https://aistudio.google.com" : "https://console.anthropic.com"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-white/5 text-text-muted hover:text-white text-xs font-bold transition-all whitespace-nowrap"

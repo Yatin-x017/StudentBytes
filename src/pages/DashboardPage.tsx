@@ -151,9 +151,25 @@ const DashboardPage: React.FC = () => {
             Quick Actions
           </h2>
           <div className="grid grid-cols-1 gap-3">
-            <ActionLink icon={<MessageSquare size={20} />} title="Start Studying" desc="Chat with Byte" onClick={() => navigate(ROUTES.STUDY)} />
-            <ActionLink icon={<GraduationCap size={20} />} title="Take a Quiz" desc="Test your knowledge" onClick={() => navigate(ROUTES.QUIZ)} />
-            <ActionLink icon={<FileText size={20} />} title="Review Notes" desc="View saved summaries" onClick={() => navigate(ROUTES.NOTES)} />
+            <ActionLink
+              icon={<MessageSquare size={20} />}
+              title="Start Studying"
+              desc="Chat with Byte"
+              onClick={() => navigate(ROUTES.STUDY)}
+            />
+            <ActionLink
+              icon={<GraduationCap size={20} />}
+              title="Canvas LMS"
+              desc={localStorage.getItem('sb_canvas_token') ? "View assignments" : "Connect your account"}
+              onClick={() => navigate(ROUTES.CANVAS)}
+              dot={!!localStorage.getItem('sb_canvas_token')}
+            />
+            <ActionLink
+              icon={<FileText size={20} />}
+              title="Review Notes"
+              desc="View saved summaries"
+              onClick={() => navigate(ROUTES.NOTES)}
+            />
           </div>
         </div>
       </div>
@@ -192,18 +208,21 @@ const StatCard = ({ icon, label, value }: { icon: React.ReactNode, label: string
   </Card>
 );
 
-const ActionLink = ({ icon, title, desc, onClick }: { icon: React.ReactNode, title: string, desc: string, onClick: () => void }) => (
+const ActionLink = ({ icon, title, desc, onClick, dot }: { icon: React.ReactNode, title: string, desc: string, onClick: () => void, dot?: boolean }) => (
   <button
     onClick={onClick}
-    className="flex items-center gap-4 p-4 rounded-xl bg-surface hover:bg-surface-2 border border-white/5 transition-all text-left w-full group cursor-pointer"
+    className="flex items-center gap-4 p-4 rounded-xl bg-surface hover:bg-surface-2 border border-white/5 transition-all text-left w-full group cursor-pointer relative overflow-hidden"
   >
     <div className="bg-primary/10 p-3 rounded-lg text-primary group-hover:bg-primary group-hover:text-white transition-all">
       {icon}
     </div>
-    <div>
+    <div className="flex-1">
       <p className="font-bold text-sm">{title}</p>
       <p className="text-xs text-text-muted">{desc}</p>
     </div>
+    {dot && (
+      <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-success rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+    )}
   </button>
 );
 

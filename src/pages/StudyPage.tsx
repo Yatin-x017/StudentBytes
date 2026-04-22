@@ -36,6 +36,16 @@ const StudyPage: React.FC = () => {
 
   const activeSession = state.sessions.find(s => s.id === activeSessionId) || null;
 
+  useEffect(() => {
+    const s = location.state as { prefillMessage?: string } | null;
+    if (s?.prefillMessage && activeSessionId) {
+      // auto-send the prefill message as if the user typed it
+      handleSendMessage(s.prefillMessage);
+      // clear the location state so it doesn't re-fire on re-render
+      window.history.replaceState({}, '');
+    }
+  }, [activeSessionId, location.state]);
+
   // Handle session selection from navigation or restoration
   useEffect(() => {
     if (location.state && (location.state as any).sessionId) {

@@ -24,10 +24,34 @@ export const DEFAULT_LANGUAGES = ['Python', 'JavaScript', 'Java', 'C++'] as cons
 
 export const STORAGE_KEYS = {
   API_KEY: 'sb_api_key',
+  GEMINI_KEY: 'sb_gemini_key',
   NOTES: 'sb_notes',
   SESSIONS: 'sb_sessions',
   SETTINGS: 'sb_settings',
+  CANVAS_TOKEN: 'sb_canvas_token',
+  CANVAS_DOMAIN: 'sb_canvas_domain',
 };
+
+export const PROVIDERS = [
+  {
+    id: 'anthropic',
+    name: 'Anthropic (Claude)',
+    model: 'claude-3-5-sonnet-20241022',
+    description: 'Most capable model. $5 free credits for new users.',
+    link: 'https://console.anthropic.com',
+    linkLabel: 'Get Anthropic key →',
+    badge: 'Paid',
+  },
+  {
+    id: 'gemini',
+    name: 'Google Gemini',
+    model: 'gemini-2.0-flash',
+    description: 'Blazing fast and completely free with rate limits.',
+    link: 'https://aistudio.google.com',
+    linkLabel: 'Get Gemini key →',
+    badge: 'Free',
+  },
+] as const;
 
 export const ROUTES = {
   LANDING: '/',
@@ -39,4 +63,5 @@ export const ROUTES = {
   ANALYTICS: '/analytics',
   COMMUNITY: '/community',
   PROFILE: '/profile',
+  CANVAS: '/canvas',
 };

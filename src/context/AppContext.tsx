@@ -6,7 +6,7 @@ const initialState: AppState = {
   apiKey: localStorage.getItem(STORAGE_KEYS.API_KEY) || '',
   notes: JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTES) || '[]'),
   sessions: JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSIONS) || '[]'),
-  settings: JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS) || '{"defaultLanguage": "Python"}'),
+  settings: JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS) || '{"defaultLanguage": "Python", "provider": "anthropic", "geminiApiKey": ""}'),
   user: JSON.parse(localStorage.getItem('sb_user') || '{"name": "Student", "xp": 0, "level": 1}'),
 };
 
@@ -41,7 +41,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         apiKey: '',
         notes: [],
         sessions: [],
-        settings: { defaultLanguage: 'Python' },
+        settings: { defaultLanguage: 'Python', provider: 'anthropic', geminiApiKey: '' },
         user: { name: 'Student', xp: 0, level: 1 },
       };
     default:

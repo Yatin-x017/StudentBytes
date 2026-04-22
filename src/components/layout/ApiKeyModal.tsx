@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { STORAGE_KEYS } from '@/lib/constants';
 
 interface ApiKeyModalProps {
   isOpen: boolean;
@@ -13,14 +12,21 @@ interface ApiKeyModalProps {
 }
 
 export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const { dispatch } = useAppContext();
+  const { state, dispatch } = useAppContext();
   const [key, setKey] = useState('');
 
-  const handleSave = () => {
-    if (!key.trim()) return;
+  const isGemini = state.settings.provider === 'gemini';
 
-    localStorage.setItem(STORAGE_KEYS.API_KEY, key.trim());
-    dispatch({ type: 'SET_API_KEY', payload: key.trim() });
+  const handleSave = () => {
+    const trimmedKey = key.trim();
+    if (!trimmedKey) return;
+
+    if (isGemini) {
+      dispatch({ type: 'UPDATE_SETTINGS', payload: { geminiApiKey: trimmedKey } });
+    } else {
+      dispatch({ type: 'SET_API_KEY', payload: trimmedKey });
+    }
+
     setKey('');
     onSuccess();
     onClose();
@@ -57,18 +63,20 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onSuc
                 </div>
                 <h2 className="text-2xl font-black mb-2">Activate Byte</h2>
                 <p className="text-text-muted text-sm">
-                  Paste your Anthropic API key below. It's stored locally on your device and never sent to our servers.
+                  Paste your {isGemini ? 'Gemini' : 'Anthropic'} API key below. It's stored locally on your device and never sent to our servers.
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-1">Anthropic API Key</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-1">
+                    {isGemini ? 'Google Gemini API Key' : 'Anthropic API Key'}
+                  </label>
                   <input
                     type="password"
                     value={key}
                     onChange={(e) => setKey(e.target.value)}
-                    placeholder="sk-ant-..."
+                    placeholder={isGemini ? "AIza..." : "sk-ant-..."}
                     className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm font-mono focus:ring-2 focus:ring-primary/50 outline-none transition-all"
                     autoFocus
                   />
@@ -83,7 +91,9 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onSuc
                 </Button>
 
                 <p className="text-[10px] text-center text-text-muted font-medium pt-2">
-                  Don't have a key? You can get one for free at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">console.anthropic.com</a>
+                  Don't have a key? You can get one for free at <a href={isGemini ? "https://aistudio.google.com" : "https://console.anthropic.com"} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    {isGemini ? "aistudio.google.com" : "console.anthropic.com"}
+                  </a>
                 </p>
               </div>
             </Card>

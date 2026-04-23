@@ -18,6 +18,8 @@ const AnalyticsPage = lazy(() => import('@/pages/AnalyticsPage'));
 const CommunityPage = lazy(() => import('@/pages/CommunityPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const CanvasPage = lazy(() => import('@/pages/CanvasPage'));
+const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'));
+const TermsPage = lazy(() => import('@/pages/TermsPage'));
 
 const App: React.FC = () => {
   return (
@@ -48,6 +50,8 @@ const AppContent: React.FC = () => {
     }>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="/login" element={
           user ? <Navigate to={ROUTES.DASHBOARD} replace /> : <LoginPage />
         } />

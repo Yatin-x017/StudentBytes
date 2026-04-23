@@ -244,17 +244,26 @@ const StudyPage: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 gap-2 w-full">
                 <button
-                  onClick={() => handleSendMessage("Explain React 19's new features briefly")}
-                  className="p-3 text-xs font-medium text-left bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all"
+                  onClick={() => handleSendMessage("Explain Dijkstra's Algorithm using a real-world analogy")}
+                  className="p-3 text-xs font-medium text-left bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all flex items-center justify-between group"
                 >
-                  "Explain React 19's new features briefly"
+                  <span>"Explain Dijkstra's Algorithm with an analogy"</span>
+                  <Zap size={14} className="text-amber-500 opacity-0 group-hover:opacity-100 transition-all" />
                 </button>
                 <button
-                  onClick={() => handleSendMessage("How does asynchronous programming work in JS?")}
-                  className="p-3 text-xs font-medium text-left bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all"
+                  onClick={() => handleSendMessage("How do B-Trees optimize database queries?")}
+                  className="p-3 text-xs font-medium text-left bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all flex items-center justify-between group"
                 >
-                  "How does asynchronous programming work in JS?"
+                  <span>"How do B-Trees optimize DB queries?"</span>
+                  <Zap size={14} className="text-amber-500 opacity-0 group-hover:opacity-100 transition-all" />
                 </button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleSendMessage("Give me a crash course on Memory Management in Operating Systems.")}
+                  className="w-full justify-center gap-2 mt-2 py-5 text-xs font-black uppercase tracking-widest"
+                >
+                  <Sparkles size={16} /> Try with example
+                </Button>
               </div>
             </div>
           ) : (

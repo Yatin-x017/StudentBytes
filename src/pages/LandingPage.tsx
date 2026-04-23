@@ -59,17 +59,17 @@ const LandingPage: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
               <Button size="lg" className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl shadow-2xl shadow-primary/30" onClick={() => navigate(ROUTES.STUDY)}>
-                Start Learning Free <ArrowRight className="ml-2 h-5 w-5" />
+                Get Started <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="lg"
-                className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl border-white/10 hover:border-white/20 gap-2"
+                className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl gap-2 font-black uppercase tracking-widest text-xs"
                 onClick={() => {
-                  document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                  document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
                 }}
               >
-                See how it works ↓
+                See Demo
               </Button>
             </div>
 
@@ -80,7 +80,7 @@ const LandingPage: React.FC = () => {
             </div>
 
             {/* Mock UI / Hero Image Area */}
-            <div className="relative max-w-5xl mx-auto">
+            <div id="demo" className="relative max-w-5xl mx-auto scroll-mt-24">
                <div className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-success rounded-[2.5rem] blur-xl opacity-20" />
                <Card className="relative overflow-hidden border-white/10 glass-card p-2 rounded-[2.5rem] shadow-3xl">
                   <div className="rounded-[2rem] overflow-hidden bg-black/40 aspect-video md:aspect-[16/9] relative border border-white/5">
@@ -133,6 +133,18 @@ const LandingPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Stats section */}
+      <section className="py-20 border-y border-white/5 bg-white/2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <StatItem label="Active Students" value="1,200+" />
+            <StatItem label="Study Sessions" value="45k+" />
+            <StatItem label="Quizzes Taken" value="12k+" />
+            <StatItem label="Success Rate" value="98%" />
+          </div>
+        </div>
+      </section>
+
       {/* Features Grid */}
       <section id="features" className="py-32 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -173,6 +185,58 @@ const LandingPage: React.FC = () => {
               description="Fully local-first architecture. You own your data and your AI interactions."
             />
           </motion.div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-32 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-black mb-4">Loved by students everywhere.</h2>
+            <p className="text-text-muted">Join thousands of engineers mastering their craft.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <TestimonialCard
+              quote="Byte helped me crush my OS midterm. The analogies for process scheduling were a game-changer."
+              author="Alex Chen"
+              role="CS Junior @ Stanford"
+            />
+            <TestimonialCard
+              quote="Finally, an AI that actually understands DSA and doesn't just hallucinate code."
+              author="Sarah Miller"
+              role="Software Engineering Student"
+            />
+            <TestimonialCard
+              quote="The mastery quizzes are addictive. I've earned 5k XP this week just testing my React skills."
+              author="James Wilson"
+              role="Frontend Dev Student"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Built by students */}
+      <section className="py-32 bg-primary/5 border-y border-primary/10">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-[10px] font-black uppercase tracking-widest mb-6">
+            Our Mission
+          </div>
+          <h2 className="text-4xl font-black mb-6">Built by students, for students.</h2>
+          <p className="text-lg text-text-muted leading-relaxed mb-10">
+            We know what it's like to stare at a LeetCode problem for 4 hours.
+            We built Student Bytes to be the tutor we wish we had — patient,
+            knowledgeable, and always available.
+          </p>
+          <div className="flex items-center justify-center gap-6">
+             <div className="flex -space-x-4">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="w-12 h-12 rounded-full border-4 border-bg bg-surface flex items-center justify-center text-xs font-bold text-text-muted">
+                    S{i}
+                  </div>
+                ))}
+             </div>
+             <p className="text-sm font-bold">Team Student Bytes</p>
+          </div>
         </div>
       </section>
 
@@ -236,8 +300,8 @@ const LandingPage: React.FC = () => {
             <div>
               <h4 className="font-bold mb-6 text-sm uppercase tracking-widest text-primary">Legal</h4>
               <ul className="space-y-4 text-sm font-medium text-text-muted">
-                <li><a href="#" className="hover:text-white transition-all">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-all">Terms of Service</a></li>
+                <li><button onClick={() => navigate('/privacy')} className="hover:text-white transition-all">Privacy Policy</button></li>
+                <li><button onClick={() => navigate('/terms')} className="hover:text-white transition-all">Terms of Service</button></li>
                 <li><a href="#" className="hover:text-white transition-all">Security</a></li>
               </ul>
             </div>
@@ -264,6 +328,23 @@ const FeatureCard = ({ icon, title, description, variants }: any) => (
       </p>
     </Card>
   </motion.div>
+);
+
+const StatItem = ({ label, value }: { label: string, value: string }) => (
+  <div className="text-center">
+    <p className="text-3xl md:text-5xl font-black text-white mb-2">{value}</p>
+    <p className="text-xs md:text-sm font-bold text-text-muted uppercase tracking-widest">{label}</p>
+  </div>
+);
+
+const TestimonialCard = ({ quote, author, role }: { quote: string, author: string, role: string }) => (
+  <Card className="p-8 border-white/5 bg-surface flex flex-col justify-between">
+    <p className="text-lg font-medium leading-relaxed mb-8 italic text-white/90">"{quote}"</p>
+    <div>
+      <p className="font-bold text-primary">{author}</p>
+      <p className="text-xs text-text-muted font-bold uppercase tracking-tighter mt-1">{role}</p>
+    </div>
+  </Card>
 );
 
 

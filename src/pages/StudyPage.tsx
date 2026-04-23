@@ -13,6 +13,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
 import { useAI } from '@/hooks/useAI';
+import { useAuth } from '@/hooks/useAuth';
+import { useDatabase } from '@/hooks/useDatabase';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -25,6 +27,8 @@ import { TopicSelector } from '@/components/study/TopicSelector';
 const StudyPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { streamMessage, loading, error } = useAI();
+  const { user } = useAuth();
+  const db = useDatabase(user?.id || '');
   const location = useLocation();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(() => {
      return localStorage.getItem('sb_last_active_session');
@@ -75,20 +79,28 @@ const StudyPage: React.FC = () => {
     }
   }, [activeSession?.messages, loading]);
 
-  const handleNewSession = () => {
+  // Persist session to DB
+  useEffect(() => {
+    if (!activeSession || !user) return;
+    const timer = setTimeout(() => {
+      db.upsertSession(activeSession).catch(console.error);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [activeSession?.messages.length, activeSession, user, db]);
+
+  const handleNewSession = async () => {
     const id = Date.now().toString();
-    dispatch({
-      type: 'ADD_SESSION',
-      payload: {
-        id,
-        topic: 'New Study Session',
-        subjectId: selectedSubject.toLowerCase(),
-        messages: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }
-    });
+    const session = {
+      id,
+      topic: 'New Study Session',
+      subjectId: selectedSubject.toLowerCase(),
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    dispatch({ type: 'ADD_SESSION', payload: session });
     setActiveSessionId(id);
+    await db.upsertSession(session);
   };
 
   const handleSendMessage = async (message: string) => {
@@ -131,9 +143,10 @@ const StudyPage: React.FC = () => {
     setShowToast(true);
   };
 
-  const deleteSession = (id: string, e: React.MouseEvent) => {
+  const deleteSession = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     dispatch({ type: 'DELETE_SESSION', payload: id });
+    await db.deleteSession(id);
     if (activeSessionId === id) {
       const nextId = state.sessions.find(s => s.id !== id)?.id || null;
       setActiveSessionId(nextId);
@@ -231,17 +244,26 @@ const StudyPage: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 gap-2 w-full">
                 <button
-                  onClick={() => handleSendMessage("Explain React 19's new features briefly")}
-                  className="p-3 text-xs font-medium text-left bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all"
+                  onClick={() => handleSendMessage("Explain Dijkstra's Algorithm using a real-world analogy")}
+                  className="p-3 text-xs font-medium text-left bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all flex items-center justify-between group"
                 >
-                  "Explain React 19's new features briefly"
+                  <span>"Explain Dijkstra's Algorithm with an analogy"</span>
+                  <Zap size={14} className="text-amber-500 opacity-0 group-hover:opacity-100 transition-all" />
                 </button>
                 <button
-                  onClick={() => handleSendMessage("How does asynchronous programming work in JS?")}
-                  className="p-3 text-xs font-medium text-left bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all"
+                  onClick={() => handleSendMessage("How do B-Trees optimize database queries?")}
+                  className="p-3 text-xs font-medium text-left bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all flex items-center justify-between group"
                 >
-                  "How does asynchronous programming work in JS?"
+                  <span>"How do B-Trees optimize DB queries?"</span>
+                  <Zap size={14} className="text-amber-500 opacity-0 group-hover:opacity-100 transition-all" />
                 </button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleSendMessage("Give me a crash course on Memory Management in Operating Systems.")}
+                  className="w-full justify-center gap-2 mt-2 py-5 text-xs font-black uppercase tracking-widest"
+                >
+                  <Sparkles size={16} /> Try with example
+                </Button>
               </div>
             </div>
           ) : (

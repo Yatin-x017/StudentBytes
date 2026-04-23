@@ -4,10 +4,12 @@ import { Terminal, Menu, X, Zap, ChevronRight, LayoutDashboard, MessageSquare } 
 import { ROUTES } from '@/lib/constants';
 import { Button } from '../ui/Button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 
 export const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
   const location = useLocation();
   const isLanding = location.pathname === '/';
 
@@ -36,9 +38,24 @@ export const Navbar: React.FC = () => {
             <Button variant="ghost" className="font-bold gap-2" onClick={() => navigate(ROUTES.DASHBOARD)}>
               <LayoutDashboard size={18} /> Dashboard
             </Button>
-            <Button className="font-black px-6 rounded-xl shadow-lg shadow-primary/20" onClick={() => navigate(ROUTES.SETTINGS)}>
-              Get Started
-            </Button>
+            {user ? (
+              <div
+                onClick={() => navigate(ROUTES.PROFILE)}
+                className="flex items-center gap-3 pl-2 cursor-pointer group"
+              >
+                <div className="text-right hidden lg:block">
+                  <p className="text-[10px] font-black uppercase tracking-tighter text-text-muted">Signed In</p>
+                  <p className="text-xs font-bold text-white group-hover:text-primary transition-colors">{user.email}</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black shadow-lg shadow-primary/10 group-hover:bg-primary group-hover:text-white transition-all">
+                  {user.email?.charAt(0).toUpperCase()}
+                </div>
+              </div>
+            ) : (
+              <Button className="font-black px-6 rounded-xl shadow-lg shadow-primary/20" onClick={() => navigate(ROUTES.SETTINGS)}>
+                Get Started
+              </Button>
+            )}
           </div>
 
           <div className="md:hidden flex items-center">

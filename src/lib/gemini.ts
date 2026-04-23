@@ -8,12 +8,13 @@ export const getGeminiClient = (apiKey: string) =>
 export async function streamGeminiMessage(
   apiKey: string,
   messages: Message[],
-  onChunk: (text: string) => void
+  onChunk: (text: string) => void,
+  systemPrompt: string = SYSTEM_PROMPT
 ): Promise<string> {
   const genAI = getGeminiClient(apiKey);
   const model = genAI.getGenerativeModel({
     model: 'gemini-2.0-flash',
-    systemInstruction: SYSTEM_PROMPT,
+    systemInstruction: systemPrompt,
   });
 
   // Convert messages to Gemini format

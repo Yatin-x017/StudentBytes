@@ -26,6 +26,7 @@ import { XPToast } from '@/components/ui/XPToast';
 import { CS_SUBJECTS, ROUTES } from '@/lib/constants';
 import { QuizCard } from '@/components/study/QuizCard';
 import { TopicSelector } from '@/components/study/TopicSelector';
+import { calculateNextReview, type SRCard } from '@/lib/spacedRepetition';
 
 interface Question {
   question: string;
@@ -54,6 +55,7 @@ const QuizPage: React.FC = () => {
   const [subject, setSubject] = useState(CS_SUBJECTS[0]);
   const [showXP, setShowXP] = useState(false);
   const [lastXP, setLastXP] = useState(0);
+  const [srCards, setSrCards] = useState<SRCard[]>([]);
 
   // Persisted state
   const [quizState, setQuizState] = useState<QuizState>(() => {
@@ -74,6 +76,16 @@ const QuizPage: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('sb_quiz_state', JSON.stringify(quizState));
   }, [quizState]);
+
+  useEffect(() => {
+    const loadSR = async () => {
+      if (user) {
+        const cards = await db.fetchSRCards();
+        setSrCards(cards);
+      }
+    };
+    loadSR();
+  }, [user, db]);
 
   const handleStartQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,6 +139,21 @@ const QuizPage: React.FC = () => {
       // Save to quiz history
       db.insertQuizResult(quizState.topic, score, quizState.questions.length, xpGained).catch(console.error);
       db.upsertSettings({ xp: newXp, level: Math.floor(newXp / 1000) + 1 }).catch(console.error);
+
+      // Update/Create Spaced Repetition card
+      const existingCard = srCards.find(c => c.topic.toLowerCase() === quizState.topic.toLowerCase());
+      const baseCard = existingCard || {
+        id: `sr_${Date.now()}`,
+        topic: quizState.topic,
+        easeFactor: 2.5,
+        intervalDays: 1,
+        repetitions: 0,
+        nextReviewDate: new Date().toISOString().split('T')[0],
+        lastScore: 0,
+      };
+
+      const updatedCard = calculateNextReview(baseCard, score / quizState.questions.length);
+      db.upsertSRCard(updatedCard).catch(console.error);
 
       setLastXP(xpGained);
       setShowXP(true);

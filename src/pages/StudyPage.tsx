@@ -8,7 +8,9 @@ import {
   Sparkles,
   Zap,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Paperclip,
+  FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
@@ -23,6 +25,7 @@ import { CS_SUBJECTS } from '@/lib/constants';
 import { ChatBubble } from '@/components/study/ChatBubble';
 import { MessageInput } from '@/components/study/MessageInput';
 import { TopicSelector } from '@/components/study/TopicSelector';
+import { processFile } from '@/lib/pdfExtractor';
 
 const StudyPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
@@ -35,6 +38,9 @@ const StudyPage: React.FC = () => {
   });
   const [selectedSubject, setSelectedSubject] = useState(CS_SUBJECTS[0]);
   const [showToast, setShowToast] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -136,11 +142,44 @@ const StudyPage: React.FC = () => {
         id: Date.now().toString(),
         title,
         content,
-        topic: selectedSubject,
+        topic: activeSession?.attachedFile?.name || selectedSubject,
         createdAt: Date.now()
       }
     });
     setShowToast(true);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeSession) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const extracted = await processFile(file);
+
+      // Attach file to current session
+      const updatedSession = {
+        ...activeSession,
+        attachedFile: extracted,
+        topic: file.name.replace(/\.[^/.]+$/, ''), // use filename as topic
+      };
+      dispatch({ type: 'UPDATE_SESSION', payload: updatedSession });
+      await db.upsertSession(updatedSession);
+
+      // Auto-send an opening message
+      await handleSendMessage(
+        `I've uploaded "${file.name}" (${extracted.pageCount} pages).
+         Please give me a brief summary of the key topics covered.`
+      );
+    } catch (err: any) {
+      setUploadError(err.message || 'Failed to process file');
+    } finally {
+      setUploading(false);
+      // Reset input so same file can be re-uploaded
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const deleteSession = async (id: string, e: React.MouseEvent) => {
@@ -221,12 +260,61 @@ const StudyPage: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.txt,.md"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading || !activeSessionId}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5
+                        hover:bg-white/10 border border-white/10 text-xs font-bold
+                        transition-all disabled:opacity-50"
+            >
+              {uploading ? <Spinner size={12} /> : <Paperclip size={14} />}
+              {uploading ? 'Reading...' : 'Upload PDF'}
+            </button>
             <Badge className="text-[10px] border-white/10 font-bold uppercase tracking-tight">
               {selectedSubject}
             </Badge>
           </div>
         </header>
 
+        {activeSession?.attachedFile && (
+          <div className="px-4 py-2 bg-primary/5 border-b border-white/5
+                          flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText size={14} className="text-primary" />
+              <span className="text-xs font-bold text-primary">
+                {activeSession.attachedFile.name}
+              </span>
+              <span className="text-[10px] text-text-muted">
+                {activeSession.attachedFile.pageCount} pages ·
+                {activeSession.attachedFile.sizeKb}KB
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                const updated = { ...activeSession };
+                delete updated.attachedFile;
+                dispatch({ type: 'UPDATE_SESSION', payload: updated });
+                db.upsertSession(updated);
+              }}
+              className="text-[10px] text-text-muted hover:text-error transition-colors"
+            >
+              Remove
+            </button>
+          </div>
+        )}
+
+        {uploadError && (
+          <p className="text-xs text-error px-4 py-2 bg-error/5 border-b border-error/10 flex items-center gap-2">
+            <AlertCircle size={12} /> {uploadError}
+          </p>
+        )}
 
         <div
           className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar bg-gradient-to-b from-transparent to-black/10"

@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { getAnthropicClient, SYSTEM_PROMPT, QUIZ_PROMPT } from '@/lib/anthropic';
+import { getAnthropicClient, SYSTEM_PROMPT, QUIZ_PROMPT, buildSystemPromptWithFile } from '@/lib/anthropic';
 import { streamGeminiMessage, generateGeminiQuiz } from '@/lib/gemini';
+import { truncateForContext } from '@/lib/pdfExtractor';
 import type { Message, QuizQuestion } from '@/lib/types';
 
 export function useAI() {
@@ -42,6 +43,13 @@ export function useAI() {
       try {
         const assistantMsgId = `msg_${Date.now()}`;
 
+        const systemPrompt = session.attachedFile
+          ? buildSystemPromptWithFile(
+              truncateForContext(session.attachedFile.text),
+              session.attachedFile.name
+            )
+          : SYSTEM_PROMPT;
+
         console.log('[useAI] Sending to', state.settings.provider, 'model: claude-sonnet-4-5');
         console.log('[useAI] API key present:', state.settings.provider === 'gemini' ? !!state.settings.geminiApiKey : !!state.apiKey);
         console.log('[useAI] Messages count:', messagesWithUser.length);
@@ -69,14 +77,15 @@ export function useAI() {
                 }
               });
               if (onChunk) onChunk(text);
-            }
+            },
+            systemPrompt
           );
         } else {
           const client = getAnthropicClient(state.apiKey);
           const stream = await client.messages.create({
             model: 'claude-sonnet-4-5',
             max_tokens: 1024,
-            system: SYSTEM_PROMPT,
+            system: systemPrompt,
             messages: messagesWithUser.map((msg) => ({
               role: msg.role,
               content: msg.content,

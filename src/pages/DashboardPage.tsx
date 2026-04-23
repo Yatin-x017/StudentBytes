@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Clock,
@@ -10,13 +10,16 @@ import {
   FileText,
   Zap,
   CheckCircle2,
-  ChevronRight
+  ChevronRight,
+  Brain
 } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
 import { useAppContext } from '@/context/AppContext';
 import { ROUTES } from '@/lib/constants';
 import { useAuth } from '@/hooks/useAuth';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useRealtime } from '@/hooks/useRealtime';
+import { getDueCards, type SRCard } from '@/lib/spacedRepetition';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatDate } from '@/lib/utils';
@@ -27,19 +30,22 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const db = useDatabase(user?.id || '');
+  const [srCards, setSrCards] = useState<SRCard[]>([]);
   useRealtime(user?.id);
 
   useEffect(() => {
     async function loadData() {
       if (!user) return;
       try {
-        const [sessions, notes, settings] = await Promise.all([
+        const [sessions, notes, settings, cards] = await Promise.all([
           db.fetchSessions(),
           db.fetchNotes(),
           db.fetchSettings(),
+          db.fetchSRCards(),
         ]);
         dispatch({ type: 'SET_SESSIONS', payload: sessions });
         dispatch({ type: 'SET_NOTES', payload: notes });
+        setSrCards(cards);
         if (settings) {
           dispatch({ type: 'UPDATE_SETTINGS', payload: {
             defaultLanguage: settings.default_language as any,
@@ -74,6 +80,7 @@ const DashboardPage: React.FC = () => {
     : '0%';
 
   const recentSessions = state.sessions.slice(0, 3);
+  const dueCards = srCards ? getDueCards(srCards) : [];
 
   // Onboarding Checklist
   const hasApiKey = !!state.apiKey;
@@ -135,6 +142,43 @@ const DashboardPage: React.FC = () => {
         <StatCard icon={<BrainCircuit className="text-amber-500" />} label="Topics Studied" value={topicsStudied} />
         <StatCard icon={<TrendingUp className="text-primary" />} label="Quiz Avg" value={quizScoreAvg} />
       </div>
+
+      {dueCards.length > 0 && (
+        <Card className="p-6 border-amber-500/20 bg-amber-500/5 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+             <Brain size={48} className="text-amber-400" />
+          </div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-4">
+              <Brain size={18} className="text-amber-400" />
+              <h3 className="font-black text-sm uppercase tracking-widest text-amber-200">Due for Review</h3>
+              <Badge className="bg-amber-500/20 text-amber-400 text-[10px] border-amber-500/30">
+                {dueCards.length}
+              </Badge>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {dueCards.map(card => (
+                <button
+                  key={card.id}
+                  onClick={() => navigate(ROUTES.QUIZ, { state: { topic: card.topic } })}
+                  className="px-4 py-2 rounded-xl bg-amber-500/10 border
+                            border-amber-500/20 text-amber-300 text-xs font-bold
+                            hover:bg-amber-500/20 hover:border-amber-500/40 transition-all flex items-center gap-2"
+                >
+                  {card.topic}
+                  <ArrowRight size={12} />
+                </button>
+              ))}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {dueCards.length === 0 && srCards.length > 0 && (
+        <div className="text-xs text-success font-bold flex items-center gap-2 px-4 py-2 bg-success/5 border border-success/10 rounded-xl w-fit">
+          <CheckCircle2 size={14} /> All caught up! Next review: {srCards[0]?.nextReviewDate}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">

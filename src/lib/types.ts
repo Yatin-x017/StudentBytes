@@ -14,6 +14,12 @@ export interface Session {
   createdAt: number;
   updatedAt: number;
   subjectId?: string;
+  attachedFile?: {
+    name: string;
+    text: string;
+    pageCount: number;
+    sizeKb: number;
+  };
 }
 
 export interface Note {

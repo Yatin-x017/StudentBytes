@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Session, Note, DbSession, DbNote, UserSettings } from '@/lib/types';
+import type { SRCard } from '@/lib/spacedRepetition';
 
 export function useDatabase(userId: string) {
 
@@ -128,10 +129,47 @@ export function useDatabase(userId: string) {
     if (error) throw error;
   }, [userId]);
 
+  // ── SPACED REPETITION ──
+  const fetchSRCards = useCallback(async (): Promise<SRCard[]> => {
+    if (!userId) return [];
+    const { data, error } = await supabase
+      .from('spaced_repetition')
+      .select('*')
+      .eq('user_id', userId)
+      .order('next_review_date', { ascending: true });
+    if (error) throw error;
+    return data.map(d => ({
+      id: d.id,
+      topic: d.topic,
+      easeFactor: d.ease_factor,
+      intervalDays: d.interval_days,
+      repetitions: d.repetitions,
+      nextReviewDate: d.next_review_date,
+      lastScore: d.last_score,
+    }));
+  }, [userId]);
+
+  const upsertSRCard = useCallback(async (card: SRCard) => {
+    if (!userId) return;
+    const { error } = await supabase.from('spaced_repetition').upsert({
+      id: card.id,
+      user_id: userId,
+      topic: card.topic,
+      ease_factor: card.easeFactor,
+      interval_days: card.intervalDays,
+      repetitions: card.repetitions,
+      next_review_date: card.nextReviewDate,
+      last_score: card.lastScore,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+  }, [userId]);
+
   return {
     fetchSessions, upsertSession, deleteSession,
     fetchNotes, insertNote, deleteNote,
     insertQuizResult, fetchQuizHistory,
     fetchSettings, upsertSettings,
+    fetchSRCards, upsertSRCard,
   };
 }

@@ -1,8 +1,10 @@
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Point worker to CDN — required for pdfjs to work in browser
+// Note: In production, ensure this version matches your installed pdfjs-dist version
+const PDFJS_VERSION = '5.6.205';
 pdfjsLib.GlobalWorkerOptions.workerSrc =
-  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs`;
+  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.mjs`;
 
 export interface ExtractedFile {
   name: string;

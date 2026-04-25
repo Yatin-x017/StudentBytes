@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Key, Globe, Trash2, Eye, EyeOff, CheckCircle2, AlertCircle, ExternalLink, Loader2, XCircle, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import { useDatabase } from '@/hooks/useDatabase';
 import { DEFAULT_LANGUAGES, PROVIDERS } from '@/lib/constants';
 import { getAnthropicClient } from '@/lib/anthropic';

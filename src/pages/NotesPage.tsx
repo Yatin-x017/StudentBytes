@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import { useDatabase } from '@/hooks/useDatabase';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';

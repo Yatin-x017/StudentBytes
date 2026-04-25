@@ -18,7 +18,7 @@ import {
 import { Badge } from '@/components/ui/Badge';
 import { useAppContext } from '@/context/AppContext';
 import { ROUTES } from '@/lib/constants';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useRealtime } from '@/hooks/useRealtime';
 import { getDueCards, type SRCard } from '@/lib/spacedRepetition';

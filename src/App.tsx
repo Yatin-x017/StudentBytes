@@ -4,7 +4,8 @@ import { AppProvider } from '@/context/AppContext';
 import { Layout } from '@/components/layout/Layout';
 import { ROUTES } from '@/lib/constants';
 import { Spinner } from '@/components/ui/Spinner';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
+import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 
 // Pages
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
@@ -51,6 +52,7 @@ const AppContent: React.FC = () => {
       </div>
     }>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path={ROUTES.SHARED_NOTE} element={<SharedNotePage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
@@ -59,17 +61,20 @@ const AppContent: React.FC = () => {
           user ? <Navigate to={ROUTES.DASHBOARD} replace /> : <LoginPage />
         } />
 
-        <Route element={user ? <Layout /> : <Navigate to="/login" replace />}>
-          <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
-          <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
-          <Route path={ROUTES.STUDY} element={<StudyPage />} />
-          <Route path={ROUTES.QUIZ} element={<QuizPage />} />
-          <Route path={ROUTES.NOTES} element={<NotesPage />} />
-          <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
-          <Route path={ROUTES.COMMUNITY} element={<CommunityPage />} />
-          <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
-          <Route path={ROUTES.CANVAS} element={<CanvasPage />} />
-          <Route path={ROUTES.TIMETABLE} element={<TimetablePage />} />
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+            <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
+            <Route path={ROUTES.STUDY} element={<StudyPage />} />
+            <Route path={ROUTES.QUIZ} element={<QuizPage />} />
+            <Route path={ROUTES.NOTES} element={<NotesPage />} />
+            <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
+            <Route path={ROUTES.COMMUNITY} element={<CommunityPage />} />
+            <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+            <Route path={ROUTES.CANVAS} element={<CanvasPage />} />
+            <Route path={ROUTES.TIMETABLE} element={<TimetablePage />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

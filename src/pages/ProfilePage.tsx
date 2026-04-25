@@ -11,16 +11,18 @@ import {
   EyeOff
 } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 
 const ProfilePage: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { profile, signOut } = useAuth();
   const [showKey, setShowKey] = useState(false);
   const [newApiKey, setNewApiKey] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [username, setUsername] = useState(state.user.name);
+  const [username, setUsername] = useState(profile?.full_name || state.user.name);
 
   const handleUpdateApiKey = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,11 +46,19 @@ const ProfilePage: React.FC = () => {
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-success" />
 
         <div className="relative">
-          <div className="w-32 h-32 rounded-3xl bg-gradient-to-tr from-primary to-accent p-1 shadow-2xl shadow-primary/20">
-            <div className="w-full h-full rounded-[20px] bg-black flex items-center justify-center text-4xl font-black">
-              {state.user.name.charAt(0)}
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt={profile.full_name}
+              className="w-32 h-32 rounded-3xl object-cover border-4 border-primary/20 shadow-2xl"
+            />
+          ) : (
+            <div className="w-32 h-32 rounded-3xl bg-gradient-to-tr from-primary to-accent p-1 shadow-2xl shadow-primary/20">
+              <div className="w-full h-full rounded-[20px] bg-black flex items-center justify-center text-4xl font-black">
+                {(profile?.full_name || state.user.name).charAt(0)}
+              </div>
             </div>
-          </div>
+          )}
           <button className="absolute -bottom-2 -right-2 p-2 rounded-xl bg-white text-black hover:bg-primary hover:text-white transition-all shadow-lg">
             <Camera size={18} />
           </button>
@@ -56,11 +66,11 @@ const ProfilePage: React.FC = () => {
 
         <div className="text-center md:text-left flex-1 space-y-3">
           <div className="flex flex-col md:flex-row items-center gap-3">
-            <h1 className="text-3xl font-black">{state.user.name}</h1>
+            <h1 className="text-3xl font-black">{profile?.full_name || state.user.name}</h1>
             <Badge variant="primary" className="bg-primary/20 text-primary border-primary/20 px-3 py-1">Level {state.user.level} Coder</Badge>
           </div>
           <p className="text-text-muted flex items-center justify-center md:justify-start gap-2">
-            <Mail size={16} /> student@university.edu
+            <Mail size={16} /> {profile?.email || 'student@university.edu'}
           </p>
           <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-2">
             <Badge variant="outline" className="border-white/10 text-text-muted">React</Badge>
@@ -71,7 +81,7 @@ const ProfilePage: React.FC = () => {
 
         <div className="flex flex-col gap-2 min-w-[140px]">
           <Button onClick={() => setIsEditing(true)} variant="outline" className="w-full">Edit Profile</Button>
-          <Button variant="ghost" className="w-full text-error hover:bg-error/10">Log Out</Button>
+          <Button onClick={() => signOut()} variant="ghost" className="w-full text-error hover:bg-error/10">Log Out</Button>
         </div>
       </header>
 

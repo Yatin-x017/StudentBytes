@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { Spinner } from '@/components/ui/Spinner';
 
 export const ProtectedRoute: React.FC = () => {
@@ -14,9 +15,10 @@ export const ProtectedRoute: React.FC = () => {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  // If Supabase not configured, allow access without auth
+  if (!isSupabaseConfigured) return <Outlet />;
+
+  if (!user) return <Navigate to="/login" replace />;
 
   return <Outlet />;
 };

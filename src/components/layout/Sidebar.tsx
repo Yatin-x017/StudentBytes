@@ -10,7 +10,8 @@ import {
   TrendingUp,
   Users,
   Zap,
-  ChevronRight
+  ChevronRight,
+  CalendarDays
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ROUTES } from '@/lib/constants';
@@ -28,6 +29,7 @@ export const Sidebar: React.FC = () => {
     { label: 'Mastery Quiz', icon: GraduationCap, path: ROUTES.QUIZ },
     { label: 'Knowledge', icon: FileText, path: ROUTES.NOTES },
     { label: 'Canvas', icon: GraduationCap, path: ROUTES.CANVAS },
+    { label: 'Timetable', icon: CalendarDays, path: ROUTES.TIMETABLE },
   ];
 
   const secondaryNav = [

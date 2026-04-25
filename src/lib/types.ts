@@ -113,6 +113,17 @@ export interface UserSettings {
   updated_at: string;
 }
 
+export interface ClassSlot {
+  id: string;
+  subject: string;
+  instructor?: string;
+  room?: string;
+  day: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0=Sun, 1=Mon...
+  startTime: string; // "09:00"
+  endTime: string;   // "10:30"
+  color: string;     // tailwind color class e.g. "bg-primary/20 text-primary"
+}
+
 export interface AppState {
   apiKey: string;
   notes: Note[];

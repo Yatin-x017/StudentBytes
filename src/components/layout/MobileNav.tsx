@@ -4,8 +4,8 @@ import {
   LayoutDashboard,
   BookOpen,
   FileText,
-  Settings,
-  GraduationCap
+  GraduationCap,
+  CalendarDays
 } from 'lucide-react';
 import { ROUTES } from '@/lib/constants';
 
@@ -14,8 +14,8 @@ export const MobileNav: React.FC = () => {
     { to: ROUTES.DASHBOARD, icon: LayoutDashboard, label: 'Home' },
     { to: ROUTES.STUDY, icon: BookOpen, label: 'Study' },
     { to: ROUTES.CANVAS, icon: GraduationCap, label: 'Canvas' },
+    { to: ROUTES.TIMETABLE, icon: CalendarDays, label: 'Timetable' },
     { to: ROUTES.NOTES, icon: FileText, label: 'Notes' },
-    { to: ROUTES.SETTINGS, icon: Settings, label: 'Settings' },
   ];
 
   return (

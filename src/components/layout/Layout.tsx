@@ -6,10 +6,13 @@ import { MobileNav } from './MobileNav';
 import { ApiKeyBanner } from './ApiKeyBanner';
 import { ROUTES } from '@/lib/constants';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { CommandPalette } from '../ui/CommandPalette';
 
 export const Layout: React.FC = () => {
   const location = useLocation();
   const isLanding = location.pathname === ROUTES.LANDING;
+  useKeyboardShortcuts();
 
   if (isLanding) {
     return (
@@ -34,6 +37,7 @@ export const Layout: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-bg text-text font-sans selection:bg-primary/30">
+      <CommandPalette />
       <Sidebar />
       <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden relative">
         {/* Animated background element */}

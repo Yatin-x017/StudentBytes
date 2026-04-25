@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   Clock,
   ArrowRight,
@@ -11,7 +12,8 @@ import {
   Zap,
   CheckCircle2,
   ChevronRight,
-  Brain
+  Brain,
+  CalendarDays
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { useAppContext } from '@/context/AppContext';
@@ -20,6 +22,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useRealtime } from '@/hooks/useRealtime';
 import { getDueCards, type SRCard } from '@/lib/spacedRepetition';
+import { getTodayClasses, getCurrentClass } from './TimetablePage';
+import type { ClassSlot } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatDate } from '@/lib/utils';
@@ -31,7 +35,14 @@ const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const db = useDatabase(user?.id || '');
   const [srCards, setSrCards] = useState<SRCard[]>([]);
+  const [slots] = useState<ClassSlot[]>(() => {
+    const saved = localStorage.getItem('sb_timetable');
+    return saved ? JSON.parse(saved) : [];
+  });
   useRealtime(user?.id);
+
+  const todayClasses = getTodayClasses(slots);
+  const currentClass = getCurrentClass(slots);
 
   useEffect(() => {
     async function loadData() {
@@ -182,6 +193,92 @@ const DashboardPage: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
+          {/* Current class banner */}
+          {currentClass && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={cn(
+                "p-6 rounded-[2rem] border flex items-center justify-between gap-6 shadow-xl relative overflow-hidden group",
+                currentClass.color
+              )}
+            >
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
+                    Class In Progress
+                  </p>
+                </div>
+                <h3 className="text-2xl font-black mb-1">{currentClass.subject}</h3>
+                <p className="text-sm font-bold opacity-80">
+                  {currentClass.startTime} – {currentClass.endTime}
+                  {currentClass.room ? ` · ${currentClass.room}` : ''}
+                </p>
+              </div>
+
+              <Button
+                onClick={() => navigate(ROUTES.STUDY, {
+                  state: { prefillMessage: `Help me understand today's ${currentClass.subject} class. Give me a brief overview of typical topics in this subject.` }
+                })}
+                className="bg-white text-black hover:bg-white/90 border-none px-6 py-4 rounded-xl font-black text-xs uppercase tracking-widest relative z-10"
+              >
+                Study with Byte <ArrowRight size={14} className="ml-2" />
+              </Button>
+
+              <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
+                <CalendarDays size={120} />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Today's schedule card */}
+          {todayClasses.length > 0 && !currentClass && (
+             <Card className="p-6 border-white/5 bg-surface-2/30">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-sm font-black flex items-center gap-2 uppercase tracking-widest text-text-muted">
+                    <CalendarDays size={16} className="text-primary" />
+                    Today's Schedule
+                  </h2>
+                  <button
+                    onClick={() => navigate(ROUTES.TIMETABLE)}
+                    className="text-[10px] text-primary hover:underline font-bold uppercase tracking-tighter"
+                  >
+                    View Timetable →
+                  </button>
+                </div>
+                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                   {todayClasses.map(slot => {
+                      const now = new Date();
+                      const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                      const isDone = slot.endTime < timeStr;
+                      return (
+                        <div
+                          key={slot.id}
+                          className={cn(
+                            "flex-shrink-0 w-48 p-4 rounded-2xl border transition-all",
+                            isDone ? "bg-white/2 border-white/5 opacity-40" : "bg-surface border-white/10"
+                          )}
+                        >
+                           <p className="text-[10px] font-bold text-text-muted mb-1">{slot.startTime}</p>
+                           <p className="font-bold truncate">{slot.subject}</p>
+                        </div>
+                      )
+                   })}
+                </div>
+             </Card>
+          )}
+
+          {todayClasses.length === 0 && slots.length === 0 && (
+            <button
+              onClick={() => navigate(ROUTES.TIMETABLE)}
+              className="group p-6 rounded-[2rem] border border-dashed border-white/10 text-text-muted hover:border-white/30 hover:text-white transition-all text-sm w-full flex flex-col items-center gap-3 bg-white/2"
+            >
+              <CalendarDays size={32} className="opacity-20 group-hover:opacity-100 transition-opacity" />
+              <span className="font-bold uppercase tracking-widest text-xs">Add your class schedule</span>
+            </button>
+          )}
+
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Clock size={20} className="text-primary" />

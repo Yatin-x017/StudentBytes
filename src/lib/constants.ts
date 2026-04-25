@@ -65,4 +65,17 @@ export const ROUTES = {
   PROFILE: '/profile',
   CANVAS: '/canvas',
   LOGIN: '/login',
+  SHARED_NOTE: '/shared',
+  TIMETABLE: '/timetable',
 };
+
+export const CLASS_COLORS = [
+  'bg-primary/20 text-primary border-primary/30',
+  'bg-success/20 text-success border-success/30',
+  'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  'bg-rose-500/20 text-rose-400 border-rose-500/30',
+  'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+  'bg-violet-500/20 text-violet-400 border-violet-500/30',
+];
+
+export const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

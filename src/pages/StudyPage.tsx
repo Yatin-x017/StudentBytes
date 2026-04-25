@@ -10,7 +10,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Paperclip,
-  FileText
+  FileText,
+  HardDriveDownload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
@@ -26,6 +27,7 @@ import { ChatBubble } from '@/components/study/ChatBubble';
 import { MessageInput } from '@/components/study/MessageInput';
 import { TopicSelector } from '@/components/study/TopicSelector';
 import { processFile } from '@/lib/pdfExtractor';
+import { isGoogleConfigured, initGoogleDrive, importFileFromDrive } from '@/lib/googleDrive';
 
 const StudyPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
@@ -39,6 +41,7 @@ const StudyPage: React.FC = () => {
   const [selectedSubject, setSelectedSubject] = useState(CS_SUBJECTS[0]);
   const [showToast, setShowToast] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [splitTab, setSplitTab] = useState<'doc' | 'chat'>('chat');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,6 +80,12 @@ const StudyPage: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [showToast]);
+
+  useEffect(() => {
+    if (isGoogleConfigured()) {
+      initGoogleDrive().catch(console.error);
+    }
+  }, []);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -190,6 +199,40 @@ const StudyPage: React.FC = () => {
     }
   };
 
+  const handleImportFromDrive = async () => {
+    if (!activeSession) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const { name, content } = await importFileFromDrive();
+      if (!content.trim()) throw new Error('File appears to be empty.');
+
+      const updatedSession = {
+        ...activeSession,
+        attachedFile: {
+          name,
+          text: content,
+          pageCount: 1,
+          sizeKb: Math.round(content.length / 1024),
+        },
+        topic: name.replace(/\.[^/.]+$/, ''),
+      };
+      dispatch({ type: 'UPDATE_SESSION', payload: updatedSession });
+      if (user?.id) {
+        await db.upsertSession(updatedSession);
+      }
+      await handleSendMessage(
+        `I've imported "${name}" from Google Drive. Please summarize the key topics.`
+      );
+    } catch (err: any) {
+      if (err.message !== 'cancelled') {
+        setUploadError(err.message || 'Failed to import from Drive');
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const deleteSession = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     dispatch({ type: 'DELETE_SESSION', payload: id });
@@ -204,59 +247,9 @@ const StudyPage: React.FC = () => {
     }
   };
 
-  return (
-    <div className="flex h-[calc(100vh-160px)] lg:h-[calc(100vh-140px)] gap-6 animate-fade-in overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-72 flex flex-col gap-4 hidden lg:flex">
-        <Button onClick={handleNewSession} className="w-full justify-start gap-2 py-6 text-base shadow-lg shadow-primary/20">
-          <Plus size={20} /> New Byte
-        </Button>
-
-        <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-          <div className="flex items-center gap-2 px-2 py-2 text-xs font-bold text-text-muted uppercase tracking-widest">
-            <History size={14} /> Recent Bytes
-          </div>
-
-          {state.sessions.length === 0 ? (
-            <div className="px-4 py-8 text-center bg-surface rounded-2xl border border-dashed border-white/5">
-              <p className="text-xs text-text-muted">No sessions yet. Ask Byte anything!</p>
-            </div>
-          ) : (
-            state.sessions.map((session) => (
-              <div
-                key={session.id}
-                onClick={() => setActiveSessionId(session.id)}
-                className={`
-                  group relative flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all border
-                  ${activeSessionId === session.id
-                    ? 'bg-primary/10 border-primary/20 text-white shadow-sm'
-                    : 'bg-surface border-transparent hover:border-white/10 text-text-muted hover:text-white'}
-                `}
-              >
-                <MessageSquare size={16} className={activeSessionId === session.id ? 'text-primary' : 'text-text-muted'} />
-                <span className="text-sm font-medium truncate flex-1">{session.topic}</span>
-                <button
-                  onClick={(e) => deleteSession(session.id, e)}
-                  className="opacity-0 group-hover:opacity-100 p-1 hover:text-error transition-all"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-
-        <Card className="p-4 border-white/5 bg-gradient-to-br from-surface to-surface/50">
-          <TopicSelector
-            selectedTopic={selectedSubject}
-            onSelect={setSelectedSubject}
-          />
-        </Card>
-      </aside>
-
-      {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col glass-card border-white/5 overflow-hidden rounded-3xl relative">
-        <header className="p-4 border-b border-white/5 flex items-center justify-between bg-white/2 backdrop-blur-md">
+  const renderChat = (hideHeaderOnMobile = false) => (
+    <>
+        <header className={`p-4 border-b border-white/5 flex items-center justify-between bg-white/2 backdrop-blur-md ${hideHeaderOnMobile ? 'hidden lg:flex' : 'flex'}`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-black shadow-lg shadow-primary/20">
               B
@@ -287,13 +280,26 @@ const StudyPage: React.FC = () => {
               {uploading ? <Spinner size={12} /> : <Paperclip size={14} />}
               {uploading ? 'Reading...' : 'Upload PDF'}
             </button>
+
+            {isGoogleConfigured() && (
+              <button
+                onClick={handleImportFromDrive}
+                disabled={uploading || !activeSessionId}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5
+                          hover:bg-white/10 border border-white/10 text-xs font-bold
+                          transition-all disabled:opacity-50"
+              >
+                <HardDriveDownload size={14} />
+                From Drive
+              </button>
+            )}
             <Badge className="text-[10px] border-white/10 font-bold uppercase tracking-tight">
               {selectedSubject}
             </Badge>
           </div>
         </header>
 
-        {activeSession?.attachedFile && (
+        {activeSession?.attachedFile && !hideHeaderOnMobile && (
           <div className="px-4 py-2 bg-primary/5 border-b border-white/5
                           flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -451,6 +457,156 @@ const StudyPage: React.FC = () => {
             <Zap size={10} className="text-amber-500" /> Byte is here to help, but always double-check important code.
           </p>
         </footer>
+    </>
+  );
+
+  return (
+    <div className="flex h-[calc(100vh-160px)] lg:h-[calc(100vh-140px)] gap-6 animate-fade-in overflow-hidden">
+      {/* Sidebar */}
+      <aside className="w-72 flex flex-col gap-4 hidden lg:flex">
+        <Button onClick={handleNewSession} className="w-full justify-start gap-2 py-6 text-base shadow-lg shadow-primary/20">
+          <Plus size={20} /> New Byte
+        </Button>
+
+        <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+          <div className="flex items-center gap-2 px-2 py-2 text-xs font-bold text-text-muted uppercase tracking-widest">
+            <History size={14} /> Recent Bytes
+          </div>
+
+          {state.sessions.length === 0 ? (
+            <div className="px-4 py-8 text-center bg-surface rounded-2xl border border-dashed border-white/5">
+              <p className="text-xs text-text-muted">No sessions yet. Ask Byte anything!</p>
+            </div>
+          ) : (
+            state.sessions.map((session) => (
+              <div
+                key={session.id}
+                onClick={() => setActiveSessionId(session.id)}
+                className={`
+                  group relative flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all border
+                  ${activeSessionId === session.id
+                    ? 'bg-primary/10 border-primary/20 text-white shadow-sm'
+                    : 'bg-surface border-transparent hover:border-white/10 text-text-muted hover:text-white'}
+                `}
+              >
+                <MessageSquare size={16} className={activeSessionId === session.id ? 'text-primary' : 'text-text-muted'} />
+                <span className="text-sm font-medium truncate flex-1">{session.topic}</span>
+                <button
+                  onClick={(e) => deleteSession(session.id, e)}
+                  className="opacity-0 group-hover:opacity-100 p-1 hover:text-error transition-all"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        <Card className="p-4 border-white/5 bg-gradient-to-br from-surface to-surface/50">
+          <TopicSelector
+            selectedTopic={selectedSubject}
+            onSelect={setSelectedSubject}
+          />
+        </Card>
+      </aside>
+
+      {/* Main Chat Area */}
+      <main className="flex-1 flex flex-col glass-card border-white/5 overflow-hidden rounded-3xl relative">
+        {activeSession?.attachedFile ? (
+          <>
+            {/* Desktop split */}
+            <div className="hidden lg:grid lg:grid-cols-2 gap-0 h-full overflow-hidden">
+              {/* Left: Document panel */}
+              <div className="border-r border-white/5 overflow-y-auto p-6 space-y-4 bg-black/20">
+                <div className="flex items-center justify-between mb-4 sticky top-0 bg-bg/80 backdrop-blur-md py-2 z-10">
+                  <div className="flex items-center gap-2">
+                    <FileText size={16} className="text-primary" />
+                    <span className="font-bold text-sm truncate max-w-[200px]">
+                      {activeSession.attachedFile.name}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const updated = { ...activeSession };
+                      delete updated.attachedFile;
+                      dispatch({ type: 'UPDATE_SESSION', payload: updated });
+                      if (user?.id) db.upsertSession(updated);
+                    }}
+                    className="text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-error transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="prose prose-invert prose-sm max-w-none text-xs leading-relaxed text-text-muted whitespace-pre-wrap">
+                  {activeSession.attachedFile.text.slice(0, 12000)}
+                  {activeSession.attachedFile.text.length > 12000 && (
+                    <p className="text-text-muted text-[10px] mt-4 font-bold">
+                      [Showing first 12,000 characters. Full document sent to Byte.]
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Right: Chat panel */}
+              <div className="flex flex-col h-full overflow-hidden">
+                {renderChat()}
+              </div>
+            </div>
+
+            {/* Mobile tabs */}
+            <div className="lg:hidden flex flex-col h-full overflow-hidden">
+              <div className="flex border-b border-white/5">
+                <button
+                  onClick={() => setSplitTab('doc')}
+                  className={`flex-1 py-4 text-xs font-black uppercase tracking-widest transition-all ${
+                    splitTab === 'doc'
+                      ? 'text-white bg-white/5'
+                      : 'text-text-muted hover:text-white'
+                  }`}
+                >
+                  <FileText size={14} className="inline mr-2" />
+                  Document
+                </button>
+                <button
+                  onClick={() => setSplitTab('chat')}
+                  className={`flex-1 py-4 text-xs font-black uppercase tracking-widest transition-all ${
+                    splitTab === 'chat'
+                      ? 'text-white bg-white/5'
+                      : 'text-text-muted hover:text-white'
+                  }`}
+                >
+                  <MessageSquare size={14} className="inline mr-2" />
+                  Chat
+                </button>
+              </div>
+              {splitTab === 'doc' ? (
+                <div className="overflow-y-auto p-4 text-xs text-text-muted whitespace-pre-wrap leading-relaxed bg-black/20 flex-1">
+                  <div className="mb-4 flex items-center justify-between border-b border-white/5 pb-2">
+                    <span className="font-bold text-primary truncate pr-4">{activeSession.attachedFile.name}</span>
+                    <button
+                      onClick={() => {
+                        const updated = { ...activeSession };
+                        delete updated.attachedFile;
+                        dispatch({ type: 'UPDATE_SESSION', payload: updated });
+                        if (user?.id) db.upsertSession(updated);
+                      }}
+                      className="text-[10px] font-black text-error whitespace-nowrap"
+                    >
+                      REMOVE
+                    </button>
+                  </div>
+                  {activeSession.attachedFile.text.slice(0, 12000)}
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  {renderChat(true)}
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          renderChat()
+        )}
       </main>
     </div>
   );

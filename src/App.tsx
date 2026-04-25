@@ -18,8 +18,10 @@ const AnalyticsPage = lazy(() => import('@/pages/AnalyticsPage'));
 const CommunityPage = lazy(() => import('@/pages/CommunityPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const CanvasPage = lazy(() => import('@/pages/CanvasPage'));
+const TimetablePage = lazy(() => import('@/pages/TimetablePage'));
 const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'));
 const TermsPage = lazy(() => import('@/pages/TermsPage'));
+const SharedNotePage = lazy(() => import('@/pages/SharedNotePage'));
 
 const App: React.FC = () => {
   return (
@@ -50,6 +52,7 @@ const AppContent: React.FC = () => {
     }>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path={ROUTES.SHARED_NOTE} element={<SharedNotePage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/login" element={
@@ -66,6 +69,7 @@ const AppContent: React.FC = () => {
           <Route path={ROUTES.COMMUNITY} element={<CommunityPage />} />
           <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
           <Route path={ROUTES.CANVAS} element={<CanvasPage />} />
+          <Route path={ROUTES.TIMETABLE} element={<TimetablePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

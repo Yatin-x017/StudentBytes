@@ -79,7 +79,7 @@ const QuizPage: React.FC = () => {
 
   useEffect(() => {
     const loadSR = async () => {
-      if (user) {
+      if (user?.id) {
         const cards = await db.fetchSRCards();
         setSrCards(cards);
       }
@@ -137,8 +137,10 @@ const QuizPage: React.FC = () => {
       });
 
       // Save to quiz history
-      db.insertQuizResult(quizState.topic, score, quizState.questions.length, xpGained).catch(console.error);
-      db.upsertSettings({ xp: newXp, level: Math.floor(newXp / 1000) + 1 }).catch(console.error);
+      if (user?.id) {
+        db.insertQuizResult(quizState.topic, score, quizState.questions.length, xpGained).catch(console.error);
+        db.upsertSettings({ xp: newXp, level: Math.floor(newXp / 1000) + 1 }).catch(console.error);
+      }
 
       // Update/Create Spaced Repetition card
       const existingCard = srCards.find(c => c.topic.toLowerCase() === quizState.topic.toLowerCase());
@@ -153,7 +155,9 @@ const QuizPage: React.FC = () => {
       };
 
       const updatedCard = calculateNextReview(baseCard, score / quizState.questions.length);
-      db.upsertSRCard(updatedCard).catch(console.error);
+      if (user?.id) {
+        db.upsertSRCard(updatedCard).catch(console.error);
+      }
 
       setLastXP(xpGained);
       setShowXP(true);

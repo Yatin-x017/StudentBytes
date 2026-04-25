@@ -36,13 +36,15 @@ const SettingsPage: React.FC = () => {
       dispatch({ type: 'SET_API_KEY', payload: apiKey });
     }
 
-    // Persist settings (excluding keys) to DB
-    await db.upsertSettings({
-      default_language: state.settings.defaultLanguage,
-      provider: state.settings.provider,
-      xp: state.user.xp,
-      level: state.user.level,
-    });
+    // Only sync to DB if user is authenticated
+    if (user?.id) {
+      await db.upsertSettings({
+        default_language: state.settings.defaultLanguage,
+        provider: state.settings.provider,
+        xp: state.user.xp,
+        level: state.user.level,
+      });
+    }
 
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
@@ -50,7 +52,9 @@ const SettingsPage: React.FC = () => {
 
   const handleLanguageChange = async (lang: string) => {
     dispatch({ type: 'UPDATE_SETTINGS', payload: { defaultLanguage: lang as any } });
-    await db.upsertSettings({ default_language: lang });
+    if (user?.id) {
+      await db.upsertSettings({ default_language: lang });
+    }
   };
 
   async function testAnthropicKey(key: string) {
@@ -77,7 +81,7 @@ const SettingsPage: React.FC = () => {
     setTestResult(null);
     try {
       const genAI = new GoogleGenerativeAI(key);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       await model.generateContent('Say hi');
       setTestResult('success');
     } catch (err: any) {

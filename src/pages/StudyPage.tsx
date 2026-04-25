@@ -87,7 +87,7 @@ const StudyPage: React.FC = () => {
 
   // Persist session to DB
   useEffect(() => {
-    if (!activeSession || !user) return;
+    if (!activeSession || !user?.id) return;
     const timer = setTimeout(() => {
       db.upsertSession(activeSession).catch(console.error);
     }, 1000);
@@ -106,7 +106,9 @@ const StudyPage: React.FC = () => {
     };
     dispatch({ type: 'ADD_SESSION', payload: session });
     setActiveSessionId(id);
-    await db.upsertSession(session);
+    if (user?.id) {
+      await db.upsertSession(session);
+    }
   };
 
   const handleSendMessage = async (message: string) => {
@@ -134,18 +136,22 @@ const StudyPage: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSaveNote = (content: string) => {
+  const handleSaveNote = async (content: string) => {
     const title = content.split(' ').slice(0, 6).join(' ') + '...';
+    const note = {
+      id: Date.now().toString(),
+      title,
+      content,
+      topic: activeSession?.attachedFile?.name || selectedSubject,
+      createdAt: Date.now()
+    };
     dispatch({
       type: 'ADD_NOTE',
-      payload: {
-        id: Date.now().toString(),
-        title,
-        content,
-        topic: activeSession?.attachedFile?.name || selectedSubject,
-        createdAt: Date.now()
-      }
+      payload: note
     });
+    if (user?.id) {
+      await db.insertNote(note);
+    }
     setShowToast(true);
   };
 
@@ -166,7 +172,9 @@ const StudyPage: React.FC = () => {
         topic: file.name.replace(/\.[^/.]+$/, ''), // use filename as topic
       };
       dispatch({ type: 'UPDATE_SESSION', payload: updatedSession });
-      await db.upsertSession(updatedSession);
+      if (user?.id) {
+        await db.upsertSession(updatedSession);
+      }
 
       // Auto-send an opening message
       await handleSendMessage(
@@ -185,7 +193,9 @@ const StudyPage: React.FC = () => {
   const deleteSession = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     dispatch({ type: 'DELETE_SESSION', payload: id });
-    await db.deleteSession(id);
+    if (user?.id) {
+      await db.deleteSession(id);
+    }
     if (activeSessionId === id) {
       const nextId = state.sessions.find(s => s.id !== id)?.id || null;
       setActiveSessionId(nextId);
@@ -301,7 +311,9 @@ const StudyPage: React.FC = () => {
                 const updated = { ...activeSession };
                 delete updated.attachedFile;
                 dispatch({ type: 'UPDATE_SESSION', payload: updated });
-                db.upsertSession(updated);
+                if (user?.id) {
+                  db.upsertSession(updated);
+                }
               }}
               className="text-[10px] text-text-muted hover:text-error transition-colors"
             >

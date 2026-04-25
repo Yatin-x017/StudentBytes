@@ -35,7 +35,7 @@ const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     async function loadData() {
-      if (!user) return;
+      if (!user?.id) return;
       try {
         const [sessions, notes, settings, cards] = await Promise.all([
           db.fetchSessions(),

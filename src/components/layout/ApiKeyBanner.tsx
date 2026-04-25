@@ -10,9 +10,9 @@ export const ApiKeyBanner: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
-  const hasKey = state.settings.provider === 'gemini'
-    ? !!state.settings.geminiApiKey
-    : !!state.apiKey;
+  const provider = state.settings?.provider || 'anthropic';
+  const geminiKey = state.settings?.geminiApiKey || '';
+  const hasKey = provider === 'gemini' ? !!geminiKey : !!state.apiKey;
 
   if (hasKey) return null;
 
@@ -34,14 +34,14 @@ export const ApiKeyBanner: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    {state.settings.provider === 'gemini'
+                    {provider === 'gemini'
                       ? "Byte needs a Gemini API key."
                       : "Byte needs an Anthropic API key."}
                   </h3>
                   <p className="text-xs text-text-muted mt-0.5 flex items-center gap-1.5">
-                    {state.settings.provider === 'gemini'
-                      ? "It's completely free to get one."
-                      : "$5 free credits to start."}
+                    {provider === 'gemini'
+                      ? "Get one free at aistudio.google.com."
+                      : "Byte needs an Anthropic API key to respond."}
                     <ShieldCheck size={12} className="text-success opacity-50" />
                   </p>
                 </div>
@@ -49,7 +49,7 @@ export const ApiKeyBanner: React.FC = () => {
 
               <div className="flex items-center gap-2">
                 <a
-                  href={state.settings.provider === 'gemini' ? "https://aistudio.google.com" : "https://console.anthropic.com"}
+                  href={provider === 'gemini' ? "https://aistudio.google.com" : "https://console.anthropic.com"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-white/5 text-text-muted hover:text-white text-xs font-bold transition-all whitespace-nowrap"

@@ -4,10 +4,16 @@ import { STORAGE_KEYS } from '@/lib/constants';
 
 const initialState: AppState = {
   apiKey: localStorage.getItem(STORAGE_KEYS.API_KEY) || '',
-  notes: [],
-  sessions: [],
-  settings: { defaultLanguage: 'Python', provider: 'anthropic', geminiApiKey: '' },
-  user: { name: 'Student', xp: 0, level: 1 },
+  notes: JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTES) || '[]'),
+  sessions: JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSIONS) || '[]'),
+  settings: JSON.parse(
+    localStorage.getItem(STORAGE_KEYS.SETTINGS) ||
+    '{"defaultLanguage":"Python","provider":"anthropic","geminiApiKey":""}'
+  ),
+  user: JSON.parse(
+    localStorage.getItem('sb_user') ||
+    '{"name":"Student","xp":0,"level":1}'
+  ),
 };
 
 const AppContext = createContext<{
@@ -70,7 +76,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.API_KEY, state.apiKey);
-  }, [state.apiKey]);
+    localStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(state.notes));
+    localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(state.sessions));
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
+    localStorage.setItem('sb_user', JSON.stringify(state.user));
+  }, [state]);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

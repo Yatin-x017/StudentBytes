@@ -15,14 +15,18 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onSuc
   const { state, dispatch } = useAppContext();
   const [key, setKey] = useState('');
 
-  const isGemini = state.settings.provider === 'gemini';
+  const provider = state.settings?.provider || 'anthropic';
+  const isGemini = provider === 'gemini';
 
   const handleSave = () => {
     const trimmedKey = key.trim();
     if (!trimmedKey) return;
 
     if (isGemini) {
-      dispatch({ type: 'UPDATE_SETTINGS', payload: { geminiApiKey: trimmedKey } });
+      dispatch({
+        type: 'UPDATE_SETTINGS',
+        payload: { geminiApiKey: trimmedKey }
+      });
     } else {
       dispatch({ type: 'SET_API_KEY', payload: trimmedKey });
     }

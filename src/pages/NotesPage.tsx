@@ -32,7 +32,9 @@ const NotesPage: React.FC = () => {
 
   const deleteNote = async (id: string) => {
     dispatch({ type: 'DELETE_NOTE', payload: id });
-    await db.deleteNote(id);
+    if (user?.id) {
+      await db.deleteNote(id);
+    }
   };
 
   if (state.notes.length === 0) {

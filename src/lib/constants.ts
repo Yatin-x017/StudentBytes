@@ -45,7 +45,7 @@ export const PROVIDERS = [
   {
     id: 'gemini',
     name: 'Google Gemini',
-    model: 'gemini-2.0-flash',
+    model: 'gemini-1.5-flash',
     description: 'Blazing fast and completely free with rate limits.',
     link: 'https://aistudio.google.com',
     linkLabel: 'Get Gemini key →',
@@ -64,4 +64,5 @@ export const ROUTES = {
   COMMUNITY: '/community',
   PROFILE: '/profile',
   CANVAS: '/canvas',
+  LOGIN: '/login',
 };

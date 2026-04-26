@@ -39,7 +39,10 @@ const AppContent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-bg">
+      <div
+        style={{ backgroundColor: '#0f0f13' }}
+        className="h-screen w-full flex items-center justify-center"
+      >
         <Spinner size={32} className="text-primary" />
       </div>
     );
@@ -47,7 +50,10 @@ const AppContent: React.FC = () => {
 
   return (
     <Suspense fallback={
-      <div className="h-screen w-full flex items-center justify-center bg-bg">
+      <div
+        style={{ backgroundColor: '#0f0f13' }}
+        className="h-screen w-full flex items-center justify-center"
+      >
         <Spinner size={32} className="text-primary" />
       </div>
     }>

@@ -30,17 +30,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const fetchProfile = async (userId: string) => {
     if (!supabase) return;
     try {
+      // Use abortSignal to prevent hanging queries
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .single()
+        .abortSignal(controller.signal);
 
-      if (!error && data) {
-        setProfile(data);
-      }
-    } catch (err) {
-      console.error('Error fetching profile:', err);
+      clearTimeout(timer);
+      if (!error && data) setProfile(data);
+    } catch {
+      // Silently fail — profile is optional, don't block the app
     }
   };
 
@@ -50,22 +54,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return;
     }
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) fetchProfile(currentUser.id);
+    // SAFETY NET: always unblock after 3 seconds no matter what
+    const timeout = setTimeout(() => {
       setLoading(false);
-    }).catch(() => {
-      setLoading(false);
-    });
+    }, 3000);
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // Get initial session with timeout race
+    const sessionPromise = supabase.auth.getSession();
+    const timeoutPromise = new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), 2500)
+    );
+
+    Promise.race([sessionPromise, timeoutPromise])
+      .then((result) => {
+        if (result && 'data' in result) {
+          const currentUser = (result as any).data.session?.user ?? null;
+          setUser(currentUser);
+          // Don't await fetchProfile — fire and forget
+          if (currentUser) fetchProfile(currentUser.id);
+        }
+      })
+      .catch(() => {
+        // Supabase failed — just unblock the app
+      })
+      .finally(() => {
+        clearTimeout(timeout);
+        setLoading(false);
+      });
+
+    // Auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       if (currentUser) {
-        await fetchProfile(currentUser.id);
+        fetchProfile(currentUser.id); // fire and forget, no await
       } else {
         setProfile(null);
       }
@@ -73,6 +95,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     return () => {
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);

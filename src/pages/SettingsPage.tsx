@@ -81,7 +81,7 @@ const SettingsPage: React.FC = () => {
     setTestResult(null);
     try {
       const genAI = new GoogleGenerativeAI(key);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
       await model.generateContent('Say hi');
       setTestResult('success');
     } catch (err: any) {

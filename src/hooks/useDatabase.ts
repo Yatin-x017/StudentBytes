@@ -7,7 +7,7 @@ export function useDatabase(userId: string) {
 
   // ── SESSIONS ──
   const fetchSessions = useCallback(async (): Promise<Session[]> => {
-    if (!isSupabaseConfigured || !supabase || !userId) return [];
+    if (!userId || !isSupabaseConfigured || !supabase) return [];
     const { data, error } = await supabase
       .from('sessions')
       .select('*')
@@ -25,7 +25,7 @@ export function useDatabase(userId: string) {
   }, [userId]);
 
   const upsertSession = useCallback(async (session: Session) => {
-    if (!isSupabaseConfigured || !supabase || !userId) return;
+    if (!userId || !isSupabaseConfigured || !supabase) return;
     const { error } = await supabase.from('sessions').upsert({
       id: session.id,
       user_id: userId,
@@ -38,7 +38,7 @@ export function useDatabase(userId: string) {
   }, [userId]);
 
   const deleteSession = useCallback(async (id: string) => {
-    if (!isSupabaseConfigured || !supabase || !userId) return;
+    if (!userId || !isSupabaseConfigured || !supabase) return;
     const { error } = await supabase
       .from('sessions').delete().eq('id', id).eq('user_id', userId);
     if (error) throw error;
@@ -46,7 +46,7 @@ export function useDatabase(userId: string) {
 
   // ── NOTES ──
   const fetchNotes = useCallback(async (): Promise<Note[]> => {
-    if (!isSupabaseConfigured || !supabase || !userId) return [];
+    if (!userId || !isSupabaseConfigured || !supabase) return [];
     const { data, error } = await supabase
       .from('notes')
       .select('*')
@@ -63,7 +63,7 @@ export function useDatabase(userId: string) {
   }, [userId]);
 
   const insertNote = useCallback(async (note: Note) => {
-    if (!isSupabaseConfigured || !supabase || !userId) return;
+    if (!userId || !isSupabaseConfigured || !supabase) return;
     const { error } = await supabase.from('notes').insert({
       id: note.id,
       user_id: userId,
@@ -75,7 +75,7 @@ export function useDatabase(userId: string) {
   }, [userId]);
 
   const deleteNote = useCallback(async (id: string) => {
-    if (!isSupabaseConfigured || !supabase || !userId) return;
+    if (!userId || !isSupabaseConfigured || !supabase) return;
     const { error } = await supabase
       .from('notes').delete().eq('id', id).eq('user_id', userId);
     if (error) throw error;
@@ -85,7 +85,7 @@ export function useDatabase(userId: string) {
   const insertQuizResult = useCallback(async (
     topic: string, score: number, total: number, xpEarned: number
   ) => {
-    if (!isSupabaseConfigured || !supabase || !userId) return;
+    if (!userId || !isSupabaseConfigured || !supabase) return;
     const { error } = await supabase.from('quiz_history').insert({
       user_id: userId,
       topic,
@@ -98,7 +98,7 @@ export function useDatabase(userId: string) {
   }, [userId]);
 
   const fetchQuizHistory = useCallback(async () => {
-    if (!isSupabaseConfigured || !supabase || !userId) return [];
+    if (!userId || !isSupabaseConfigured || !supabase) return [];
     const { data, error } = await supabase
       .from('quiz_history')
       .select('*')
@@ -110,7 +110,7 @@ export function useDatabase(userId: string) {
 
   // ── USER SETTINGS ──
   const fetchSettings = useCallback(async () => {
-    if (!isSupabaseConfigured || !supabase || !userId) return null;
+    if (!userId || !isSupabaseConfigured || !supabase) return null;
     const { data } = await supabase
       .from('user_settings')
       .select('*')
@@ -120,7 +120,7 @@ export function useDatabase(userId: string) {
   }, [userId]);
 
   const upsertSettings = useCallback(async (settings: Partial<UserSettings>) => {
-    if (!isSupabaseConfigured || !supabase || !userId) return;
+    if (!userId || !isSupabaseConfigured || !supabase) return;
     const { error } = await supabase.from('user_settings').upsert({
       user_id: userId,
       ...settings,
@@ -131,7 +131,7 @@ export function useDatabase(userId: string) {
 
   // ── SPACED REPETITION ──
   const fetchSRCards = useCallback(async (): Promise<SRCard[]> => {
-    if (!isSupabaseConfigured || !supabase || !userId) return [];
+    if (!userId || !isSupabaseConfigured || !supabase) return [];
     const { data, error } = await supabase
       .from('spaced_repetition')
       .select('*')
@@ -150,7 +150,7 @@ export function useDatabase(userId: string) {
   }, [userId]);
 
   const upsertSRCard = useCallback(async (card: SRCard) => {
-    if (!isSupabaseConfigured || !supabase || !userId) return;
+    if (!userId || !isSupabaseConfigured || !supabase) return;
     const { error } = await supabase.from('spaced_repetition').upsert({
       id: card.id,
       user_id: userId,

@@ -49,7 +49,7 @@ const CanvasPage: React.FC = () => {
       setConnected(true);
       if (fetchedCourses.length > 0) {
         setSelectedCourse(fetchedCourses[0]);
-        loadCourseData(fetchedCourses[0]);
+        loadCourseData(fetchedCourses[0], fetchedCourses);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to connect. Check your domain and token.');
@@ -59,12 +59,27 @@ const CanvasPage: React.FC = () => {
     }
   };
 
-  const loadCourseData = async (course: CanvasCourse) => {
+  const loadCourseData = async (course: CanvasCourse, allCourses?: CanvasCourse[]) => {
     setDataLoading(true);
     try {
+      const coursesToFetch = allCourses || [course];
       const [assns, anns] = await Promise.all([
-        fetchAssignments(domain, token, course.id),
-        fetchAnnouncements(domain, token, course.id)
+        // Fetch assignments from ALL courses for a complete picture
+        Promise.allSettled(
+          coursesToFetch.map(c => fetchAssignments(domain || localStorage.getItem(STORAGE_KEYS.CANVAS_DOMAIN) || '', token || localStorage.getItem(STORAGE_KEYS.CANVAS_TOKEN) || '', c.id)
+            .then(a => a.map(assignment => ({ ...assignment, courseName: c.name })))
+          )
+        ).then(results =>
+          results
+            .filter((r): r is PromiseFulfilledResult<any[]> => r.status === 'fulfilled')
+            .flatMap(r => r.value)
+            .sort((a, b) => {
+              if (!a.due_at) return 1;
+              if (!b.due_at) return -1;
+              return new Date(a.due_at).getTime() - new Date(b.due_at).getTime();
+            })
+        ),
+        fetchAnnouncements(domain || localStorage.getItem(STORAGE_KEYS.CANVAS_DOMAIN) || '', token || localStorage.getItem(STORAGE_KEYS.CANVAS_TOKEN) || '', course.id)
       ]);
       setAssignments(assns);
       setAnnouncements(anns);
@@ -196,6 +211,12 @@ const CanvasPage: React.FC = () => {
               key={course.id}
               onClick={() => {
                 setSelectedCourse(course);
+                // Filter already-loaded assignments by course instead of re-fetching
+                setAssignments(prev => {
+                  // If we have assignments with courseName, filter; otherwise re-fetch
+                  const filtered = prev.filter(a => (a as any).courseName === course.name);
+                  return filtered.length > 0 ? filtered : prev;
+                });
                 loadCourseData(course);
               }}
               className={cn(
@@ -280,7 +301,7 @@ const CanvasPage: React.FC = () => {
                       {assignment.name}
                     </h3>
                     <p className="text-xs text-text-muted mt-1 truncate">
-                      {selectedCourse?.name}
+                      {(assignment as any).courseName || selectedCourse?.name}
                     </p>
                   </div>
 

@@ -9,6 +9,10 @@ async function canvasFetch<T>(
   token: string,
   path: string
 ): Promise<T> {
+  if (!domain || !token) {
+    throw new Error('Canvas not connected. Add your domain and token.');
+  }
+
   const params = new URLSearchParams({
     domain: domain.replace(/^https?:\/\//, '').replace(/\/$/, ''),
     token,

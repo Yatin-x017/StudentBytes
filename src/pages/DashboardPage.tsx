@@ -22,8 +22,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useRealtime } from '@/hooks/useRealtime';
 import { getDueCards, type SRCard } from '@/lib/spacedRepetition';
+import { fetchCourses, fetchAllUpcomingAssignments, formatDueDate, dueDateColor } from '@/lib/canvas';
 import { getTodayClasses, getCurrentClass } from './TimetablePage';
 import type { ClassSlot } from '@/lib/types';
+import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatDate } from '@/lib/utils';
@@ -39,6 +41,12 @@ const DashboardPage: React.FC = () => {
     const saved = localStorage.getItem('sb_timetable');
     return saved ? JSON.parse(saved) : [];
   });
+
+  const [canvasAssignments, setCanvasAssignments] = useState<any[]>([]);
+  const [canvasLoading, setCanvasLoading] = useState(false);
+  const canvasToken = localStorage.getItem('sb_canvas_token') || '';
+  const canvasDomain = localStorage.getItem('sb_canvas_domain') || '';
+  const canvasConnected = !!(canvasToken && canvasDomain);
   useRealtime(user?.id);
 
   const todayClasses = getTodayClasses(slots);
@@ -73,6 +81,16 @@ const DashboardPage: React.FC = () => {
     }
     loadData();
   }, [user, db, dispatch]);
+
+  useEffect(() => {
+    if (!canvasConnected) return;
+    setCanvasLoading(true);
+    fetchCourses(canvasDomain, canvasToken)
+      .then(courses => fetchAllUpcomingAssignments(canvasDomain, canvasToken, courses))
+      .then(assignments => setCanvasAssignments(assignments.slice(0, 6)))
+      .catch(err => console.error('Canvas dashboard error:', err))
+      .finally(() => setCanvasLoading(false));
+  }, [canvasConnected, canvasDomain, canvasToken]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -346,6 +364,93 @@ const DashboardPage: React.FC = () => {
               onClick={() => navigate(ROUTES.NOTES)}
             />
           </div>
+
+          {/* Canvas Assignments Widget */}
+          <Card className="p-5 border-white/5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-widest
+                             text-text-muted flex items-center gap-2">
+                <GraduationCap size={14} className="text-primary" />
+                Upcoming Assignments
+              </h3>
+              <button
+                onClick={() => navigate(ROUTES.CANVAS)}
+                className="text-[10px] text-primary hover:underline font-bold"
+              >
+                View all →
+              </button>
+            </div>
+
+            {canvasLoading && (
+              <div className="space-y-2">
+                {[1,2,3].map(i => (
+                  <div key={i} className="h-12 bg-white/5 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            )}
+
+            {!canvasLoading && !canvasConnected && (
+              <div className="text-center py-4 space-y-3">
+                <p className="text-xs text-text-muted leading-relaxed">
+                  Connect Canvas to see your deadlines here
+                </p>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => navigate(ROUTES.CANVAS)}
+                  className="text-[10px] font-black uppercase tracking-widest"
+                >
+                  Connect Canvas →
+                </Button>
+              </div>
+            )}
+
+            {!canvasLoading && canvasConnected && canvasAssignments.length === 0 && (
+              <p className="text-xs text-success flex items-center gap-2 py-2">
+                <CheckCircle2 size={14} /> All caught up!
+              </p>
+            )}
+
+            {!canvasLoading && canvasConnected && canvasAssignments.length > 0 && (
+              <div className="space-y-1">
+                {canvasAssignments.map(a => (
+                  <div
+                    key={a.id}
+                    className="flex items-center justify-between py-2.5 px-3
+                               rounded-xl hover:bg-white/5 transition-all group"
+                  >
+                    <div className="flex-1 min-w-0 mr-3">
+                      <p className="text-xs font-bold truncate
+                                    group-hover:text-primary transition-colors">
+                        {a.name}
+                      </p>
+                      <p className="text-[10px] text-text-muted truncate">
+                        {a.courseName}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-[10px] font-black ${dueDateColor(a.due_at)}`}>
+                        {formatDueDate(a.due_at)}
+                      </span>
+                      <button
+                        onClick={() => navigate(ROUTES.STUDY, {
+                          state: {
+                            prefillMessage: `Help me with this assignment: "${a.name}"`
+                          }
+                        })}
+                        className="p-1.5 rounded-lg bg-primary/10 hover:bg-primary/20
+                                   text-primary transition-all opacity-0
+                                   group-hover:opacity-100"
+                        title="Study with Byte"
+                      >
+                        <Sparkles size={10} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </div>
       </div>
     </div>

@@ -13,7 +13,7 @@ export async function streamGeminiMessage(
 ): Promise<string> {
   const genAI = getGeminiClient(apiKey);
   const model = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.0-flash-lite',
     systemInstruction: systemPrompt,
   });
 
@@ -43,7 +43,7 @@ export async function generateGeminiQuiz(
   difficulty: string
 ): Promise<QuizQuestion[]> {
   const genAI = getGeminiClient(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
 
   const result = await model.generateContent(QUIZ_PROMPT(topic, difficulty));
   const text = result.response.text();

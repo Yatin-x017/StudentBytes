@@ -8,13 +8,17 @@ import {
   Sparkles,
   Zap,
   Filter,
-  ArrowRight
+  ArrowRight,
+  Trophy,
+  Medal
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { cn } from '@/lib/utils';
 
 const CommunityPage: React.FC = () => {
+  const [activeTab, setActiveTab] = React.useState<'feed' | 'leaderboard'>('feed');
   return (
     <div className="max-w-6xl mx-auto space-y-10 animate-fade-in pb-20">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -30,55 +34,107 @@ const CommunityPage: React.FC = () => {
         </Button>
       </header>
 
+      <div className="flex border-b border-white/5 mb-8">
+        <button
+          onClick={() => setActiveTab('feed')}
+          className={cn(
+            "px-8 py-4 text-sm font-black uppercase tracking-widest transition-all relative",
+            activeTab === 'feed' ? "text-primary" : "text-text-muted hover:text-white"
+          )}
+        >
+          Activity Feed
+          {activeTab === 'feed' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />}
+        </button>
+        <button
+          onClick={() => setActiveTab('leaderboard')}
+          className={cn(
+            "px-8 py-4 text-sm font-black uppercase tracking-widest transition-all relative",
+            activeTab === 'leaderboard' ? "text-primary" : "text-text-muted hover:text-white"
+          )}
+        >
+          Global Leaderboard
+          {activeTab === 'leaderboard' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />}
+        </button>
+      </div>
+
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="lg:w-2/3 space-y-6">
-          <div className="flex items-center gap-3">
-             <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
-                <input
-                  type="text"
-                  placeholder="Search shared bytes..."
-                  className="w-full bg-surface border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                />
-             </div>
-             <Button variant="outline" size="icon" className="h-10 w-10">
-               <Filter size={18} />
-             </Button>
-          </div>
+          {activeTab === 'feed' ? (
+            <>
+              <div className="flex items-center gap-3">
+                 <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+                    <input
+                      type="text"
+                      placeholder="Search shared bytes..."
+                      className="w-full bg-surface border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    />
+                 </div>
+                 <Button variant="outline" size="icon" className="h-10 w-10">
+                   <Filter size={18} />
+                 </Button>
+              </div>
 
-          <div className="space-y-4">
-            <CommunityPost
-              author="Alex Chen"
-              authorAvatar="A"
-              topic="Distributed Systems"
-              title="A clear breakdown of Paxos Consensus"
-              desc="I was struggling with Paxos for weeks. Byte helped me visualize it with a 'Parliament' analogy. Check out the full session summary here."
-              likes={42}
-              comments={12}
-              tags={['Systems', 'Conceptual']}
-            />
-            <CommunityPost
-              author="Sarah Miller"
-              authorAvatar="S"
-              topic="React Performance"
-              title="When to actually use useMemo vs useCallback"
-              desc="Compiled a list of real-world scenarios where memoization actually hurts performance. Verified with Byte."
-              likes={128}
-              comments={45}
-              tags={['Frontend', 'Performance']}
-              featured
-            />
-            <CommunityPost
-              author="Jordan Smith"
-              authorAvatar="J"
-              topic="Algorithms"
-              title="Dynamic Programming: The 'Bottom-Up' Secret"
-              desc="If you're stuck on recursion, try this iterative approach Byte taught me. Makes DP problems feel like filling out a spreadsheet."
-              likes={89}
-              comments={18}
-              tags={['Algorithms', 'CS Fundamentals']}
-            />
-          </div>
+              <div className="space-y-4">
+                <CommunityPost
+                  author="Alex Chen"
+                  authorAvatar="A"
+                  topic="Distributed Systems"
+                  title="A clear breakdown of Paxos Consensus"
+                  desc="I was struggling with Paxos for weeks. Byte helped me visualize it with a 'Parliament' analogy. Check out the full session summary here."
+                  likes={42}
+                  comments={12}
+                  tags={['Systems', 'Conceptual']}
+                />
+                <CommunityPost
+                  author="Sarah Miller"
+                  authorAvatar="S"
+                  topic="React Performance"
+                  title="When to actually use useMemo vs useCallback"
+                  desc="Compiled a list of real-world scenarios where memoization actually hurts performance. Verified with Byte."
+                  likes={128}
+                  comments={45}
+                  tags={['Frontend', 'Performance']}
+                  featured
+                />
+                <CommunityPost
+                  author="Jordan Smith"
+                  authorAvatar="J"
+                  topic="Algorithms"
+                  title="Dynamic Programming: The 'Bottom-Up' Secret"
+                  desc="If you're stuck on recursion, try this iterative approach Byte taught me. Makes DP problems feel like filling out a spreadsheet."
+                  likes={89}
+                  comments={18}
+                  tags={['Algorithms', 'CS Fundamentals']}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <Card className="p-0 border-white/5 overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-white/2">
+                    <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted">
+                      <th className="px-6 py-4 text-left">Rank</th>
+                      <th className="px-6 py-4 text-left">Student</th>
+                      <th className="px-6 py-4 text-right">Mastery XP</th>
+                      <th className="px-6 py-4 text-right">Streak</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    <LeaderboardRow rank={1} name="Alex Chen" xp={14250} streak={42} isMe />
+                    <LeaderboardRow rank={2} name="Sarah Miller" xp={12100} streak={15} />
+                    <LeaderboardRow rank={3} name="Jordan Smith" xp={9800} streak={8} />
+                    <LeaderboardRow rank={4} name="Elena Rodriguez" xp={8500} streak={31} />
+                    <LeaderboardRow rank={5} name="Liam Wilson" xp={7200} streak={12} />
+                    <LeaderboardRow rank={6} name="Maya Patel" xp={6900} streak={5} />
+                    <LeaderboardRow rank={7} name="Kofi Mensah" xp={6100} streak={22} />
+                    <LeaderboardRow rank={8} name="Hiroshi Tanaka" xp={5400} streak={4} />
+                  </tbody>
+                </table>
+              </Card>
+            </div>
+          )}
         </div>
 
         <div className="lg:w-1/3 space-y-8">
@@ -149,6 +205,38 @@ const CommunityPost = ({ author, authorAvatar, topic, title, desc, likes, commen
       </button>
     </div>
   </Card>
+);
+
+const LeaderboardRow = ({ rank, name, xp, streak, isMe }: any) => (
+  <tr className={cn("group hover:bg-white/2 transition-all", isMe && "bg-primary/5")}>
+    <td className="px-6 py-4">
+      <div className="flex items-center gap-3">
+        {rank === 1 && <Trophy size={16} className="text-amber-500" />}
+        {rank === 2 && <Medal size={16} className="text-slate-400" />}
+        {rank === 3 && <Medal size={16} className="text-amber-700" />}
+        <span className={cn("text-sm font-black", rank <= 3 ? "text-white" : "text-text-muted")}>#{rank}</span>
+      </div>
+    </td>
+    <td className="px-6 py-4">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center font-bold text-xs border border-white/5 group-hover:scale-110 transition-transform">
+          {name.charAt(0)}
+        </div>
+        <div>
+          <p className="text-sm font-bold">{name} {isMe && <span className="text-[10px] text-primary ml-2 uppercase tracking-tighter">(You)</span>}</p>
+        </div>
+      </div>
+    </td>
+    <td className="px-6 py-4 text-right">
+      <span className="text-sm font-mono font-bold text-primary">{xp.toLocaleString()}</span>
+    </td>
+    <td className="px-6 py-4 text-right">
+      <div className="flex items-center justify-end gap-1.5">
+        <Zap size={12} className="text-amber-500 fill-amber-500" />
+        <span className="text-sm font-bold">{streak}d</span>
+      </div>
+    </td>
+  </tr>
 );
 
 const TrendingItem = ({ label, count }: { label: string, count: number }) => (

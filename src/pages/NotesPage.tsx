@@ -26,9 +26,11 @@ import { isGoogleConfigured, initGoogleDrive, exportNoteToDrive } from '@/lib/go
 import { generateShareUrl } from '@/lib/shareNote';
 import { formatDate } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
+import { NoteModal } from '@/components/ui/NoteModal';
 
 const NotesPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useAuth();
   const db = useDatabase(user?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
@@ -97,15 +99,38 @@ const NotesPage: React.FC = () => {
     }
   };
 
-  if (state.notes.length === 0) {
+  const handleManualSave = async (note: { title: string; content: string; topic: string }) => {
+    const newNote = {
+      ...note,
+      id: Date.now().toString(),
+      createdAt: Date.now(),
+    };
+    dispatch({ type: 'ADD_NOTE', payload: newNote });
+    if (user?.id) {
+      await db.insertNote(newNote);
+    }
+  };
+
+  if (state.notes.length === 0 && !isModalOpen) {
     return (
-      <EmptyState
-        icon={BookOpen}
-        title="Your knowledge base is empty"
-        description="Save insights from your study sessions to build your personal library."
-        actionLabel="Start a Study Session"
-        actionPath={ROUTES.STUDY}
-      />
+      <div className="h-[80vh] flex flex-col items-center justify-center space-y-6">
+        <EmptyState
+          icon={BookOpen}
+          title="Your knowledge base is empty"
+          description="Save insights from your study sessions to build your personal library."
+          actionLabel="Start a Study Session"
+          actionPath={ROUTES.STUDY}
+        />
+        <p className="text-text-muted font-bold uppercase tracking-widest text-[10px]">Or</p>
+        <Button variant="outline" onClick={() => setIsModalOpen(true)} className="rounded-2xl px-8">
+          Create Manual Note
+        </Button>
+        <NoteModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleManualSave}
+        />
+      </div>
     );
   }
 
@@ -162,11 +187,23 @@ const NotesPage: React.FC = () => {
                 className="bg-surface border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64 transition-all"
               />
            </div>
-           <Button variant="outline" size="icon" className="h-10 w-10">
+           <Button
+             variant="outline"
+             size="icon"
+             className="h-10 w-10"
+             onClick={() => setIsModalOpen(true)}
+             aria-label="Create Note"
+           >
              <Plus size={20} />
            </Button>
         </div>
       </header>
+
+      <NoteModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleManualSave}
+      />
 
       {filteredNotes.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

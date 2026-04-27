@@ -49,17 +49,17 @@ const LandingPage: React.FC = () => {
             </div>
 
             <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tight mb-8 leading-[1.1] bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent">
-              Master Computer Science with your AI personal tutor.
+              Master Computer Science with your personal AI tutor.
             </h1>
 
             <p className="text-lg md:text-xl text-text-muted max-w-3xl mx-auto mb-12 leading-relaxed font-medium">
-              Join 1,200+ students using Student Bytes to crush DSA midterms,
-              visualize complex OS concepts, and build mastery through AI-driven quizzes.
+              Crush DSA midterms, visualize complex OS concepts, and build mastery through AI-driven quizzes.
+              No account needed — start studying in seconds.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
               <Button size="lg" className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl shadow-2xl shadow-primary/30" onClick={() => navigate(ROUTES.DASHBOARD)}>
-                Try Now — It's Free <ArrowRight className="ml-2 h-5 w-5" />
+                Start Studying Now <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button
                 variant="secondary"

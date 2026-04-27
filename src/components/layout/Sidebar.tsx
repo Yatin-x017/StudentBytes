@@ -17,6 +17,7 @@ import { motion } from 'framer-motion';
 import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Card } from '../ui/Card';
 
 export const Sidebar: React.FC = () => {
@@ -37,6 +38,8 @@ export const Sidebar: React.FC = () => {
     { label: 'Community', icon: Users, path: ROUTES.COMMUNITY },
     { label: 'Settings', icon: Settings, path: ROUTES.SETTINGS },
   ];
+
+  const { user } = useAuth();
 
   return (
     <aside className="w-72 border-r border-white/5 h-screen sticky top-0 hidden lg:flex flex-col bg-bg overflow-hidden">
@@ -137,19 +140,34 @@ export const Sidebar: React.FC = () => {
       </div>
 
       <div className="p-6 border-t border-white/5 bg-white/2 backdrop-blur-md">
-        <Link
-          to={ROUTES.PROFILE}
-          className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/5 transition-all group"
-        >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-black shadow-lg shadow-primary/20 group-hover:rotate-3 transition-transform">
-            {state.user.name.charAt(0)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold truncate">{state.user.name}</p>
-            <p className="text-[10px] font-bold text-text-muted uppercase tracking-tighter">Level {state.user.level} Coder</p>
-          </div>
-          <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-        </Link>
+        {user ? (
+          <Link
+            to={ROUTES.PROFILE}
+            className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-black shadow-lg shadow-primary/20 group-hover:rotate-3 transition-transform">
+              {state.user.name.charAt(0)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold truncate">{state.user.name}</p>
+              <p className="text-[10px] font-bold text-text-muted uppercase tracking-tighter">Level {state.user.level} Coder</p>
+            </div>
+            <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+          </Link>
+        ) : (
+          <Link
+            to="/login"
+            className="flex items-center justify-between p-3 rounded-2xl bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all group"
+          >
+            <div className="flex items-center gap-3">
+               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
+                 <Users size={16} />
+               </div>
+               <span className="text-xs font-black uppercase tracking-widest text-primary">Sync Data</span>
+            </div>
+            <ChevronRight size={14} className="text-primary group-hover:translate-x-1 transition-transform" />
+          </Link>
+        )}
       </div>
     </aside>
   );

@@ -1,5 +1,8 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+
+export const config = {
+  runtime: 'edge',
+};
 
 const BUILTIN_KEY = process.env.GEMINI_API_KEY || '';
 
@@ -18,30 +21,45 @@ HOW YOU RESPOND:
 - For assignments: help understand, guide don't just solve
 - Be concise, no filler`;
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+export default async function handler(req: Request) {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+    });
   }
 
-  const { messages, systemPrompt, mode } = req.body;
-
-  if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: 'messages array required' });
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   if (!BUILTIN_KEY) {
-    return res.status(503).json({ error: 'Built-in AI not configured.' });
+    return new Response(JSON.stringify({ error: 'Built-in AI not configured.' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
+    const { messages, systemPrompt, mode } = await req.json();
+
+    if (!messages || !Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: 'messages array required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const genAI = new GoogleGenerativeAI(BUILTIN_KEY);
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.0-flash-lite',
       systemInstruction: systemPrompt || SYSTEM_PROMPT,
     });
 
@@ -53,33 +71,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const lastMessage = messages[messages.length - 1];
 
     if (mode === 'stream') {
-      // Streaming response for chat
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-
       const chat = model.startChat({ history });
       const result = await chat.sendMessageStream(lastMessage.content);
 
-      for await (const chunk of result.stream) {
-        const text = chunk.text();
-        if (text) {
-          res.write(`data: ${JSON.stringify({ text })}\n\n`);
-        }
-      }
-      res.write('data: [DONE]\n\n');
-      res.end();
+      const stream = new ReadableStream({
+        async start(controller) {
+          const encoder = new TextEncoder();
+          try {
+            for await (const chunk of result.stream) {
+              const text = chunk.text();
+              if (text) {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
+              }
+            }
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          } catch (err: any) {
+            controller.error(err);
+          } finally {
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
     } else {
-      // Single response for quiz generation
       const chat = model.startChat({ history });
       const result = await chat.sendMessage(lastMessage.content);
       const text = result.response.text();
-      return res.status(200).json({ text });
+      return new Response(JSON.stringify({ text }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
     }
   } catch (err: any) {
-    const status = err.status || 500;
-    return res.status(status).json({
-      error: err.message || 'AI request failed'
+    return new Response(JSON.stringify({ error: err.message || 'AI request failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }

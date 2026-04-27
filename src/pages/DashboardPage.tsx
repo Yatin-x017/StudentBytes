@@ -9,10 +9,9 @@ import {
   MessageSquare,
   GraduationCap,
   FileText,
-  Zap,
   CheckCircle2,
   Brain,
-  CalendarDays
+  Sparkles
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { useAppContext } from '@/context/AppContext';
@@ -22,13 +21,9 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { useRealtime } from '@/hooks/useRealtime';
 import { getDueCards, type SRCard } from '@/lib/spacedRepetition';
 import { fetchCourses, fetchAllUpcomingAssignments, formatDueDate, dueDateColor } from '@/lib/canvas';
-import { getTodayClasses, getCurrentClass } from './TimetablePage';
-import type { ClassSlot } from '@/lib/types';
-import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatDate } from '@/lib/utils';
-import { cn } from '@/lib/utils';
 
 const DashboardPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
@@ -36,10 +31,6 @@ const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const db = useDatabase(user?.id || '');
   const [srCards, setSrCards] = useState<SRCard[]>([]);
-  const [slots] = useState<ClassSlot[]>(() => {
-    const saved = localStorage.getItem('sb_timetable');
-    return saved ? JSON.parse(saved) : [];
-  });
 
   const [canvasAssignments, setCanvasAssignments] = useState<any[]>([]);
   const [canvasLoading, setCanvasLoading] = useState(false);
@@ -47,9 +38,6 @@ const DashboardPage: React.FC = () => {
   const canvasDomain = localStorage.getItem('sb_canvas_domain') || '';
   const canvasConnected = !!(canvasToken && canvasDomain);
   useRealtime(user?.id);
-
-  const todayClasses = getTodayClasses(slots);
-  const currentClass = getCurrentClass(slots);
 
   useEffect(() => {
     async function loadData() {
@@ -109,338 +97,239 @@ const DashboardPage: React.FC = () => {
   const recentSessions = state.sessions.slice(0, 3);
   const dueCards = srCards ? getDueCards(srCards) : [];
 
+  const urgentCount = canvasAssignments.filter(a => {
+    const diff = a.due_at
+      ? Math.ceil((new Date(a.due_at).getTime() - Date.now()) / 86400000)
+      : 99;
+    return diff >= 0 && diff <= 3;
+  }).length;
+
   return (
-    <div className="max-w-6xl mx-auto space-y-10 animate-fade-in">
-      <div className="relative overflow-hidden rounded-3xl p-8 mb-8
-                    bg-gradient-to-br from-primary/10 via-surface to-surface
-                    border border-primary/15">
-        {/* Decorative blob */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5
-                      rounded-full blur-3xl pointer-events-none" />
-        <div className="relative">
-          <p className="text-text-muted text-sm font-medium mb-1">
-            {greeting}, {displayName} 👋
-          </p>
-          <h1 className="text-3xl font-display font-black tracking-tight mb-4">
-            {canvasAssignments.length > 0
-              ? `${canvasAssignments.filter(a => {
-                  const diff = a.due_at
-                    ? Math.ceil((new Date(a.due_at).getTime() - Date.now()) / 86400000)
-                    : 99;
-                  return diff >= 0 && diff <= 3;
-                }).length} urgent deadline${
-                  canvasAssignments.filter(a => {
-                    const diff = a.due_at
-                      ? Math.ceil((new Date(a.due_at).getTime() - Date.now()) / 86400000)
-                      : 99;
-                    return diff >= 0 && diff <= 3;
-                  }).length === 1 ? '' : 's'
-                } this week`
-              : "Ready to study?"}
-          </h1>
-          {/* Quick action buttons */}
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => navigate(ROUTES.STUDY)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl
-                        bg-primary hover:bg-primary-hover text-white text-sm
-                        font-bold transition-all shadow-lg shadow-primary/20"
-            >
-              <Sparkles size={16} /> Start Studying
-            </button>
-            <button
-              onClick={() => navigate(ROUTES.QUIZ)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl
-                        bg-white/5 hover:bg-white/10 border border-white/10
-                        text-sm font-bold transition-all"
-            >
-              <Brain size={16} /> Take a Quiz
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden rounded-[2.5rem] border border-white/10 glass p-8 md:p-12">
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/20 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
 
+        <div className="relative z-10 max-w-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <p className="text-primary font-display font-black uppercase tracking-[0.2em] text-[10px] mb-4 flex items-center gap-2">
+              <span className="w-8 h-px bg-primary/30" />
+              {greeting}, {displayName}
+            </p>
+            <h1 className="text-4xl md:text-6xl font-display font-black tracking-tight mb-6 leading-[1.1]">
+              {urgentCount > 0
+                ? <>{urgentCount} urgent <span className="text-primary glow-text">deadlines</span> this week.</>
+                : <>Master your courses <span className="text-primary glow-text">10x faster.</span></>
+              }
+            </h1>
+
+            <div className="flex flex-wrap gap-4 mt-8">
+              <Button
+                size="lg"
+                onClick={() => navigate(ROUTES.STUDY)}
+                className="h-14 px-8 rounded-2xl shadow-xl shadow-primary/20 gap-3 text-base"
+              >
+                <Sparkles size={20} />
+                Start Studying
+              </Button>
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => navigate(ROUTES.QUIZ)}
+                className="h-14 px-8 rounded-2xl border-white/10 glass gap-3 text-base"
+              >
+                <Brain size={20} />
+                Prove Mastery
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={<Clock className="text-primary" />} label="Sessions Today" value={sessionsToday} />
-        <StatCard icon={<FileText className="text-success" />} label="Notes Saved" value={notesSaved} />
-        <StatCard icon={<BrainCircuit className="text-amber-500" />} label="Topics Studied" value={topicsStudied} />
-        <StatCard icon={<TrendingUp className="text-primary" />} label="Quiz Avg" value={quizScoreAvg} />
+        <StatCard icon={<Clock size={20} className="text-primary" />} label="Sessions Today" value={sessionsToday} />
+        <StatCard icon={<FileText size={20} className="text-success" />} label="Notes Saved" value={notesSaved} />
+        <StatCard icon={<BrainCircuit size={20} className="text-warning" />} label="Topics Studied" value={topicsStudied} />
+        <StatCard icon={<TrendingUp size={20} className="text-accent" />} label="Quiz Avg" value={quizScoreAvg} />
       </div>
-
-      {dueCards.length > 0 && (
-        <Card className="p-6 border-amber-500/20 bg-amber-500/5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-             <Brain size={48} className="text-amber-400" />
-          </div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-4">
-              <Brain size={18} className="text-amber-400" />
-              <h3 className="font-black text-sm uppercase tracking-widest text-amber-200">Due for Review</h3>
-              <Badge className="bg-amber-500/20 text-amber-400 text-[10px] border-amber-500/30">
-                {dueCards.length}
-              </Badge>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {dueCards.map(card => (
-                <button
-                  key={card.id}
-                  onClick={() => navigate(ROUTES.QUIZ, { state: { topic: card.topic } })}
-                  className="px-4 py-2 rounded-xl bg-amber-500/10 border
-                            border-amber-500/20 text-amber-300 text-xs font-bold
-                            hover:bg-amber-500/20 hover:border-amber-500/40 transition-all flex items-center gap-2"
-                >
-                  {card.topic}
-                  <ArrowRight size={12} />
-                </button>
-              ))}
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {dueCards.length === 0 && srCards.length > 0 && (
-        <div className="text-xs text-success font-bold flex items-center gap-2 px-4 py-2 bg-success/5 border border-success/10 rounded-xl w-fit">
-          <CheckCircle2 size={14} /> All caught up! Next review: {srCards[0]?.nextReviewDate}
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Current class banner */}
-          {currentClass && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className={cn(
-                "p-6 rounded-[2rem] border flex items-center justify-between gap-6 shadow-xl relative overflow-hidden group",
-                currentClass.color
-              )}
-            >
+        <div className="lg:col-span-2 space-y-8">
+          {/* Due for Review */}
+          {dueCards.length > 0 && (
+            <Card className="p-6 border-warning/20 bg-warning/5 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                 <Brain size={64} className="text-warning" />
+              </div>
               <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
-                    Class In Progress
-                  </p>
-                </div>
-                <h3 className="text-2xl font-black mb-1">{currentClass.subject}</h3>
-                <p className="text-sm font-bold opacity-80">
-                  {currentClass.startTime} – {currentClass.endTime}
-                  {currentClass.room ? ` · ${currentClass.room}` : ''}
-                </p>
-              </div>
-
-              <Button
-                onClick={() => navigate(ROUTES.STUDY, {
-                  state: { prefillMessage: `Help me understand today's ${currentClass.subject} class. Give me a brief overview of typical topics in this subject.` }
-                })}
-                className="bg-white text-black hover:bg-white/90 border-none px-6 py-4 rounded-xl font-black text-xs uppercase tracking-widest relative z-10"
-              >
-                Study with Byte <ArrowRight size={14} className="ml-2" />
-              </Button>
-
-              <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
-                <CalendarDays size={120} />
-              </div>
-            </motion.div>
-          )}
-
-          {/* Today's schedule card */}
-          {todayClasses.length > 0 && !currentClass && (
-             <Card className="p-6 border-white/5 bg-surface-2/30">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-black flex items-center gap-2 uppercase tracking-widest text-text-muted">
-                    <CalendarDays size={16} className="text-primary" />
-                    Today's Schedule
-                  </h2>
-                  <button
-                    onClick={() => navigate(ROUTES.TIMETABLE)}
-                    className="text-[10px] text-primary hover:underline font-bold uppercase tracking-tighter"
-                  >
-                    View Timetable →
-                  </button>
-                </div>
-                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                   {todayClasses.map(slot => {
-                      const now = new Date();
-                      const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-                      const isDone = slot.endTime < timeStr;
-                      return (
-                        <div
-                          key={slot.id}
-                          className={cn(
-                            "flex-shrink-0 w-48 p-4 rounded-2xl border transition-all",
-                            isDone ? "bg-white/2 border-white/5 opacity-40" : "bg-surface border-white/10"
-                          )}
-                        >
-                           <p className="text-[10px] font-bold text-text-muted mb-1">{slot.startTime}</p>
-                           <p className="font-bold truncate">{slot.subject}</p>
-                        </div>
-                      )
-                   })}
-                </div>
-             </Card>
-          )}
-
-          {todayClasses.length === 0 && slots.length === 0 && (
-            <button
-              onClick={() => navigate(ROUTES.TIMETABLE)}
-              className="group p-6 rounded-[2rem] border border-dashed border-white/10 text-text-muted hover:border-white/30 hover:text-white transition-all text-sm w-full flex flex-col items-center gap-3 bg-white/2"
-            >
-              <CalendarDays size={32} className="opacity-20 group-hover:opacity-100 transition-opacity" />
-              <span className="font-bold uppercase tracking-widest text-xs">Add your class schedule</span>
-            </button>
-          )}
-
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Clock size={20} className="text-primary" />
-              Recent Sessions
-            </h2>
-            {state.sessions.length > 0 && (
-               <button onClick={() => navigate(ROUTES.STUDY)} className="text-xs font-bold text-primary hover:underline">View All</button>
-            )}
-          </div>
-
-          {recentSessions.length > 0 ? (
-            <div className="space-y-3">
-              {recentSessions.map((session) => (
-                <Card
-                  key={session.id}
-                  className="flex items-center justify-between p-5 hover:bg-surface-2 transition-all cursor-pointer group border-white/5"
-                  onClick={() => navigate(ROUTES.STUDY, { state: { sessionId: session.id } })}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="bg-primary/10 p-3 rounded-xl text-primary">
-                      <MessageSquare size={20} />
-                    </div>
-                    <div>
-                      <h3 className="font-bold">{session.topic}</h3>
-                      <p className="text-xs text-text-muted">{formatDate(session.updatedAt)} • {session.messages.length} messages</p>
-                    </div>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center text-warning border border-warning/20">
+                    <Brain size={20} />
                   </div>
-                  <ArrowRight size={18} className="text-text-muted group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card className="h-48 flex flex-col items-center justify-center text-center p-8 border-dashed border-white/10 bg-transparent">
-              <p className="text-text-muted mb-4">No recent sessions yet. Byte is waiting!</p>
-              <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.STUDY)}>
-                New Session
-              </Button>
+                  <div>
+                    <h3 className="font-bold">Due for Review</h3>
+                    <p className="text-xs text-text-muted">Spaced repetition picks for today</p>
+                  </div>
+                  <Badge className="ml-auto bg-warning/20 text-warning border-warning/30">
+                    {dueCards.length}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {dueCards.map(card => (
+                    <button
+                      key={card.id}
+                      onClick={() => navigate(ROUTES.QUIZ, { state: { topic: card.topic } })}
+                      className="px-4 py-2 rounded-xl bg-surface border
+                                border-white/5 text-xs font-bold
+                                hover:border-warning/40 transition-all flex items-center gap-2 group/btn"
+                    >
+                      {card.topic}
+                      <ArrowRight size={12} className="opacity-0 group-hover/btn:opacity-100 -translate-x-2 group-hover/btn:translate-x-0 transition-all" />
+                    </button>
+                  ))}
+                </div>
+              </div>
             </Card>
           )}
+
+          {/* Recent Sessions */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                   <Clock size={16} className="text-primary" />
+                </div>
+                Recent Sessions
+              </h2>
+              <button onClick={() => navigate(ROUTES.STUDY)} className="text-xs font-bold text-primary hover:underline">View All</button>
+            </div>
+
+            {recentSessions.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3">
+                {recentSessions.map((session) => (
+                  <Card
+                    key={session.id}
+                    className="flex items-center justify-between p-5 hover:bg-white/5 transition-all cursor-pointer group border-white/5 glass"
+                    onClick={() => navigate(ROUTES.STUDY, { state: { sessionId: session.id } })}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                        <MessageSquare size={20} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-sm">{session.topic}</h3>
+                        <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider mt-1">
+                          {formatDate(session.updatedAt)} · {session.messages.length} messages
+                        </p>
+                      </div>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                      <ArrowRight size={14} />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="h-48 flex flex-col items-center justify-center text-center p-8 border-dashed border-white/10 bg-transparent">
+                <p className="text-text-muted text-sm mb-6">No recent sessions yet. Byte is waiting!</p>
+                <Button variant="outline" size="sm" onClick={() => navigate(ROUTES.STUDY)} className="rounded-xl border-white/10">
+                  New Session
+                </Button>
+              </Card>
+            )}
+          </div>
         </div>
 
-        <div className="space-y-6">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <Zap size={20} className="text-amber-500" />
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-1 gap-3">
-            <ActionLink
-              icon={<MessageSquare size={20} />}
-              title="Start Studying"
-              desc="Chat with Byte"
-              onClick={() => navigate(ROUTES.STUDY)}
-            />
-            <ActionLink
-              icon={<GraduationCap size={20} />}
-              title="Canvas LMS"
-              desc={localStorage.getItem('sb_canvas_token') ? "View assignments" : "Connect your account"}
-              onClick={() => navigate(ROUTES.CANVAS)}
-              dot={!!localStorage.getItem('sb_canvas_token')}
-            />
-            <ActionLink
-              icon={<FileText size={20} />}
-              title="Review Notes"
-              desc="View saved summaries"
-              onClick={() => navigate(ROUTES.NOTES)}
-            />
+        <div className="space-y-8">
+          {/* Quick Actions */}
+          <div className="space-y-4">
+            <h2 className="text-sm font-display font-black uppercase tracking-widest text-text-faint">Quick Actions</h2>
+            <div className="grid grid-cols-1 gap-3">
+              <ActionLink
+                icon={<MessageSquare size={18} />}
+                title="AI Study Room"
+                desc="Chat with Byte"
+                onClick={() => navigate(ROUTES.STUDY)}
+              />
+              <ActionLink
+                icon={<GraduationCap size={18} />}
+                title="Canvas LMS"
+                desc={canvasConnected ? "View deadlines" : "Connect account"}
+                onClick={() => navigate(ROUTES.CANVAS)}
+                dot={canvasConnected}
+              />
+              <ActionLink
+                icon={<FileText size={18} />}
+                title="Knowledge Base"
+                desc="Review notes"
+                onClick={() => navigate(ROUTES.NOTES)}
+              />
+            </div>
           </div>
 
-          {/* Canvas Assignments Widget */}
-          <Card className="p-5 border-white/5 space-y-4">
+          {/* Canvas Widget */}
+          <Card className="p-6 border-white/5 glass space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-black uppercase tracking-widest
-                             text-text-muted flex items-center gap-2">
+              <h3 className="text-xs font-black uppercase tracking-widest text-text-muted flex items-center gap-2">
                 <GraduationCap size={14} className="text-primary" />
-                Upcoming Assignments
+                Deadlines
               </h3>
               <button
                 onClick={() => navigate(ROUTES.CANVAS)}
                 className="text-[10px] text-primary hover:underline font-bold"
               >
-                View all →
+                All →
               </button>
             </div>
 
-            {canvasLoading && (
-              <div className="space-y-2">
+            {canvasLoading ? (
+              <div className="space-y-4">
                 {[1,2,3].map(i => (
                   <div key={i} className="h-12 bg-white/5 rounded-xl animate-pulse" />
                 ))}
               </div>
-            )}
-
-            {!canvasLoading && !canvasConnected && (
-              <div className="text-center py-4 space-y-3">
+            ) : !canvasConnected ? (
+              <div className="text-center py-6 space-y-4">
                 <p className="text-xs text-text-muted leading-relaxed">
-                  Connect Canvas to see your deadlines here
+                  Link Canvas to sync assignments
                 </p>
                 <Button
                   size="sm"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => navigate(ROUTES.CANVAS)}
-                  className="text-[10px] font-black uppercase tracking-widest"
+                  className="w-full rounded-xl text-[10px] font-black uppercase tracking-widest border-white/10"
                 >
-                  Connect Canvas →
+                  Connect
                 </Button>
               </div>
-            )}
-
-            {!canvasLoading && canvasConnected && canvasAssignments.length === 0 && (
-              <p className="text-xs text-success flex items-center gap-2 py-2">
+            ) : canvasAssignments.length === 0 ? (
+              <p className="text-xs text-success flex items-center gap-2 py-4 font-bold justify-center">
                 <CheckCircle2 size={14} /> All caught up!
               </p>
-            )}
-
-            {!canvasLoading && canvasConnected && canvasAssignments.length > 0 && (
+            ) : (
               <div className="space-y-1">
                 {canvasAssignments.map(a => (
                   <div
                     key={a.id}
-                    className="flex items-center justify-between py-2.5 px-3
+                    className="flex items-center justify-between py-3 px-3
                                rounded-xl hover:bg-white/5 transition-all group"
                   >
                     <div className="flex-1 min-w-0 mr-3">
-                      <p className="text-xs font-bold truncate
-                                    group-hover:text-primary transition-colors">
+                      <p className="text-xs font-bold truncate group-hover:text-primary transition-colors">
                         {a.name}
                       </p>
-                      <p className="text-[10px] text-text-muted truncate">
+                      <p className="text-[10px] text-text-muted truncate mt-0.5">
                         {a.courseName}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className={`text-[10px] font-black ${dueDateColor(a.due_at)}`}>
-                        {formatDueDate(a.due_at)}
-                      </span>
-                      <button
-                        onClick={() => navigate(ROUTES.STUDY, {
-                          state: {
-                            prefillMessage: `Help me with this assignment: "${a.name}"`
-                          }
-                        })}
-                        className="p-1.5 rounded-lg bg-primary/10 hover:bg-primary/20
-                                   text-primary transition-all opacity-0
-                                   group-hover:opacity-100"
-                        title="Study with Byte"
-                      >
-                        <Sparkles size={10} />
-                      </button>
-                    </div>
+                    <span className={`text-[10px] font-black whitespace-nowrap px-2 py-1 rounded-lg glass border border-white/5 ${dueDateColor(a.due_at)}`}>
+                      {formatDueDate(a.due_at)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -452,15 +341,14 @@ const DashboardPage: React.FC = () => {
   );
 };
 
-
 const StatCard = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) => (
-  <Card className="p-6 flex flex-col gap-4 border-white/5">
-    <div className="bg-white/5 w-10 h-10 rounded-lg flex items-center justify-center">
+  <Card className="p-6 flex flex-col gap-4 border-white/5 glass hover:border-white/10 transition-all">
+    <div className="bg-white/5 w-10 h-10 rounded-xl flex items-center justify-center border border-white/5">
       {icon}
     </div>
     <div>
-      <p className="text-2xl font-black">{value}</p>
-      <p className="text-xs text-text-muted font-medium uppercase tracking-wider">{label}</p>
+      <p className="text-2xl font-display font-black tracking-tight">{value}</p>
+      <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.1em] mt-1">{label}</p>
     </div>
   </Card>
 );
@@ -468,17 +356,17 @@ const StatCard = ({ icon, label, value }: { icon: React.ReactNode, label: string
 const ActionLink = ({ icon, title, desc, onClick, dot }: { icon: React.ReactNode, title: string, desc: string, onClick: () => void, dot?: boolean }) => (
   <button
     onClick={onClick}
-    className="flex items-center gap-4 p-4 rounded-xl bg-surface hover:bg-surface-2 border border-white/5 transition-all text-left w-full group cursor-pointer relative overflow-hidden"
+    className="flex items-center gap-4 p-4 rounded-2xl bg-white/2 hover:bg-white/5 border border-white/5 transition-all text-left w-full group relative overflow-hidden"
   >
-    <div className="bg-primary/10 p-3 rounded-lg text-primary group-hover:bg-primary group-hover:text-white transition-all">
+    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all border border-primary/20">
       {icon}
     </div>
     <div className="flex-1">
-      <p className="font-bold text-sm">{title}</p>
-      <p className="text-xs text-text-muted">{desc}</p>
+      <p className="font-bold text-sm group-hover:text-white transition-colors">{title}</p>
+      <p className="text-[10px] text-text-muted font-medium mt-0.5 uppercase tracking-tighter">{desc}</p>
     </div>
     {dot && (
-      <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-success rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+      <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-success rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)] animate-pulse" />
     )}
   </button>
 );

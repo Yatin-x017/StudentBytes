@@ -43,18 +43,22 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
     <div className={cn('flex w-full mb-6 animate-fade-in', isUser ? 'justify-end' : 'justify-start')}>
       <div className={cn('flex gap-3 max-w-[85%] md:max-w-[75%]', isUser && 'flex-row-reverse')}>
         <div className={cn(
-          'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-1',
-          isUser ? 'bg-primary/20 text-primary' : 'bg-surface-2 text-primary'
+          'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-1 border',
+          isUser
+            ? 'bg-primary/10 border-primary/20 text-primary'
+            : 'bg-white/5 border-white/5 text-primary'
         )}>
-          {isUser ? <User size={16} /> : <Terminal size={16} />}
+          {isUser ? <User size={18} /> : <Terminal size={18} />}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 flex-1">
           <div className={cn(
-            'p-4 rounded-2xl text-sm leading-relaxed',
-            isUser ? 'bg-primary text-white rounded-tr-none shadow-lg' :
-            isError ? 'bg-error/10 border-error/20 text-error rounded-tl-none shadow-sm' :
-            'bg-surface border border-border rounded-tl-none text-text shadow-sm'
+            'p-5 rounded-[1.5rem] text-sm leading-relaxed transition-all duration-300',
+            isUser
+              ? 'bg-gradient-to-br from-primary to-primary-hover text-white rounded-tr-none shadow-xl shadow-primary/10' :
+            isError
+              ? 'bg-error/5 border-error/20 text-error rounded-tl-none' :
+              'glass rounded-tl-none text-text/90 shadow-lg'
           )}>
             {isUser ? (
               <p className="whitespace-pre-wrap">{content}</p>

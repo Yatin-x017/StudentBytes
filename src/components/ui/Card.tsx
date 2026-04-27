@@ -10,10 +10,10 @@ interface CardProps extends HTMLMotionProps<'div'> {
 export const Card: React.FC<CardProps> = ({ children, className, animate = true, ...props }) => {
   return (
     <motion.div
-      whileHover={animate ? { y: -2, borderColor: 'rgba(255,255,255,0.2)' } : {}}
-      transition={{ duration: 0.15 }}
+      whileHover={animate ? { y: -2, scale: 1.005 } : {}}
+      transition={{ duration: 0.2, ease: "easeOut" }}
       className={cn(
-        'bg-surface border border-white/5 rounded-2xl overflow-hidden transition-colors',
+        'glass rounded-[2rem] overflow-hidden transition-all duration-300 hover:shadow-glow',
         className
       )}
       {...props}

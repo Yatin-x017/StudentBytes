@@ -44,32 +44,34 @@ const LandingPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-black uppercase tracking-widest mb-8 animate-pulse">
-              <Sparkles size={14} className="fill-primary" /> The Future of CS Study
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-8">
+              <Sparkles size={14} className="fill-primary" /> For Computer Science Students
             </div>
 
-            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tight mb-8 leading-[1.1] bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent">
-              Master Computer Science with your personal AI tutor.
+            <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter mb-8 leading-[0.9] bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent">
+              Master CS <br/> <span className="text-primary glow-text">10x faster.</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-text-muted max-w-3xl mx-auto mb-12 leading-relaxed font-medium">
-              Crush DSA midterms, visualize complex OS concepts, and build mastery through AI-driven quizzes.
-              No account needed — start studying in seconds.
+            <p className="text-lg md:text-xl text-text-muted max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
+              The AI-powered study platform for the next generation of engineers.
+              Understand complex concepts, sync Canvas assignments, and prove mastery.
+              <span className="block mt-2 text-white/40">No account required. Built for local privacy.</span>
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-              <Button size="lg" className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl shadow-2xl shadow-primary/30" onClick={() => navigate(ROUTES.DASHBOARD)}>
-                Start Studying Now <ArrowRight className="ml-2 h-5 w-5" />
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+              <Button size="lg" className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl shadow-2xl shadow-primary/40 relative group overflow-hidden" onClick={() => navigate(ROUTES.DASHBOARD)}>
+                <span className="relative z-10 flex items-center gap-2">Get Started for Free <ArrowRight size={20} /></span>
+                <div className="absolute inset-0 bg-gradient-to-r from-primary-hover to-accent opacity-0 group-hover:opacity-100 transition-opacity" />
               </Button>
               <Button
                 variant="secondary"
                 size="lg"
-                className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl gap-2 font-black uppercase tracking-widest text-xs"
+                className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl glass border-white/10 gap-2 font-black uppercase tracking-widest text-xs"
                 onClick={() => {
                   document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
                 }}
               >
-                See Demo
+                See it in action
               </Button>
             </div>
 

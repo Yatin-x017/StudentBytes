@@ -11,7 +11,6 @@ import {
   FileText,
   Zap,
   CheckCircle2,
-  ChevronRight,
   Brain,
   CalendarDays
 } from 'lucide-react';
@@ -92,12 +91,11 @@ const DashboardPage: React.FC = () => {
       .finally(() => setCanvasLoading(false));
   }, [canvasConnected, canvasDomain, canvasToken]);
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const displayName = user?.user_metadata?.full_name?.split(' ')[0]
+    || user?.email?.split('@')[0]
+    || 'Coder';
 
   const today = new Date().setHours(0, 0, 0, 0);
   const sessionsToday = state.sessions.filter(s => s.createdAt >= today).length;
@@ -111,59 +109,56 @@ const DashboardPage: React.FC = () => {
   const recentSessions = state.sessions.slice(0, 3);
   const dueCards = srCards ? getDueCards(srCards) : [];
 
-  // Onboarding Checklist
-  const hasApiKey = !!state.apiKey;
-  const hasSession = state.sessions.length > 0;
-  const hasQuiz = quizHistory.length > 0;
-  const isNewUser = state.sessions.length === 0;
-
   return (
     <div className="max-w-6xl mx-auto space-y-10 animate-fade-in">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight mb-2">
-            {getGreeting()}, {state.user.name.split(' ')[0]} 👋
+      <div className="relative overflow-hidden rounded-3xl p-8 mb-8
+                    bg-gradient-to-br from-primary/10 via-surface to-surface
+                    border border-primary/15">
+        {/* Decorative blob */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5
+                      rounded-full blur-3xl pointer-events-none" />
+        <div className="relative">
+          <p className="text-text-muted text-sm font-medium mb-1">
+            {greeting}, {displayName} 👋
+          </p>
+          <h1 className="text-3xl font-display font-black tracking-tight mb-4">
+            {canvasAssignments.length > 0
+              ? `${canvasAssignments.filter(a => {
+                  const diff = a.due_at
+                    ? Math.ceil((new Date(a.due_at).getTime() - Date.now()) / 86400000)
+                    : 99;
+                  return diff >= 0 && diff <= 3;
+                }).length} urgent deadline${
+                  canvasAssignments.filter(a => {
+                    const diff = a.due_at
+                      ? Math.ceil((new Date(a.due_at).getTime() - Date.now()) / 86400000)
+                      : 99;
+                    return diff >= 0 && diff <= 3;
+                  }).length === 1 ? '' : 's'
+                } this week`
+              : "Ready to study?"}
           </h1>
-          <p className="text-text-muted">Welcome back to your study hub. What are we mastering today?</p>
+          {/* Quick action buttons */}
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => navigate(ROUTES.STUDY)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl
+                        bg-primary hover:bg-primary-hover text-white text-sm
+                        font-bold transition-all shadow-lg shadow-primary/20"
+            >
+              <Sparkles size={16} /> Start Studying
+            </button>
+            <button
+              onClick={() => navigate(ROUTES.QUIZ)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl
+                        bg-white/5 hover:bg-white/10 border border-white/10
+                        text-sm font-bold transition-all"
+            >
+              <Brain size={16} /> Take a Quiz
+            </button>
+          </div>
         </div>
-        <Button size="lg" onClick={() => navigate(ROUTES.STUDY)}>
-          Start Studying <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </header>
-
-      {isNewUser && (
-        <Card className="p-8 border-primary/20 bg-primary/5 rounded-[2.5rem] relative overflow-hidden">
-           <div className="relative z-10">
-              <h2 className="text-2xl font-black mb-6 flex items-center gap-2">
-                <Zap className="text-primary fill-primary" size={24} />
-                Getting Started
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <ChecklistItem
-                  done={hasApiKey}
-                  label="Add your Anthropic API key"
-                  path={ROUTES.SETTINGS}
-                  navigate={navigate}
-                />
-                <ChecklistItem
-                  done={hasSession}
-                  label="Start your first study session"
-                  path={ROUTES.STUDY}
-                  navigate={navigate}
-                />
-                <ChecklistItem
-                  done={hasQuiz}
-                  label="Take a quiz to earn XP"
-                  path={ROUTES.QUIZ}
-                  navigate={navigate}
-                />
-              </div>
-           </div>
-           <div className="absolute top-0 right-0 p-8 opacity-10">
-             <Zap size={120} />
-           </div>
-        </Card>
-      )}
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={<Clock className="text-primary" />} label="Sessions Today" value={sessionsToday} />
@@ -457,24 +452,6 @@ const DashboardPage: React.FC = () => {
   );
 };
 
-const ChecklistItem = ({ done, label, path, navigate }: { done: boolean, label: string, path: string, navigate: any }) => (
-  <button
-    onClick={() => navigate(path)}
-    className={cn(
-      "flex items-center gap-3 p-4 rounded-2xl border transition-all text-left",
-      done ? "bg-success/10 border-success/20 opacity-60" : "bg-white/5 border-white/10 hover:border-white/30"
-    )}
-  >
-    <div className={cn(
-      "w-6 h-6 rounded-full flex items-center justify-center",
-      done ? "bg-success text-white" : "border-2 border-white/20"
-    )}>
-      {done && <CheckCircle2 size={14} />}
-    </div>
-    <span className={cn("text-sm font-bold", done && "line-through")}>{label}</span>
-    {!done && <ChevronRight size={16} className="ml-auto opacity-50" />}
-  </button>
-);
 
 const StatCard = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) => (
   <Card className="p-6 flex flex-col gap-4 border-white/5">

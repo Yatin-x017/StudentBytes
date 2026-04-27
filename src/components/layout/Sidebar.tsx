@@ -1,7 +1,6 @@
 import React from 'react';
-import { NavLink, Link, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Terminal,
   Settings,
   LayoutDashboard,
   MessageSquare,
@@ -11,23 +10,26 @@ import {
   Users,
   Zap,
   ChevronRight,
-  CalendarDays
+  CalendarDays,
+  Brain,
+  LogOut
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
-import { Card } from '../ui/Card';
 
 export const Sidebar: React.FC = () => {
   const { state } = useAppContext();
+  const { user, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const mainNav = [
     { label: 'Dashboard', icon: LayoutDashboard, path: ROUTES.DASHBOARD },
     { label: 'Study AI', icon: MessageSquare, path: ROUTES.STUDY },
-    { label: 'Mastery Quiz', icon: GraduationCap, path: ROUTES.QUIZ },
+    { label: 'Mastery Quiz', icon: Brain, path: ROUTES.QUIZ },
     { label: 'Knowledge', icon: FileText, path: ROUTES.NOTES },
     { label: 'Canvas', icon: GraduationCap, path: ROUTES.CANVAS },
     { label: 'Timetable', icon: CalendarDays, path: ROUTES.TIMETABLE },
@@ -39,22 +41,27 @@ export const Sidebar: React.FC = () => {
     { label: 'Settings', icon: Settings, path: ROUTES.SETTINGS },
   ];
 
-  const { user } = useAuth();
+  const hasKey = state.settings.provider === 'gemini'
+    ? !!state.settings.geminiApiKey
+    : !!state.apiKey;
 
   return (
-    <aside className="w-72 border-r border-white/5 h-screen sticky top-0 hidden lg:flex flex-col bg-bg overflow-hidden">
-      <div className="p-8">
-        <Link to={ROUTES.LANDING} className="flex items-center gap-3 group">
-          <div className="bg-primary rounded-xl p-2 shadow-lg shadow-primary/20 group-hover:scale-110 transition-all duration-300">
-            <Terminal size={24} className="text-white" />
-          </div>
-          <span className="font-black text-2xl tracking-tighter">Student Bytes</span>
-        </Link>
+    <aside className="w-[240px] border-r border-white/5 h-screen sticky top-0 hidden lg:flex flex-col bg-[#0a0a0f]/95 backdrop-blur-xl z-30 overflow-hidden">
+      {/* Logo Area */}
+      <div className="flex items-center gap-3 px-6 py-8">
+        <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+          <Zap size={18} className="text-white fill-white" />
+        </div>
+        <div>
+          <span className="font-display font-black text-base tracking-tight">Student</span>
+          <span className="font-display font-black text-base tracking-tight text-primary">Bytes</span>
+        </div>
       </div>
 
       <div className="flex-1 px-4 space-y-8 py-4 overflow-y-auto custom-scrollbar">
+        {/* Main Menu */}
         <div>
-          <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-text-muted mb-4">Main Menu</h3>
+          <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-text-faint mb-4">Main Menu</h3>
           <nav className="space-y-1">
             {mainNav.map((item) => {
               const isActive = location.pathname === item.path;
@@ -64,21 +71,21 @@ export const Sidebar: React.FC = () => {
                   to={item.path}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center justify-between px-4 py-3 rounded-2xl font-bold text-sm transition-all group relative',
+                      'flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all group relative',
                       isActive
-                        ? 'text-white bg-white/5 shadow-sm border border-white/5'
-                        : 'text-text-muted hover:text-white hover:bg-white/2 border border-transparent'
+                        ? 'text-primary bg-primary/10 border border-primary/20'
+                        : 'text-text-muted hover:text-white hover:bg-white/5 border border-transparent'
                     )
                   }
                 >
                   <div className="flex items-center gap-3 relative z-10">
-                    <item.icon size={20} className={cn("transition-colors", isActive ? "text-primary" : "group-hover:text-primary")} />
+                    <item.icon size={18} className={cn("transition-colors", isActive ? "text-primary" : "group-hover:text-primary")} />
                     {item.label}
                   </div>
                   {isActive && (
                     <motion.div
                       layoutId="active-pill"
-                      className="absolute left-0 w-1 h-6 bg-primary rounded-r-full"
+                      className="absolute left-0 w-1 h-4 bg-primary rounded-r-full"
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
@@ -89,8 +96,9 @@ export const Sidebar: React.FC = () => {
           </nav>
         </div>
 
+        {/* Platform */}
         <div>
-          <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-text-muted mb-4">Platform</h3>
+          <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-text-faint mb-4">Platform</h3>
           <nav className="space-y-1">
             {secondaryNav.map((item) => {
               const isActive = location.pathname === item.path;
@@ -100,21 +108,21 @@ export const Sidebar: React.FC = () => {
                   to={item.path}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center justify-between px-4 py-3 rounded-2xl font-bold text-sm transition-all group relative',
+                      'flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all group relative',
                       isActive
-                        ? 'text-white bg-white/5 shadow-sm border border-white/5'
-                        : 'text-text-muted hover:text-white hover:bg-white/2 border border-transparent'
+                        ? 'text-primary bg-primary/10 border border-primary/20'
+                        : 'text-text-muted hover:text-white hover:bg-white/5 border border-transparent'
                     )
                   }
                 >
                   <div className="flex items-center gap-3 relative z-10">
-                    <item.icon size={20} className={cn("transition-colors", isActive ? "text-primary" : "group-hover:text-primary")} />
+                    <item.icon size={18} className={cn("transition-colors", isActive ? "text-primary" : "group-hover:text-primary")} />
                     {item.label}
                   </div>
                   {isActive && (
                     <motion.div
                       layoutId="active-pill-sec"
-                      className="absolute left-0 w-1 h-6 bg-primary rounded-r-full"
+                      className="absolute left-0 w-1 h-4 bg-primary rounded-r-full"
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
@@ -125,39 +133,61 @@ export const Sidebar: React.FC = () => {
           </nav>
         </div>
 
-        <div className="px-4">
-          <Card className="p-5 border-primary/20 bg-primary/5 rounded-3xl relative overflow-hidden group cursor-pointer" onClick={() => {}}>
-             <div className="absolute -right-4 -bottom-4 text-primary opacity-10 group-hover:scale-110 transition-transform">
-               <Zap size={80} />
-             </div>
-             <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Upgrade to Pro</p>
-             <p className="text-xs font-bold mb-3 leading-tight">Get unlimited AI study sessions & advanced analytics.</p>
-             <div className="flex items-center gap-1 text-[10px] font-black text-white bg-primary py-1.5 px-3 rounded-lg w-fit shadow-lg shadow-primary/20">
-               LEARN MORE
-             </div>
-          </Card>
-        </div>
+        {/* Built-in AI Indicator */}
+        {!hasKey && (
+          <div className="mx-2 p-4 rounded-xl bg-white/5 border border-white/5">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary">Built-in AI</p>
+            </div>
+            <p className="text-[10px] text-text-muted leading-relaxed mb-3">
+              Unlimited with your own key.
+            </p>
+            <button
+              onClick={() => navigate(ROUTES.SETTINGS)}
+              className="text-[10px] font-bold text-white hover:underline uppercase tracking-tighter"
+            >
+              Add Key →
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="p-6 border-t border-white/5 bg-white/2 backdrop-blur-md">
+      {/* User Area */}
+      <div className="p-4 border-t border-white/5 bg-white/2 backdrop-blur-md">
         {user ? (
-          <Link
-            to={ROUTES.PROFILE}
-            className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/5 transition-all group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-black shadow-lg shadow-primary/20 group-hover:rotate-3 transition-transform">
-              {state.user.name.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold truncate">{state.user.name}</p>
-              <p className="text-[10px] font-bold text-text-muted uppercase tracking-tighter">Level {state.user.level} Coder</p>
-            </div>
-            <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-          </Link>
+          <div className="flex items-center justify-between gap-2 p-2 rounded-xl hover:bg-white/5 transition-all group">
+            <Link to={ROUTES.PROFILE} className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="relative">
+                {user.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="" className="w-9 h-9 rounded-lg object-cover" />
+                ) : (
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-black text-sm">
+                    {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}
+                  </div>
+                )}
+                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-[#0a0a0f]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold truncate">{user.user_metadata?.full_name || user.email?.split('@')[0]}</p>
+                <div className="flex items-center gap-1">
+                   <Zap size={8} className="text-primary fill-primary" />
+                   <span className="text-[8px] font-black text-primary uppercase tracking-tighter">Level {state.user.level}</span>
+                </div>
+              </div>
+            </Link>
+            <button
+              onClick={() => signOut()}
+              className="p-2 text-text-muted hover:text-error transition-colors"
+              title="Sign Out"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
         ) : (
           <Link
             to="/login"
-            className="flex items-center justify-between p-3 rounded-2xl bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all group"
+            className="flex items-center justify-between p-3 rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all group"
           >
             <div className="flex items-center gap-3">
                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">

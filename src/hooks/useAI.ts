@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { getAnthropicClient, SYSTEM_PROMPT, QUIZ_PROMPT, buildSystemPromptWithFile } from '@/lib/anthropic';
 import { streamGeminiMessage, generateGeminiQuiz } from '@/lib/gemini';
+import { streamBuiltinAI, generateBuiltinQuiz } from '@/lib/builtinAI';
 import { truncateForContext } from '@/lib/pdfExtractor';
 import type { Message, QuizQuestion } from '@/lib/types';
 
@@ -12,15 +13,6 @@ export function useAI() {
 
   const streamMessage = useCallback(
     async (sessionId: string, userContent: string, onChunk?: (text: string) => void) => {
-      const hasKey = state.settings.provider === 'gemini'
-        ? !!state.settings.geminiApiKey
-        : !!state.apiKey;
-
-      if (!hasKey) {
-        setError('API key missing. Add it in Settings.');
-        return;
-      }
-
       setLoading(true);
       setError(null);
 
@@ -42,6 +34,71 @@ export function useAI() {
 
       try {
         const assistantMsgId = `msg_${Date.now()}`;
+
+        // Determine which AI to use
+        const hasAnthropicKey = !!state.apiKey;
+        const hasGeminiKey = !!state.settings.geminiApiKey;
+        const provider = state.settings.provider;
+
+        // Priority: user's own key → built-in AI
+        const useBuiltin = (provider === 'anthropic' && !hasAnthropicKey) ||
+                           (provider === 'gemini' && !hasGeminiKey) ||
+                           (!hasAnthropicKey && !hasGeminiKey);
+
+        if (useBuiltin) {
+          // Use server-side built-in Gemini
+          try {
+            await streamBuiltinAI(
+              messagesWithUser,
+              (text) => {
+                dispatch({
+                  type: 'UPDATE_SESSION',
+                  payload: {
+                    ...session,
+                    updatedAt: Date.now(),
+                    messages: [
+                      ...messagesWithUser,
+                      {
+                        id: assistantMsgId,
+                        role: 'assistant' as const,
+                        content: text,
+                        timestamp: Date.now(),
+                      },
+                    ],
+                  },
+                });
+                if (onChunk) onChunk(text);
+              },
+              session.attachedFile
+                ? buildSystemPromptWithFile(
+                    truncateForContext(session.attachedFile.text),
+                    session.attachedFile.name
+                  )
+                : undefined
+            );
+          } catch (err: any) {
+            // Show error in chat
+            dispatch({
+              type: 'UPDATE_SESSION',
+              payload: {
+                ...session,
+                messages: [
+                  ...messagesWithUser,
+                  {
+                    id: assistantMsgId,
+                    role: 'assistant' as const,
+                    content: `⚠️ ${err.message || 'AI request failed. Please try again.'}`,
+                    timestamp: Date.now(),
+                    isError: true,
+                  },
+                ],
+              },
+            });
+          } finally {
+            setLoading(false);
+          }
+          return;
+        }
 
         const systemPrompt = session.attachedFile
           ? buildSystemPromptWithFile(
@@ -154,19 +211,26 @@ export function useAI() {
 
   const generateQuiz = useCallback(
     async (topic: string, difficulty: string = 'intermediate'): Promise<QuizQuestion[]> => {
-      const hasKey = state.settings.provider === 'gemini'
-        ? !!state.settings.geminiApiKey
-        : !!state.apiKey;
-
-      if (!hasKey) {
-        setError('API key missing. Add it in Settings.');
-        return [];
-      }
-
       setLoading(true);
       setError(null);
 
       try {
+        const hasAnthropicKey = !!state.apiKey;
+        const hasGeminiKey = !!state.settings.geminiApiKey;
+        const provider = state.settings.provider;
+
+        const useBuiltin = (provider === 'anthropic' && !hasAnthropicKey) ||
+                           (provider === 'gemini' && !hasGeminiKey) ||
+                           (!hasAnthropicKey && !hasGeminiKey);
+
+        if (useBuiltin) {
+          const text = await generateBuiltinQuiz(topic, difficulty, QUIZ_PROMPT(topic, difficulty));
+          const cleaned = text.replace(/```json\n?/, '').replace(/\n?```/, '').trim();
+          const match = cleaned.match(/\[[\s\S]*\]/);
+          if (!match) throw new Error('Quiz generation failed — try a different topic.');
+          return JSON.parse(match[0]) as QuizQuestion[];
+        }
+
         if (state.settings.provider === 'gemini') {
           const geminiKey = state.settings.geminiApiKey;
           if (!geminiKey) { setError('Gemini API key is missing.'); return []; }

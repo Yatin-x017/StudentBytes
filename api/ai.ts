@@ -1,122 +1,66 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import Anthropic from '@anthropic-ai/sdk';
 
-export const config = {
-  runtime: 'edge',
-};
-
-const BUILTIN_KEY = process.env.GEMINI_API_KEY || '';
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || '';
 
 const SYSTEM_PROMPT = `You are Byte — a sharp, friendly AI tutor
-for CS university students. You're like a brilliant senior student
-helping a junior: casual, precise, never condescending.
+for CS university students. Casual, precise, never condescending.
+Cover DSA, OS, DBMS, Networks, OOP, System Design.
+Use markdown, code examples, end with a follow-up question.`;
 
-STRENGTHS: DSA, OS, DBMS, Computer Networks, OOP, System Design,
-debugging, exam prep, assignment help.
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-HOW YOU RESPOND:
-- Working code examples (Python default)
-- markdown with headers, bullets, fenced code blocks
-- concept → example → common mistake → practice question
-- End with one follow-up question
-- For assignments: help understand, guide don't just solve
-- Be concise, no filler`;
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-export default async function handler(req: Request) {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-    });
-  }
-
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  if (!BUILTIN_KEY) {
-    return new Response(JSON.stringify({ error: 'Built-in AI not configured.' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  const { messages, systemPrompt, mode } = req.body;
+  if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'messages required' });
+  if (!ANTHROPIC_KEY) return res.status(503).json({ error: 'Built-in AI not configured.' });
 
   try {
-    const { messages, systemPrompt, mode } = await req.json();
+    const client = new Anthropic({ apiKey: ANTHROPIC_KEY });
 
-    if (!messages || !Array.isArray(messages)) {
-      return new Response(JSON.stringify({ error: 'messages array required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    const genAI = new GoogleGenerativeAI(BUILTIN_KEY);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-lite',
-      systemInstruction: systemPrompt || SYSTEM_PROMPT,
-    });
-
-    const history = messages.slice(0, -1).map((m: any) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
+    const anthropicMessages = messages.map((m: any) => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: m.content,
     }));
 
-    const lastMessage = messages[messages.length - 1];
-
     if (mode === 'stream') {
-      const chat = model.startChat({ history });
-      const result = await chat.sendMessageStream(lastMessage.content);
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
 
-      const stream = new ReadableStream({
-        async start(controller) {
-          const encoder = new TextEncoder();
-          try {
-            for await (const chunk of result.stream) {
-              const text = chunk.text();
-              if (text) {
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
-              }
-            }
-            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-          } catch (err: any) {
-            controller.error(err);
-          } finally {
-            controller.close();
-          }
-        },
+      const stream = await client.messages.stream({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        system: systemPrompt || SYSTEM_PROMPT,
+        messages: anthropicMessages,
       });
 
-      return new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
+      for await (const event of stream) {
+        if (
+          event.type === 'content_block_delta' &&
+          event.delta.type === 'text_delta'
+        ) {
+          res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`);
+        }
+      }
+      res.write('data: [DONE]\n\n');
+      res.end();
     } else {
-      const chat = model.startChat({ history });
-      const result = await chat.sendMessage(lastMessage.content);
-      const text = result.response.text();
-      return new Response(JSON.stringify({ text }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        system: systemPrompt || SYSTEM_PROMPT,
+        messages: anthropicMessages,
       });
+      const text = response.content[0].type === 'text' ? response.content[0].text : '';
+      return res.status(200).json({ text });
     }
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message || 'AI request failed' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(500).json({ error: err.message || 'AI request failed' });
   }
 }

@@ -1,11 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/((?!api/).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "env": {
-    "ANTHROPIC_API_KEY": "your Anthropic API key from console.anthropic.com"
-  }
+  ]
 }

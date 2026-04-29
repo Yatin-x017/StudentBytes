@@ -13,13 +13,15 @@ async function canvasFetch<T>(
     throw new Error('Canvas not connected. Add your domain and token.');
   }
 
-  const params = new URLSearchParams({
-    domain: domain.replace(/^https?:\/\//, '').replace(/\/$/, ''),
-    token,
-    path,
-  });
+  const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const url = `https://${cleanDomain}/api/v1${path}`;
 
-  const res = await fetch(`/api/canvas?${params.toString()}`);
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json'
+    }
+  });
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Unknown error' }));

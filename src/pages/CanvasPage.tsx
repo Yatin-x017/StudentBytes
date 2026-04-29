@@ -9,19 +9,15 @@ import {
   ChevronRight,
   Loader2,
   Lightbulb,
-  X,
-  ArrowRight,
   Sparkles
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import ReactMarkdown from 'react-markdown';
+import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { STORAGE_KEYS, ROUTES } from '@/lib/constants';
 import { fetchCourses, fetchAssignments, fetchAnnouncements, formatDueDate, dueDateColor } from '@/lib/canvas';
-import { analyzeAssignment } from '@/lib/builtinAI';
 import type { CanvasCourse, CanvasAssignment, CanvasAnnouncement } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -38,13 +34,6 @@ const CanvasPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(!!localStorage.getItem(STORAGE_KEYS.CANVAS_TOKEN));
   const [activeTab, setActiveTab] = useState<'assignments' | 'announcements'>('assignments');
-
-  const [helpModal, setHelpModal] = useState<{
-    assignment: any;
-    analysis: string;
-    loading: boolean;
-    error: string | null;
-  } | null>(null);
 
   useEffect(() => {
     if (connected && domain && token) {
@@ -121,36 +110,14 @@ const CanvasPage: React.FC = () => {
   };
 
   const handleHelp = async (assignment: any) => {
-    setHelpModal({
-      assignment,
-      analysis: '',
-      loading: true,
-      error: null,
+    navigate(ROUTES.STUDY, {
+      state: { prefillMessage:
+        `Help me with this assignment: "${assignment.name}"\n\n` +
+        `Course: ${(assignment as any).courseName || selectedCourse?.name}\n` +
+        `Description: ${stripHtml(assignment.description).slice(0, 500)}\n\n` +
+        `Please analyze this and suggest how I should start.`
+      }
     });
-
-    try {
-      const description = assignment.description
-        ? assignment.description.replace(/<[^>]*>/g, '').trim().slice(0, 1000)
-        : '';
-
-      const analysis = await analyzeAssignment(
-        assignment.name,
-        description,
-        (assignment as any).courseName || selectedCourse?.name || '',
-      );
-
-      setHelpModal(prev => prev ? {
-        ...prev,
-        analysis,
-        loading: false,
-      } : null);
-    } catch (err: any) {
-      setHelpModal(prev => prev ? {
-        ...prev,
-        error: err.message || 'Failed to analyze assignment.',
-        loading: false,
-      } : null);
-    }
   };
 
   const stripHtml = (html: string | null) => {
@@ -487,132 +454,6 @@ const CanvasPage: React.FC = () => {
         </div>
       )}
 
-      {/* Help Modal */}
-      <AnimatePresence>
-        {helpModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4
-                          bg-black/70 backdrop-blur-md"
-               onClick={() => setHelpModal(null)}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-2xl bg-[#13131a] border border-white/10 rounded-3xl
-                         shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
-              onClick={e => e.stopPropagation()}
-            >
-              {/* Modal header */}
-              <div className="flex items-start justify-between p-6 pb-4
-                              border-b border-white/5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center
-                                  justify-center shrink-0">
-                    <Lightbulb size={20} className="text-amber-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] text-amber-400 font-black uppercase
-                                  tracking-widest mb-0.5">
-                      Assignment Help
-                    </p>
-                    <h3 className="font-black text-base leading-tight truncate max-w-md">
-                      {helpModal.assignment.name}
-                    </h3>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setHelpModal(null)}
-                  className="p-2 rounded-xl hover:bg-white/5 text-text-muted
-                             hover:text-white transition-all shrink-0 ml-4"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              {/* Modal content */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {helpModal.loading ? (
-                  <div className="flex flex-col items-center justify-center py-16 gap-4">
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-full border-2 border-amber-500/20
-                                      border-t-amber-400 animate-spin" />
-                      <Sparkles size={16} className="text-amber-400 absolute inset-0
-                                                     m-auto animate-pulse" />
-                    </div>
-                    <div className="text-center">
-                      <p className="font-bold text-sm">Byte is reading your assignment...</p>
-                      <p className="text-text-muted text-xs mt-1">
-                        Summarizing, breaking down steps, suggesting resources
-                      </p>
-                    </div>
-                  </div>
-                ) : helpModal.error ? (
-                  <div className="flex flex-col items-center justify-center py-12 gap-3">
-                    <AlertCircle size={32} className="text-error" />
-                    <p className="text-error text-sm">{helpModal.error}</p>
-                    <button
-                      onClick={() => handleHelp(helpModal.assignment)}
-                      className="text-xs text-primary hover:underline"
-                    >
-                      Try again
-                    </button>
-                  </div>
-                ) : (
-                  <div className="prose prose-invert prose-sm max-w-none
-                                  prose-headings:font-black prose-headings:text-white
-                                  prose-p:text-text-muted prose-li:text-text-muted
-                                  prose-strong:text-white">
-                    <ReactMarkdown>{helpModal.analysis}</ReactMarkdown>
-                  </div>
-                )}
-              </div>
-
-              {/* Modal footer */}
-              {!helpModal.loading && !helpModal.error && (
-                <div className="p-6 pt-4 border-t border-white/5 flex items-center
-                                justify-between gap-4">
-                  <p className="text-[11px] text-text-muted">
-                    Powered by Byte AI
-                  </p>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setHelpModal(null)}
-                      className="px-4 py-2.5 rounded-xl border border-white/10
-                                 hover:border-white/20 text-sm font-bold text-text-muted
-                                 hover:text-white transition-all"
-                    >
-                      Close
-                    </button>
-                    <button
-                      onClick={() => {
-                        const desc = helpModal.assignment.description
-                          ? helpModal.assignment.description.replace(/<[^>]*>/g, '').slice(0, 600)
-                          : '';
-                        navigate(ROUTES.STUDY, {
-                          state: {
-                            prefillMessage:
-                              `I need help with my assignment: "${helpModal.assignment.name}".\n\n` +
-                              `Course: ${(helpModal.assignment as any).courseName || selectedCourse?.name}\n` +
-                              (desc ? `Description: ${desc}\n\n` : '\n') +
-                              `Byte's initial analysis:\n${helpModal.analysis}\n\n` +
-                              `Let's work through this step by step.`,
-                          },
-                        });
-                        setHelpModal(null);
-                      }}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl
-                                 bg-primary hover:bg-primary-hover text-white text-sm
-                                 font-bold transition-all"
-                    >
-                      Study with Byte
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

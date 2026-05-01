@@ -4,6 +4,7 @@ import { getAnthropicClient, SYSTEM_PROMPT, QUIZ_PROMPT, buildSystemPromptWithFi
 import { streamGeminiMessage, generateGeminiQuiz } from '@/lib/gemini';
 import { truncateForContext } from '@/lib/pdfExtractor';
 import type { Message, QuizQuestion } from '@/lib/types';
+import { streamBuiltinAI, generateBuiltinQuiz } from '@/lib/builtinAI';
 
 export function useAI() {
   const { state, dispatch } = useAppContext();
@@ -17,6 +18,75 @@ export function useAI() {
 
       const session = state.sessions.find(s => s.id === sessionId);
       if (!session) return;
+
+      const hasAnthropicKey = !!state.apiKey;
+      const hasGeminiKey = !!(state.settings as any)?.geminiApiKey;
+      const hasAnyKey = hasAnthropicKey || hasGeminiKey;
+
+      if (!hasAnyKey) {
+        const assistantMsgId = `msg_${Date.now() + 1}`;
+        const newUserMessage: Message = {
+          id: Date.now().toString(),
+          role: 'user',
+          content: userContent,
+          timestamp: Date.now()
+        };
+
+        const messagesWithUser = [...session.messages, newUserMessage];
+        dispatch({
+          type: 'UPDATE_SESSION',
+          payload: { ...session, messages: messagesWithUser, updatedAt: Date.now() }
+        });
+
+        const systemPrompt = session.attachedFile
+          ? buildSystemPromptWithFile(
+              truncateForContext(session.attachedFile.text),
+              session.attachedFile.name
+            )
+          : SYSTEM_PROMPT;
+
+        try {
+          await streamBuiltinAI(
+            messagesWithUser,
+            (text) => {
+              dispatch({
+                type: 'UPDATE_SESSION',
+                payload: {
+                  ...session,
+                  updatedAt: Date.now(),
+                  messages: [
+                    ...messagesWithUser,
+                    { id: assistantMsgId, role: 'assistant', content: text, timestamp: Date.now() }
+                  ]
+                }
+              });
+              if (onChunk) onChunk(text);
+            },
+            systemPrompt
+          );
+        } catch (err: any) {
+          setError(err.message || 'Something went wrong. Try again.');
+          dispatch({
+            type: 'UPDATE_SESSION',
+            payload: {
+              ...session,
+              updatedAt: Date.now(),
+              messages: [
+                ...messagesWithUser,
+                {
+                  id: assistantMsgId,
+                  role: 'assistant',
+                  content: `⚠️ ${err.message || 'Something went wrong. Try again.'}`,
+                  timestamp: Date.now(),
+                },
+              ],
+            },
+          });
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
 
       const newUserMessage: Message = {
         id: Date.now().toString(),
@@ -40,10 +110,6 @@ export function useAI() {
               session.attachedFile.name
             )
           : SYSTEM_PROMPT;
-
-        console.log('[useAI] Sending to', state.settings.provider, 'model: claude-sonnet-4-5');
-        console.log('[useAI] API key present:', state.settings.provider === 'gemini' ? !!state.settings.geminiApiKey : !!state.apiKey);
-        console.log('[useAI] Messages count:', messagesWithUser.length);
 
         if (state.settings.provider === 'gemini') {
           const geminiKey = state.settings.geminiApiKey;
@@ -78,7 +144,7 @@ export function useAI() {
             max_tokens: 1024,
             system: systemPrompt,
             messages: messagesWithUser.map((msg) => ({
-              role: msg.role,
+              role: msg.role as 'user' | 'assistant',
               content: msg.content,
             })),
             stream: true,
@@ -113,8 +179,6 @@ export function useAI() {
         }
       } catch (err: any) {
         console.error('[useAI] Full error:', err);
-        console.error('[useAI] Error status:', err.status);
-        console.error('[useAI] Error message:', err.message);
         const errorMessage = err.message || 'Failed to get response from AI.';
         setError(errorMessage);
 
@@ -147,6 +211,23 @@ export function useAI() {
     async (topic: string, difficulty: string = 'intermediate'): Promise<QuizQuestion[]> => {
       setLoading(true);
       setError(null);
+
+      const hasAnyKey = !!state.apiKey || !!(state.settings as any)?.geminiApiKey;
+
+      if (!hasAnyKey) {
+        try {
+          const text = await generateBuiltinQuiz(QUIZ_PROMPT(topic, difficulty));
+          const cleaned = text.replace(/```json\n?/g, '').replace(/\n?```/g, '').trim();
+          const match = cleaned.match(/\[[\s\S]*\]/);
+          if (!match) throw new Error('Quiz generation failed — try a different topic.');
+          return JSON.parse(match[0]) as QuizQuestion[];
+        } catch (err: any) {
+          setError(err.message || 'Failed to generate quiz.');
+          return [];
+        } finally {
+          setLoading(false);
+        }
+      }
 
       try {
         if (state.settings.provider === 'gemini') {

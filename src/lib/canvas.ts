@@ -14,7 +14,8 @@ async function canvasFetch<T>(
   }
 
   const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
-  const url = `https://${cleanDomain}/api/v1${path}`;
+  const targetUrl = `https://${cleanDomain}/api/v1${path}`;
+  const url = `/api/canvas?url=${encodeURIComponent(targetUrl)}`;
 
   const res = await fetch(url, {
     headers: {

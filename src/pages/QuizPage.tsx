@@ -89,7 +89,7 @@ const QuizPage: React.FC = () => {
 
   const handleStartQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!topic.trim() || !state.apiKey) return;
+    if (!topic.trim()) return;
 
     const result = await generateQuiz(topic);
     if (result && Array.isArray(result)) {
@@ -322,7 +322,7 @@ const QuizPage: React.FC = () => {
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="e.g. Redux state management, Binary trees..."
                 className="w-full bg-black/40 border border-white/10 rounded-xl p-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
-                disabled={loading || !state.apiKey}
+                disabled={loading}
               />
             </div>
 
@@ -334,7 +334,7 @@ const QuizPage: React.FC = () => {
             <Button
               type="submit"
               className="w-full py-6 text-base font-black shadow-xl shadow-primary/20"
-              disabled={loading || !topic.trim() || !state.apiKey}
+              disabled={loading || !topic.trim()}
             >
               {loading ? (
                 <>

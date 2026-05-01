@@ -121,7 +121,7 @@ const StudyPage: React.FC = () => {
   };
 
   const handleSendMessage = async (message: string) => {
-    if (!message.trim() || loading || !state.apiKey) return;
+    if (!message.trim() || loading) return;
 
     let sessionId = activeSessionId;
     if (!sessionId) {
@@ -449,8 +449,8 @@ const StudyPage: React.FC = () => {
 
           <MessageInput
             onSend={handleSendMessage}
-            disabled={loading || !state.apiKey}
-            placeholder={state.apiKey ? "Ask Byte anything..." : "API key required to study..."}
+            disabled={loading}
+            placeholder="Ask Byte anything..."
           />
 
           <p className="text-[10px] text-center text-text-muted mt-3 font-medium flex items-center justify-center gap-1">

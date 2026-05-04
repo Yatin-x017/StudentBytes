@@ -142,7 +142,9 @@ const StudyPage: React.FC = () => {
 
     await streamMessage(sessionId, message);
     // scroll to bottom to make error visible if one occurred or for long streams
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const handleSaveNote = async (content: string) => {
@@ -412,14 +414,18 @@ const StudyPage: React.FC = () => {
           )}
 
           {error && (
-            <div className="flex justify-center">
-              <div className="bg-error/10 border border-error/20 text-error p-3 rounded-xl flex items-center gap-2 text-xs font-bold">
-                <AlertCircle size={14} /> {error}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex justify-center"
+            >
+              <div className="bg-error/10 border border-error/20 text-error p-4 rounded-2xl flex items-center gap-3 text-sm font-bold shadow-xl shadow-error/10">
+                <AlertCircle size={18} /> {error}
               </div>
-            </div>
+            </motion.div>
           )}
 
-          <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} className="h-4" />
         </div>
 
         <AnimatePresence>

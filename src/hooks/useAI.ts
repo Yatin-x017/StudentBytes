@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { getAnthropicClient, SYSTEM_PROMPT, QUIZ_PROMPT, buildSystemPromptWithFile } from '@/lib/anthropic';
 import { streamGeminiMessage, generateGeminiQuiz } from '@/lib/gemini';
@@ -11,15 +11,23 @@ export function useAI() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Keep a ref to state to avoid stale closures in streaming callbacks
+  const stateRef = React.useRef(state);
+  stateRef.current = state;
+
   const streamMessage = useCallback(
     async (sessionId: string, userContent: string, onChunk?: (text: string) => void) => {
       setLoading(true);
       setError(null);
 
-      const session = state.sessions.find(s => s.id === sessionId);
-      if (!session) return;
+      // Find session in latest state to handle newly created sessions
+      const session = stateRef.current.sessions.find(s => s.id === sessionId);
+      if (!session) {
+        setLoading(false);
+        return;
+      }
 
-      const hasAnthropicKey = !!state.apiKey;
+      const hasAnthropicKey = !!stateRef.current.apiKey;
       const hasGeminiKey = !!(state.settings as any)?.geminiApiKey;
       const hasAnyKey = hasAnthropicKey || hasGeminiKey;
 
@@ -49,10 +57,11 @@ export function useAI() {
           await streamBuiltinAI(
             messagesWithUser,
             (text) => {
+              const currentSession = stateRef.current.sessions.find(s => s.id === sessionId) || session;
               dispatch({
                 type: 'UPDATE_SESSION',
                 payload: {
-                  ...session,
+                  ...currentSession,
                   updatedAt: Date.now(),
                   messages: [
                     ...messagesWithUser,
@@ -111,8 +120,8 @@ export function useAI() {
             )
           : SYSTEM_PROMPT;
 
-        if (state.settings.provider === 'gemini') {
-          const geminiKey = state.settings.geminiApiKey;
+        if (stateRef.current.settings.provider === 'gemini') {
+          const geminiKey = stateRef.current.settings.geminiApiKey;
           if (!geminiKey) {
             setError('Gemini API key is missing. Add it in Settings.');
             setLoading(false);
@@ -122,10 +131,11 @@ export function useAI() {
             geminiKey,
             messagesWithUser,
             (text) => {
+              const currentSession = stateRef.current.sessions.find(s => s.id === sessionId) || session;
               dispatch({
                 type: 'UPDATE_SESSION',
                 payload: {
-                  ...session,
+                  ...currentSession,
                   updatedAt: Date.now(),
                   messages: [
                     ...messagesWithUser,
@@ -138,7 +148,7 @@ export function useAI() {
             systemPrompt
           );
         } else {
-          const client = getAnthropicClient(state.apiKey);
+          const client = getAnthropicClient(stateRef.current.apiKey);
           const stream = await client.messages.create({
             model: 'claude-sonnet-4-5',
             max_tokens: 1024,
@@ -156,10 +166,11 @@ export function useAI() {
             if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
               fullText += event.delta.text;
 
+              const currentSession = stateRef.current.sessions.find(s => s.id === sessionId) || session;
               dispatch({
                 type: 'UPDATE_SESSION',
                 payload: {
-                  ...session,
+                  ...currentSession,
                   updatedAt: Date.now(),
                   messages: [
                     ...messagesWithUser,
@@ -182,15 +193,16 @@ export function useAI() {
         const errorMessage = err.message || 'Failed to get response from AI.';
         setError(errorMessage);
 
+        const currentSession = stateRef.current.sessions.find(s => s.id === sessionId) || session;
         dispatch({
           type: 'UPDATE_SESSION',
           payload: {
-            ...session,
+            ...currentSession,
             updatedAt: Date.now(),
             messages: [
               ...messagesWithUser,
               {
-                id: Date.now().toString(),
+                id: `err_${Date.now()}`,
                 role: 'assistant',
                 content: `Byte couldn't respond: ${errorMessage}. Try again?`,
                 timestamp: Date.now(),

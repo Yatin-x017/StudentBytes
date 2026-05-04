@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Key, Save, X } from 'lucide-react';
+import { Key, Save, X, Loader2, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { getAnthropicClient } from '@/lib/anthropic';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface ApiKeyModalProps {
   isOpen: boolean;
@@ -14,6 +16,9 @@ interface ApiKeyModalProps {
 export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const { state, dispatch } = useAppContext();
   const [key, setKey] = useState('');
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  const [testError, setTestError] = useState('');
 
   const provider = state.settings?.provider || 'anthropic';
   const isGemini = provider === 'gemini';
@@ -32,9 +37,38 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onSuc
     }
 
     setKey('');
+    setTestResult(null);
     onSuccess();
     onClose();
   };
+
+  async function testKey() {
+    const trimmedKey = key.trim();
+    if (!trimmedKey) return;
+
+    setTesting(true);
+    setTestResult(null);
+    try {
+      if (isGemini) {
+        const genAI = new GoogleGenerativeAI(trimmedKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
+        await model.generateContent('hi');
+      } else {
+        const client = getAnthropicClient(trimmedKey);
+        await client.messages.create({
+          model: 'claude-sonnet-4-5',
+          max_tokens: 10,
+          messages: [{ role: 'user', content: 'hi' }],
+        });
+      }
+      setTestResult('success');
+    } catch (err: any) {
+      setTestResult('error');
+      setTestError(err.message || 'Invalid key');
+    } finally {
+      setTesting(false);
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -86,13 +120,45 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onSuc
                   />
                 </div>
 
-                <Button
-                  onClick={handleSave}
-                  disabled={!key.trim()}
-                  className="w-full py-6 text-base font-black shadow-xl shadow-primary/20 gap-2"
-                >
-                  <Save size={18} /> Save & Activate
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSave}
+                    disabled={!key.trim() || testing}
+                    className="flex-1 py-6 text-sm font-black shadow-xl shadow-primary/20 gap-2"
+                  >
+                    <Save size={18} /> Save
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={testKey}
+                    disabled={!key.trim() || testing}
+                    className="flex-1 py-6 text-sm font-black gap-2"
+                  >
+                    {testing ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
+                    {testing ? 'Testing...' : 'Test'}
+                  </Button>
+                </div>
+
+                <AnimatePresence>
+                  {testResult === 'success' && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-xs font-bold text-success flex items-center gap-2 justify-center"
+                    >
+                      <CheckCircle2 size={14} /> Connected!
+                    </motion.p>
+                  )}
+                  {testResult === 'error' && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-xs font-bold text-error flex items-center gap-2 justify-center"
+                    >
+                      <XCircle size={14} /> {testError}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
 
                 <p className="text-[10px] text-center text-text-muted font-medium pt-2">
                   Don't have a key? You can get one for free at <a href={isGemini ? "https://aistudio.google.com" : "https://console.anthropic.com"} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">

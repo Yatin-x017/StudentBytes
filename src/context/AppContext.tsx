@@ -24,7 +24,7 @@ const AppContext = createContext<{
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'SET_API_KEY':
-      return { ...state, apiKey: action.payload };
+      return { ...state, apiKey: action.payload.trim() };
     case 'ADD_NOTE':
       return { ...state, notes: [action.payload, ...state.notes] };
     case 'SET_NOTES':
@@ -54,8 +54,13 @@ function appReducer(state: AppState, action: AppAction): AppState {
     }
     case 'DELETE_SESSION':
       return { ...state, sessions: state.sessions.filter(s => s.id !== action.payload) };
-    case 'UPDATE_SETTINGS':
-      return { ...state, settings: { ...state.settings, ...action.payload } };
+    case 'UPDATE_SETTINGS': {
+      const newSettings = { ...state.settings, ...action.payload };
+      if (action.payload.geminiApiKey !== undefined) {
+        newSettings.geminiApiKey = action.payload.geminiApiKey.trim();
+      }
+      return { ...state, settings: newSettings };
+    }
     case 'UPDATE_USER':
       return { ...state, user: { ...state.user, ...action.payload } };
     case 'CLEAR_DATA':

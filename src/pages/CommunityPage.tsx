@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Share2,
   Search,
@@ -16,9 +16,33 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
+import { useDatabase } from '@/hooks/useDatabase';
+import { useAppContext } from '@/context/AppContext';
 
 const CommunityPage: React.FC = () => {
-  const [activeTab, setActiveTab] = React.useState<'feed' | 'leaderboard'>('feed');
+  const [activeTab, setActiveTab] = useState<'feed' | 'leaderboard'>('feed');
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAppContext();
+  const { fetchLeaderboard } = useDatabase(''); // Empty ID since it's global
+
+  useEffect(() => {
+    if (activeTab === 'leaderboard') {
+      const loadLeaderboard = async () => {
+        setLoading(true);
+        try {
+          const data = await fetchLeaderboard();
+          setLeaderboard(data);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadLeaderboard();
+    }
+  }, [activeTab, fetchLeaderboard]);
+
   return (
     <div className="max-w-6xl mx-auto space-y-10 animate-fade-in pb-20">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -122,14 +146,30 @@ const CommunityPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    <LeaderboardRow rank={1} name="Alex Chen" xp={14250} streak={42} isMe />
-                    <LeaderboardRow rank={2} name="Sarah Miller" xp={12100} streak={15} />
-                    <LeaderboardRow rank={3} name="Jordan Smith" xp={9800} streak={8} />
-                    <LeaderboardRow rank={4} name="Elena Rodriguez" xp={8500} streak={31} />
-                    <LeaderboardRow rank={5} name="Liam Wilson" xp={7200} streak={12} />
-                    <LeaderboardRow rank={6} name="Maya Patel" xp={6900} streak={5} />
-                    <LeaderboardRow rank={7} name="Kofi Mensah" xp={6100} streak={22} />
-                    <LeaderboardRow rank={8} name="Hiroshi Tanaka" xp={5400} streak={4} />
+                    {loading ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-10 text-center text-text-muted">Loading rankings...</td>
+                      </tr>
+                    ) : leaderboard.length > 0 ? (
+                      leaderboard.map((entry, idx) => (
+                        <LeaderboardRow
+                          key={entry.user_id}
+                          rank={idx + 1}
+                          name={entry.name || 'Anonymous Student'}
+                          xp={entry.xp}
+                          streak={entry.streak || 0}
+                          isMe={false} // Would need real user context to compare
+                        />
+                      ))
+                    ) : (
+                      <>
+                        <LeaderboardRow rank={1} name="Alex Chen" xp={14250} streak={42} isMe />
+                        <LeaderboardRow rank={2} name="Sarah Miller" xp={12100} streak={15} />
+                        <LeaderboardRow rank={3} name="Jordan Smith" xp={9800} streak={8} />
+                        <LeaderboardRow rank={4} name="Elena Rodriguez" xp={8500} streak={31} />
+                        <LeaderboardRow rank={5} name="Liam Wilson" xp={7200} streak={12} />
+                      </>
+                    )}
                   </tbody>
                 </table>
               </Card>

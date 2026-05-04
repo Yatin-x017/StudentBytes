@@ -106,11 +106,20 @@ export interface DbQuizHistory {
 
 export interface UserSettings {
   user_id: string;
+  name?: string;
   default_language: string;
   provider: 'anthropic' | 'gemini';
   xp: number;
   level: number;
   updated_at: string;
+}
+
+export interface LeaderboardEntry {
+  user_id: string;
+  name: string;
+  xp: number;
+  level: number;
+  streak?: number;
 }
 
 export interface ClassSlot {

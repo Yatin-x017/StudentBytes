@@ -1,6 +1,8 @@
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { decodeNote } from '@/lib/shareNote';
 import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const SharedNotePage = () => {
   const [params] = useSearchParams();
@@ -53,7 +55,30 @@ const SharedNotePage = () => {
         {/* Content */}
         <div className="prose prose-invert prose-sm max-w-none
                         bg-surface rounded-3xl p-8 md:p-12 border border-white/5 shadow-xl leading-relaxed">
-          <ReactMarkdown>{note.content || ''}</ReactMarkdown>
+          <ReactMarkdown
+            components={{
+              code({ node, inline, className, children, ...props }: any) {
+                const match = /language-(\w+)/.exec(className || '');
+                return !inline && match ? (
+                  <SyntaxHighlighter
+                    style={vscDarkPlus as any}
+                    language={match[1]}
+                    PreTag="div"
+                    className="rounded-xl border border-white/10"
+                    {...props}
+                  >
+                    {String(children).replace(/\n$/, '')}
+                  </SyntaxHighlighter>
+                ) : (
+                  <code className={className} {...props}>
+                    {children}
+                  </code>
+                );
+              },
+            }}
+          >
+            {note.content || ''}
+          </ReactMarkdown>
         </div>
 
         {/* Footer */}

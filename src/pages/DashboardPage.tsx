@@ -31,6 +31,7 @@ const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const db = useDatabase(user?.id || '');
   const [srCards, setSrCards] = useState<SRCard[]>([]);
+  const [quizHistory, setQuizHistory] = useState<any[]>([]);
 
   const [canvasAssignments, setCanvasAssignments] = useState<any[]>([]);
   const [canvasLoading, setCanvasLoading] = useState(false);
@@ -43,15 +44,17 @@ const DashboardPage: React.FC = () => {
     async function loadData() {
       if (!user?.id) return;
       try {
-        const [sessions, notes, settings, cards] = await Promise.all([
+        const [sessions, notes, settings, cards, quizzes] = await Promise.all([
           db.fetchSessions(),
           db.fetchNotes(),
           db.fetchSettings(),
           db.fetchSRCards(),
+          db.fetchQuizHistory(),
         ]);
         dispatch({ type: 'SET_SESSIONS', payload: sessions });
         dispatch({ type: 'SET_NOTES', payload: notes });
         setSrCards(cards);
+        setQuizHistory(quizzes);
         if (settings) {
           dispatch({ type: 'UPDATE_SETTINGS', payload: {
             defaultLanguage: settings.default_language as any,
@@ -89,7 +92,6 @@ const DashboardPage: React.FC = () => {
   const sessionsToday = state.sessions.filter(s => s.createdAt >= today).length;
   const notesSaved = state.notes.length;
   const topicsStudied = new Set(state.sessions.map(s => s.topic)).size;
-  const quizHistory = JSON.parse(localStorage.getItem('sb_quiz_history') || '[]');
   const quizScoreAvg = quizHistory.length > 0
     ? Math.round(quizHistory.reduce((acc: number, curr: any) => acc + (curr.score/curr.total), 0) / quizHistory.length * 100) + '%'
     : '0%';

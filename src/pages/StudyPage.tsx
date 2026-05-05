@@ -124,27 +124,29 @@ const StudyPage: React.FC = () => {
     if (!message.trim() || loading) return;
 
     let sessionId = activeSessionId;
+    let initialSession = null;
+
     if (!sessionId) {
       sessionId = Date.now().toString();
+      initialSession = {
+        id: sessionId,
+        topic: message.slice(0, 30) + (message.length > 30 ? '...' : ''),
+        subjectId: selectedSubject.toLowerCase(),
+        messages: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
       dispatch({
         type: 'ADD_SESSION',
-        payload: {
-          id: sessionId,
-          topic: message.slice(0, 30) + (message.length > 30 ? '...' : ''),
-          subjectId: selectedSubject.toLowerCase(),
-          messages: [],
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        }
+        payload: initialSession
       });
       setActiveSessionId(sessionId);
     }
 
-    await streamMessage(sessionId, message);
+    await streamMessage(sessionId, message, undefined, initialSession);
     // scroll to bottom to make error visible if one occurred or for long streams
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleSaveNote = async (content: string) => {
@@ -414,18 +416,14 @@ const StudyPage: React.FC = () => {
           )}
 
           {error && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex justify-center"
-            >
-              <div className="bg-error/10 border border-error/20 text-error p-4 rounded-2xl flex items-center gap-3 text-sm font-bold shadow-xl shadow-error/10">
-                <AlertCircle size={18} /> {error}
+            <div className="flex justify-center">
+              <div className="bg-error/10 border border-error/20 text-error p-3 rounded-xl flex items-center gap-2 text-xs font-bold">
+                <AlertCircle size={14} /> {error}
               </div>
-            </motion.div>
+            </div>
           )}
 
-          <div ref={messagesEndRef} className="h-4" />
+          <div ref={messagesEndRef} />
         </div>
 
         <AnimatePresence>

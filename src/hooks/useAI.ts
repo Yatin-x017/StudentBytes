@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { getAnthropicClient, SYSTEM_PROMPT, QUIZ_PROMPT, buildSystemPromptWithFile } from '@/lib/anthropic';
 import { streamGeminiMessage, generateGeminiQuiz } from '@/lib/gemini';
@@ -11,23 +11,30 @@ export function useAI() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Keep a ref to state to avoid stale closures in streaming callbacks
-  const stateRef = React.useRef(state);
-  stateRef.current = state;
+  // Use a ref to always have the latest state in the async streamMessage
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   const streamMessage = useCallback(
-    async (sessionId: string, userContent: string, onChunk?: (text: string) => void) => {
+    async (
+      sessionId: string,
+      userContent: string,
+      onChunk?: (text: string) => void,
+      initialSession?: any // Handle new session race condition
+    ) => {
       setLoading(true);
       setError(null);
 
-      // Find session in latest state to handle newly created sessions
-      const session = stateRef.current.sessions.find(s => s.id === sessionId);
+      const session = initialSession || stateRef.current.sessions.find(s => s.id === sessionId);
       if (!session) {
+        console.error(`[useAI] Session ${sessionId} not found.`);
         setLoading(false);
         return;
       }
 
-      const hasAnthropicKey = !!stateRef.current.apiKey;
+      const hasAnthropicKey = !!state.apiKey;
       const hasGeminiKey = !!(state.settings as any)?.geminiApiKey;
       const hasAnyKey = hasAnthropicKey || hasGeminiKey;
 
@@ -57,11 +64,10 @@ export function useAI() {
           await streamBuiltinAI(
             messagesWithUser,
             (text) => {
-              const currentSession = stateRef.current.sessions.find(s => s.id === sessionId) || session;
               dispatch({
                 type: 'UPDATE_SESSION',
                 payload: {
-                  ...currentSession,
+                  ...session,
                   updatedAt: Date.now(),
                   messages: [
                     ...messagesWithUser,
@@ -120,8 +126,8 @@ export function useAI() {
             )
           : SYSTEM_PROMPT;
 
-        if (stateRef.current.settings.provider === 'gemini') {
-          const geminiKey = stateRef.current.settings.geminiApiKey;
+        if (state.settings.provider === 'gemini') {
+          const geminiKey = state.settings.geminiApiKey;
           if (!geminiKey) {
             setError('Gemini API key is missing. Add it in Settings.');
             setLoading(false);
@@ -131,11 +137,10 @@ export function useAI() {
             geminiKey,
             messagesWithUser,
             (text) => {
-              const currentSession = stateRef.current.sessions.find(s => s.id === sessionId) || session;
               dispatch({
                 type: 'UPDATE_SESSION',
                 payload: {
-                  ...currentSession,
+                  ...session,
                   updatedAt: Date.now(),
                   messages: [
                     ...messagesWithUser,
@@ -148,7 +153,7 @@ export function useAI() {
             systemPrompt
           );
         } else {
-          const client = getAnthropicClient(stateRef.current.apiKey);
+          const client = getAnthropicClient(state.apiKey);
           const stream = await client.messages.create({
             model: 'claude-sonnet-4-5',
             max_tokens: 1024,
@@ -166,11 +171,10 @@ export function useAI() {
             if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
               fullText += event.delta.text;
 
-              const currentSession = stateRef.current.sessions.find(s => s.id === sessionId) || session;
               dispatch({
                 type: 'UPDATE_SESSION',
                 payload: {
-                  ...currentSession,
+                  ...session,
                   updatedAt: Date.now(),
                   messages: [
                     ...messagesWithUser,
@@ -193,16 +197,15 @@ export function useAI() {
         const errorMessage = err.message || 'Failed to get response from AI.';
         setError(errorMessage);
 
-        const currentSession = stateRef.current.sessions.find(s => s.id === sessionId) || session;
         dispatch({
           type: 'UPDATE_SESSION',
           payload: {
-            ...currentSession,
+            ...session,
             updatedAt: Date.now(),
             messages: [
               ...messagesWithUser,
               {
-                id: `err_${Date.now()}`,
+                id: Date.now().toString(),
                 role: 'assistant',
                 content: `Byte couldn't respond: ${errorMessage}. Try again?`,
                 timestamp: Date.now(),
@@ -216,7 +219,7 @@ export function useAI() {
         setLoading(false);
       }
     },
-    [state.apiKey, state.settings, state.sessions, dispatch]
+    [dispatch] // Minimal dependencies
   );
 
   const generateQuiz = useCallback(

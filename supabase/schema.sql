@@ -8,6 +8,7 @@ CREATE TABLE profiles (
   avatar_url TEXT,
   xp INTEGER DEFAULT 0,
   level INTEGER DEFAULT 1,
+  streak INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -33,14 +34,17 @@ CREATE TABLE notes (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- SR_Cards: Spaced Repetition Flashcards/Topics
-CREATE TABLE sr_cards (
+-- Spaced Repetition Flashcards/Topics
+CREATE TABLE spaced_repetition (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
   topic TEXT NOT NULL,
-  interval INTEGER DEFAULT 0,
+  interval_days INTEGER DEFAULT 0,
   ease_factor FLOAT DEFAULT 2.5,
+  repetitions INTEGER DEFAULT 0,
   next_review_date TEXT NOT NULL, -- YYYY-MM-DD
+  last_score INTEGER,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(user_id, topic)
 );
@@ -70,12 +74,12 @@ CREATE TABLE user_settings (
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE sr_cards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE spaced_repetition ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quiz_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 
--- Profiles: Users can only see/edit their own profile
-CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+-- Profiles: Users can only edit their own profile, but can see others for leaderboard
+CREATE POLICY "Profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
 -- Sessions: Users can only see/edit their own sessions
@@ -84,8 +88,8 @@ CREATE POLICY "Users can manage own sessions" ON sessions FOR ALL USING (auth.ui
 -- Notes: Users can only see/edit their own notes
 CREATE POLICY "Users can manage own notes" ON notes FOR ALL USING (auth.uid() = user_id);
 
--- SR_Cards: Users can only see/edit their own cards
-CREATE POLICY "Users can manage own sr_cards" ON sr_cards FOR ALL USING (auth.uid() = user_id);
+-- Spaced Repetition: Users can only see/edit their own cards
+CREATE POLICY "Users can manage own spaced_repetition" ON spaced_repetition FOR ALL USING (auth.uid() = user_id);
 
 -- Quiz History: Users can only see their own history
 CREATE POLICY "Users can manage own quiz_history" ON quiz_history FOR ALL USING (auth.uid() = user_id);
@@ -97,8 +101,13 @@ CREATE POLICY "Users can manage own settings" ON user_settings FOR ALL USING (au
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name)
-  VALUES (new.id, new.email, new.raw_user_meta_data->>'full_name');
+  INSERT INTO public.profiles (id, email, full_name, avatar_url)
+  VALUES (
+    new.id,
+    new.email,
+    new.raw_user_meta_data->>'full_name',
+    new.raw_user_meta_data->>'avatar_url'
+  );
 
   INSERT INTO public.user_settings (user_id)
   VALUES (new.id);

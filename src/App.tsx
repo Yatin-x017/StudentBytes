@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from '@/context/AppContext';
 import { Layout } from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { ROUTES } from '@/lib/constants';
 import { Spinner } from '@/components/ui/Spinner';
 import { useAuth } from '@/context/AuthContext';
@@ -66,18 +67,20 @@ const AppContent: React.FC = () => {
           user ? <Navigate to={ROUTES.DASHBOARD} replace /> : <LoginPage />
         } />
 
-        {/* All core features are public/local-first */}
-        <Route element={<Layout />}>
-          <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
-          <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
-          <Route path={ROUTES.STUDY} element={<StudyPage />} />
-          <Route path={ROUTES.QUIZ} element={<QuizPage />} />
-          <Route path={ROUTES.NOTES} element={<NotesPage />} />
-          <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
-          <Route path={ROUTES.COMMUNITY} element={<CommunityPage />} />
-          <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
-          <Route path={ROUTES.CANVAS} element={<CanvasPage />} />
-          <Route path={ROUTES.TIMETABLE} element={<TimetablePage />} />
+        {/* All core features are protected if Supabase is configured */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+            <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
+            <Route path={ROUTES.STUDY} element={<StudyPage />} />
+            <Route path={ROUTES.QUIZ} element={<QuizPage />} />
+            <Route path={ROUTES.NOTES} element={<NotesPage />} />
+            <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
+            <Route path={ROUTES.COMMUNITY} element={<CommunityPage />} />
+            <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+            <Route path={ROUTES.CANVAS} element={<CanvasPage />} />
+            <Route path={ROUTES.TIMETABLE} element={<TimetablePage />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

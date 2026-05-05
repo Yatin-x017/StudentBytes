@@ -16,6 +16,8 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, pass: string) => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
+  signInWithDiscord: () => Promise<{ error: AuthError | null }>;
+  signInWithTwitter: () => Promise<{ error: AuthError | null }>;
   signUp: (email: string, pass: string, fullName: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
 }
@@ -118,6 +120,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { error };
   };
 
+  const signInWithDiscord = async () => {
+    if (!supabase) return { error: new Error('Supabase not configured') as any };
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    return { error };
+  };
+
+  const signInWithTwitter = async () => {
+    if (!supabase) return { error: new Error('Supabase not configured') as any };
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'twitter',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    return { error };
+  };
+
   const signUp = async (email: string, pass: string, fullName: string) => {
     if (!supabase) return { error: new Error('Supabase not configured') as any };
     const { error } = await supabase.auth.signUp({
@@ -139,7 +163,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signInWithGoogle, signUp, signOut }}>
+    <AuthContext.Provider value={{
+      user,
+      profile,
+      loading,
+      signIn,
+      signInWithGoogle,
+      signInWithDiscord,
+      signInWithTwitter,
+      signUp,
+      signOut
+    }}>
       {children}
     </AuthContext.Provider>
   );

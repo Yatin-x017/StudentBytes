@@ -129,17 +129,6 @@ export function useDatabase(userId: string) {
     if (error) throw error;
   }, [userId]);
 
-  const fetchLeaderboard = useCallback(async (): Promise<any[]> => {
-    if (!isSupabaseConfigured || !supabase) return [];
-    const { data, error } = await supabase
-      .from('user_settings')
-      .select('user_id, name, xp, level')
-      .order('xp', { ascending: false })
-      .limit(20);
-    if (error) throw error;
-    return data;
-  }, []);
-
   // ── SPACED REPETITION ──
   const fetchSRCards = useCallback(async (): Promise<SRCard[]> => {
     if (!userId || !isSupabaseConfigured || !supabase) return [];
@@ -180,7 +169,7 @@ export function useDatabase(userId: string) {
     fetchSessions, upsertSession, deleteSession,
     fetchNotes, insertNote, deleteNote,
     insertQuizResult, fetchQuizHistory,
-    fetchSettings, upsertSettings, fetchLeaderboard,
+    fetchSettings, upsertSettings,
     fetchSRCards, upsertSRCard,
   };
 }

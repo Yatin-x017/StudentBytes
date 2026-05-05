@@ -8,9 +8,35 @@ export const config = {
   runtime: 'edge',
 };
 
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL!,
+  process.env.VITE_SUPABASE_ANON_KEY!
+);
+
 export default async function handler(req: Request) {
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 });
+  }
+
+  // Authentication check
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: 'Authentication required' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: 'Invalid or expired session' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 
   try {

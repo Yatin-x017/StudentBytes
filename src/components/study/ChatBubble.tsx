@@ -6,7 +6,7 @@ import ts from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
 import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
 import java from 'react-syntax-highlighter/dist/esm/languages/prism/java';
 import cpp from 'react-syntax-highlighter/dist/esm/languages/prism/cpp';
-import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 SyntaxHighlighter.registerLanguage('javascript', js);
 SyntaxHighlighter.registerLanguage('typescript', ts);
@@ -78,7 +78,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
                       const match = /language-(\w+)/.exec(className || '');
                       return !inline && match ? (
                         <SyntaxHighlighter
-                          style={atomDark}
+                          style={vscDarkPlus}
                           language={match[1]}
                           PreTag="div"
                           className="rounded-lg !my-4 !bg-bg border border-border"

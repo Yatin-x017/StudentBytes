@@ -1,5 +1,7 @@
 import type { Message } from './types';
 
+import { supabase } from './supabase';
+
 export async function streamBuiltinAI(
   messages: Message[],
   onChunk: (text: string) => void,
@@ -13,9 +15,15 @@ export async function streamBuiltinAI(
     body.system = systemPrompt;
   }
 
+  const session = await supabase?.auth.getSession();
+  const token = session?.data.session?.access_token;
+
   const response = await fetch('/api/ai', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    },
     body: JSON.stringify(body)
   });
 
@@ -39,9 +47,15 @@ export async function streamBuiltinAI(
 }
 
 export async function generateBuiltinQuiz(prompt: string) {
+  const session = await supabase?.auth.getSession();
+  const token = session?.data.session?.access_token;
+
   const response = await fetch('/api/ai', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    },
     body: JSON.stringify({
       messages: [{ role: 'user', content: prompt }]
     })

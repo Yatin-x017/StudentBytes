@@ -38,11 +38,11 @@ const SettingsPage: React.FC = () => {
 
     // Only sync to DB if user is authenticated
     if (user?.id) {
+      // XP and Level are in profiles table, handled by gamification logic elsewhere.
+      // Settings table only holds UI preferences.
       await db.upsertSettings({
         default_language: state.settings.defaultLanguage,
         provider: state.settings.provider,
-        xp: state.user.xp,
-        level: state.user.level,
       });
     }
 
@@ -93,7 +93,15 @@ const SettingsPage: React.FC = () => {
   }
 
   const handleClearData = () => {
-    localStorage.clear();
+    const keysToRemove = [
+      'student_bytes_state',
+      'student_bytes_sessions',
+      'student_bytes_notes',
+      'student_bytes_canvas_token',
+      'student_bytes_api_key'
+    ];
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+
     dispatch({ type: 'CLEAR_DATA' });
     setShowClearModal(false);
     setApiKey('');

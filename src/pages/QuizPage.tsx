@@ -33,6 +33,7 @@ interface Question {
   options: string[];
   correctIndex: number;
   explanation: string;
+  code?: string | null;
 }
 
 interface QuizState {
@@ -52,8 +53,10 @@ const QuizPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [topic, setTopic] = useState('');
+  const [difficulty, setDifficulty] = useState('intermediate');
   const [subject, setSubject] = useState(CS_SUBJECTS[0]);
   const [showXP, setShowXP] = useState(false);
+  const [answeredCorrect, setAnsweredCorrect] = useState(0);
   const [lastXP, setLastXP] = useState(0);
   const [srCards, setSrCards] = useState<SRCard[]>([]);
 
@@ -91,7 +94,7 @@ const QuizPage: React.FC = () => {
     e.preventDefault();
     if (!topic.trim()) return;
 
-    const result = await generateQuiz(topic);
+    const result = await generateQuiz(topic, difficulty);
     if (result && Array.isArray(result)) {
       setQuizState({
         topic,
@@ -103,6 +106,7 @@ const QuizPage: React.FC = () => {
       });
       setSelectedOption(null);
       setShowExplanation(false);
+      setAnsweredCorrect(0);
     }
   };
 
@@ -114,6 +118,9 @@ const QuizPage: React.FC = () => {
 
   const handleNext = () => {
     const newAnswers = [...quizState.answers, selectedOption as number];
+    const isCorrect = selectedOption === quizState.questions[quizState.currentIndex].correctIndex;
+    const newCorrect = isCorrect ? answeredCorrect + 1 : answeredCorrect;
+    setAnsweredCorrect(newCorrect);
 
     if (quizState.currentIndex < quizState.questions.length - 1) {
       setQuizState({
@@ -175,6 +182,9 @@ const QuizPage: React.FC = () => {
   if (quizState.quizFinished) {
     const score = quizState.answers.filter((ans, idx) => ans === quizState.questions[idx].correctIndex).length;
     const percentage = Math.round((score / quizState.questions.length) * 100);
+    const suggestedDifficulty =
+      percentage >= 80 ? 'advanced' :
+      percentage >= 50 ? 'intermediate' : 'beginner';
 
     return (
       <div className="max-w-3xl mx-auto py-12 animate-fade-in space-y-8">
@@ -199,7 +209,7 @@ const QuizPage: React.FC = () => {
             <p className="text-text-muted">You've mastered some serious concepts today.</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
             <Card className="p-6 border-white/5 bg-surface-2">
               <p className="text-5xl font-black text-primary">{score}/{quizState.questions.length}</p>
               <p className="text-xs font-bold text-text-muted uppercase tracking-wider mt-2">Correct</p>
@@ -207,6 +217,28 @@ const QuizPage: React.FC = () => {
             <Card className="p-6 border-white/5 bg-surface-2">
               <p className="text-5xl font-black text-success">{percentage}%</p>
               <p className="text-xs font-bold text-text-muted uppercase tracking-wider mt-2">Accuracy</p>
+            </Card>
+            <Card className="p-6 border-white/5 bg-surface-2 flex flex-col items-center justify-center">
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Suggested Next</p>
+              <div className="flex flex-col items-center gap-2">
+                <span className={`font-black capitalize text-xl ${
+                  suggestedDifficulty === 'advanced' ? 'text-error' :
+                  suggestedDifficulty === 'intermediate' ? 'text-primary' :
+                  'text-success'
+                }`}>
+                  {suggestedDifficulty}
+                </span>
+                <button
+                  onClick={() => {
+                    setDifficulty(suggestedDifficulty);
+                    handleStartQuiz({ preventDefault: () => {} } as any);
+                  }}
+                  className="px-3 py-1 rounded-lg bg-primary/10 text-primary
+                             text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all"
+                >
+                  Try it →
+                </button>
+              </div>
             </Card>
           </div>
         </div>
@@ -277,6 +309,7 @@ const QuizPage: React.FC = () => {
             options={current.options}
             correctIndex={current.correctIndex}
             explanation={current.explanation}
+            code={current.code}
             selectedOption={selectedOption}
             onSelect={handleOptionSelect}
           />
@@ -324,6 +357,26 @@ const QuizPage: React.FC = () => {
                 className="w-full bg-black/40 border border-white/10 rounded-xl p-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
                 disabled={loading}
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Difficulty</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['beginner', 'intermediate', 'advanced'].map((lvl) => (
+                  <button
+                    key={lvl}
+                    type="button"
+                    onClick={() => setDifficulty(lvl)}
+                    className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                      difficulty === lvl
+                        ? 'bg-primary/10 border-primary text-primary'
+                        : 'bg-white/2 border-white/5 text-text-muted hover:border-white/10'
+                    }`}
+                  >
+                    {lvl}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <TopicSelector

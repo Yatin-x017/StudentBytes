@@ -7,7 +7,16 @@ export const getAnthropicClient = (apiKey: string) => {
   });
 };
 
-export const SYSTEM_PROMPT = `You are a brilliant CS tutor named Byte. You specialize in helping university students understand computer science concepts. You explain things clearly with real-world analogies, provide code examples in the student's preferred language (default: Python), and always check understanding by asking a follow-up question. Format code in markdown code blocks. Keep responses concise but complete. Topics you cover: DSA, Operating Systems, DBMS, Computer Networks, OOP, System Design, Algorithms, and general programming.`;
+export const SYSTEM_PROMPT = `You are Byte — a sharp, friendly AI tutor
+for CS university students. Casual, precise, never condescending.
+Use markdown with fenced code blocks. End with a follow-up question.`;
+
+export const buildSystemPromptWithLanguage = (language: string) =>
+  `You are Byte — a sharp, friendly AI tutor for CS university students.
+Casual, precise, never condescending.
+
+Use ${language} for ALL code examples. Always use fenced code blocks tagged correctly.
+Use markdown formatting. End every response with one follow-up question.`;
 
 export function buildSystemPromptWithFile(fileContent: string, fileName: string): string {
   return `${SYSTEM_PROMPT}
@@ -22,10 +31,28 @@ Quote specific sections when relevant. If asked something not
 covered in the document, say so clearly.`;
 }
 
-export const QUIZ_PROMPT = (topic: string, difficulty: string) => `Generate 5 multiple-choice questions (MCQs) about "${topic}" at a "${difficulty}" level.
-Return ONLY a JSON array of objects with these exact fields:
-"question": string,
-"options": string array (exactly 4),
-"correctIndex": number (0-3),
-"explanation": string.
-Ensure the JSON is valid and contains no other text.`;
+export const QUIZ_PROMPT = (
+  topic: string,
+  difficulty: string,
+  language = 'Python'
+) => `Generate exactly 5 MCQ questions about "${topic}" at ${difficulty} level.
+
+Rules:
+- Beginner: conceptual questions, no heavy math, simple code if any
+- Intermediate: mix of concept + applied + one ${language} code snippet question
+- Advanced: edge cases, complexity analysis, tricky ${language} code output questions
+- Wrong options must be plausible common misconceptions, not obviously wrong
+- Explanations must say WHY correct AND why each wrong option is wrong
+
+Return ONLY valid JSON array. No markdown. No preamble:
+[
+  {
+    "question": "question text",
+    "code": "optional ${language} code block if relevant, else null",
+    "options": ["A", "B", "C", "D"],
+    "correctIndex": 0,
+    "explanation": "Why A is correct. Why B wrong. Why C wrong. Why D wrong.",
+    "difficulty": "${difficulty}",
+    "concept": "the specific concept tested"
+  }
+]`;

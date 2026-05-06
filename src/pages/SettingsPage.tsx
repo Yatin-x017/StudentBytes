@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { useDatabase } from '@/hooks/useDatabase';
-import { DEFAULT_LANGUAGES, PROVIDERS } from '@/lib/constants';
+import { LANGUAGES, PROVIDERS } from '@/lib/constants';
 import { getAnthropicClient } from '@/lib/anthropic';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Button } from '@/components/ui/Button';
@@ -107,6 +107,8 @@ const SettingsPage: React.FC = () => {
     setApiKey('');
     window.location.reload();
   };
+
+  const currentLanguage = state.settings.defaultLanguage || 'Python';
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-fade-in relative">
@@ -271,21 +273,28 @@ const SettingsPage: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-1.5">
+            <div className="space-y-3">
               <label className="text-sm font-medium text-text-muted">Default Programming Language</label>
-              <div className="flex flex-wrap gap-2">
-                {DEFAULT_LANGUAGES.map((lang) => (
+              <div className="grid grid-cols-2 gap-3">
+                {LANGUAGES.map(lang => (
                   <button
-                    key={lang}
-                    onClick={() => handleLanguageChange(lang)}
+                    key={lang.id}
+                    onClick={() => handleLanguageChange(lang.id)}
                     className={cn(
-                      'px-4 py-2 rounded-lg text-sm font-bold border transition-all focus-ring',
-                      state.settings.defaultLanguage === lang
-                        ? 'bg-primary/10 border-primary text-primary'
-                        : 'border-border text-text-muted hover:border-text hover:text-text'
+                      "p-4 rounded-2xl border text-left transition-all",
+                      currentLanguage === lang.id
+                        ? 'border-primary/40 bg-primary/10'
+                        : 'border-white/5 bg-surface hover:border-white/10'
                     )}
                   >
-                    {lang}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xl">{lang.emoji}</span>
+                      <span className="font-bold text-sm">{lang.label}</span>
+                      {currentLanguage === lang.id && (
+                        <CheckCircle2 size={14} className="text-primary ml-auto" />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-text-muted">{lang.useCase}</p>
                   </button>
                 ))}
               </div>

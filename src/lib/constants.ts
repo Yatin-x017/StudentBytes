@@ -20,6 +20,23 @@ export const SUBJECTS = [
   { id: 'gen', name: 'General Programming' },
 ];
 
+export const LANGUAGES = [
+  { id: 'Python', label: 'Python', color: '#3776ab', emoji: '🐍',
+    useCase: 'Best for ML, scripting, interviews' },
+  { id: 'JavaScript', label: 'JavaScript', color: '#f7df1e', emoji: '🟨',
+    useCase: 'Web, Node.js, full-stack' },
+  { id: 'Java', label: 'Java', color: '#ed8b00', emoji: '☕',
+    useCase: 'Enterprise, Android, OOP' },
+  { id: 'C++', label: 'C++', color: '#00599c', emoji: '⚡',
+    useCase: 'Competitive coding, systems' },
+  { id: 'TypeScript', label: 'TypeScript', color: '#3178c6', emoji: '🔷',
+    useCase: 'Modern web, type safety' },
+  { id: 'Go', label: 'Go', color: '#00acd7', emoji: '🐹',
+    useCase: 'Backend, concurrency, cloud' },
+] as const;
+
+export type SupportedLanguage = typeof LANGUAGES[number]['id'];
+
 export const DEFAULT_LANGUAGES = ['Python', 'JavaScript', 'Java', 'C++'] as const;
 
 export const STORAGE_KEYS = {

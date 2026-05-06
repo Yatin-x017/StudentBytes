@@ -7,6 +7,7 @@ import {
   Trash2,
   Sparkles,
   Zap,
+  ChevronDown,
   AlertCircle,
   CheckCircle2,
   Paperclip,
@@ -22,7 +23,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
-import { CS_SUBJECTS } from '@/lib/constants';
+import { CS_SUBJECTS, LANGUAGES } from '@/lib/constants';
 import { ChatBubble } from '@/components/study/ChatBubble';
 import { MessageInput } from '@/components/study/MessageInput';
 import { TopicSelector } from '@/components/study/TopicSelector';
@@ -251,6 +252,8 @@ const StudyPage: React.FC = () => {
     }
   };
 
+  const currentLanguage = state.settings.defaultLanguage || 'Python';
+
   const renderChat = (hideHeaderOnMobile = false) => (
     <>
         <header className={`p-4 border-b border-white/5 flex items-center justify-between bg-white/2 backdrop-blur-md ${hideHeaderOnMobile ? 'hidden lg:flex' : 'flex'}`}>
@@ -297,6 +300,27 @@ const StudyPage: React.FC = () => {
                 From Drive
               </button>
             )}
+            <div className="relative">
+              <select
+                value={currentLanguage}
+                onChange={e => dispatch({
+                  type: 'UPDATE_SETTINGS',
+                  payload: { defaultLanguage: e.target.value as any }
+                })}
+                className="appearance-none pl-3 pr-8 py-1.5 rounded-xl
+                           bg-white/5 border border-white/10 text-xs font-bold
+                           text-text-muted hover:text-white hover:border-white/20
+                           transition-all cursor-pointer outline-none"
+              >
+                {LANGUAGES.map(lang => (
+                  <option key={lang.id} value={lang.id} className="bg-surface">
+                    {lang.emoji} {lang.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2
+                                                 text-text-muted pointer-events-none" />
+            </div>
             <Badge className="text-[10px] border-white/10 font-bold uppercase tracking-tight">
               {selectedSubject}
             </Badge>

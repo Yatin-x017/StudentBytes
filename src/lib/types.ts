@@ -35,6 +35,9 @@ export interface QuizQuestion {
   options: string[];
   correctIndex: number;
   explanation: string;
+  code?: string | null;
+  difficulty?: string;
+  concept?: string;
 }
 
 export interface CanvasCourse {

@@ -3,12 +3,16 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import { Check, X } from 'lucide-react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useAppContext } from '@/context/AppContext';
 
 interface QuizCardProps {
   question: string;
   options: string[];
   correctIndex: number;
   explanation: string;
+  code?: string | null;
   selectedOption: number | null;
   onSelect: (index: number) => void;
 }
@@ -18,14 +22,29 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   options,
   correctIndex,
   explanation,
+  code,
   selectedOption,
   onSelect,
 }) => {
+  const { state } = useAppContext();
+  const language = state.settings.defaultLanguage || 'Python';
   const isAnswered = selectedOption !== null;
 
   return (
     <Card className="p-8 space-y-8 animate-fade-in border-white/5">
       <h3 className="text-xl font-bold leading-tight">{question}</h3>
+
+      {code && (
+        <div className="mb-4 rounded-xl overflow-hidden text-xs border border-white/5">
+          <SyntaxHighlighter
+            language={language.toLowerCase()}
+            style={vscDarkPlus}
+            customStyle={{ margin: 0, padding: '1.5rem', borderRadius: '12px', fontSize: '12px' }}
+          >
+            {code}
+          </SyntaxHighlighter>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-3">
         {options.map((option, idx) => {

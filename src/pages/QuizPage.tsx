@@ -9,7 +9,8 @@ import {
   XCircle,
   Clock,
   Sparkles,
-  Brain
+  Brain,
+  ChevronRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,7 +23,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
 import { XPToast } from '@/components/ui/XPToast';
-import { CS_SUBJECTS } from '@/lib/constants';
+import { CS_SUBJECTS, ROUTES } from '@/lib/constants';
 import { QuizCard } from '@/components/study/QuizCard';
 import { TopicSelector } from '@/components/study/TopicSelector';
 import { calculateNextReview, type SRCard } from '@/lib/spacedRepetition';
@@ -72,6 +73,8 @@ const QuizPage: React.FC = () => {
 
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [showNextQuizPicker, setShowNextQuizPicker] = useState(false);
+  const [nextTopic, setNextTopic] = useState('');
 
   useEffect(() => {
     localStorage.setItem('sb_quiz_state', JSON.stringify(quizState));
@@ -105,6 +108,8 @@ const QuizPage: React.FC = () => {
       });
       setSelectedOption(null);
       setShowExplanation(false);
+      setShowNextQuizPicker(false);
+      setNextTopic('');
     } else {
       setQuizError('Failed to generate quiz. Please try again or check your AI settings.');
     }
@@ -233,16 +238,68 @@ const QuizPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8 border-t border-white/5">
-          <Button onClick={() => handleStartQuiz(null, quizState.topic)} variant="outline" className="gap-2 py-6 px-8 rounded-2xl border-white/10">
-            <RefreshCcw size={18} /> Retake Quiz
-          </Button>
-          <Button
-            onClick={() => navigate(ROUTES.STUDY, { state: { topic: quizState.topic } })}
-            className="gap-2 py-6 px-8 rounded-2xl shadow-xl shadow-primary/20"
-          >
-            <Brain size={18} /> Study This Topic
-          </Button>
+        <div className="space-y-4 pt-8 border-t border-white/5">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button onClick={() => handleStartQuiz(null, quizState.topic)} variant="outline" className="gap-2 py-6 px-8 rounded-2xl border-white/10">
+              <RefreshCcw size={18} /> Retake Quiz
+            </Button>
+            <Button
+              onClick={() => setShowNextQuizPicker(v => !v)}
+              className="gap-2 py-6 px-8 rounded-2xl shadow-xl shadow-primary/20"
+            >
+              <ChevronRight size={18} /> Next Quiz
+            </Button>
+            <Button
+              onClick={() => navigate(ROUTES.STUDY, { state: { topic: quizState.topic } })}
+              variant="outline"
+              className="gap-2 py-6 px-8 rounded-2xl border-white/10"
+            >
+              <Brain size={18} /> Study This Topic
+            </Button>
+          </div>
+
+          <AnimatePresence>
+            {showNextQuizPicker && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="mt-2 p-6 rounded-2xl bg-surface border border-white/10 space-y-4"
+              >
+                <p className="text-xs font-black uppercase tracking-widest text-text-muted">Choose your next topic</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={nextTopic}
+                    onChange={e => setNextTopic(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && nextTopic.trim()) handleStartQuiz(null, nextTopic.trim()); }}
+                    placeholder="Type any topic..."
+                    className="flex-1 bg-black/40 border border-white/10 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                    autoFocus
+                  />
+                  <Button
+                    onClick={() => nextTopic.trim() && handleStartQuiz(null, nextTopic.trim())}
+                    disabled={loading || !nextTopic.trim()}
+                    className="gap-2 px-5"
+                  >
+                    {loading ? <Spinner size={16} /> : <><Sparkles size={16} /> Go</>}
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {CS_SUBJECTS.filter(s => s.toLowerCase() !== quizState.topic.toLowerCase()).map(s => (
+                    <button
+                      key={s}
+                      onClick={() => handleStartQuiz(null, s)}
+                      disabled={loading}
+                      className="text-xs font-bold px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all disabled:opacity-50"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     );

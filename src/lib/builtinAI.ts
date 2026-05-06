@@ -28,7 +28,14 @@ export async function streamBuiltinAI(
   });
 
   if (!response.ok) {
-    throw new Error('Built-in AI failed to respond');
+    let errorMsg = `Built-in AI failed (HTTP ${response.status})`;
+    try {
+      const errData = await response.json();
+      errorMsg = errData.error || errorMsg;
+    } catch {
+      // keep default message
+    }
+    throw new Error(errorMsg);
   }
 
   const reader = response.body?.getReader();
@@ -62,7 +69,14 @@ export async function generateBuiltinQuiz(prompt: string) {
   });
 
   if (!response.ok) {
-    throw new Error('Built-in AI failed to generate quiz');
+    let errorMsg = `Built-in AI failed to generate quiz (HTTP ${response.status})`;
+    try {
+      const errData = await response.json();
+      errorMsg = errData.error || errorMsg;
+    } catch {
+      // keep default message
+    }
+    throw new Error(errorMsg);
   }
 
   return response.text();

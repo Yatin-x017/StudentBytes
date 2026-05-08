@@ -1,232 +1,400 @@
-import React, { useState } from 'react';
-import {
-  Settings,
-  Key,
-  Shield,
-  Mail,
-  Camera,
-  CheckCircle2,
-  Trash2,
-  Eye,
-  EyeOff
-} from 'lucide-react';
-import { useAppContext } from '@/context/AppContext';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/Button';
+import { getProfile, upsertProfile, checkUsernameAvailable } from '@/lib/profile';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import {
+  CheckCircle2, XCircle, ExternalLink,
+  GraduationCap, Code2, Loader2
+} from 'lucide-react';
+import { LANGUAGES } from '@/lib/constants';
+import { useAppContext } from '@/context/AppContext';
+
+const GithubIcon = ({ size = 16, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+);
+
+const LinkedinIcon = ({ size = 16, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+);
+
+const TwitterIcon = ({ size = 16, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
+);
 
 const ProfilePage: React.FC = () => {
-  const { state, dispatch } = useAppContext();
-  const { profile, signOut } = useAuth();
-  const [showKey, setShowKey] = useState(false);
-  const [newApiKey, setNewApiKey] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-  const [username, setUsername] = useState(profile?.full_name || state.user.name);
+  const { user } = useAuth();
+  const { state } = useAppContext();
+  const [profile, setProfile] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<
+    'idle' | 'checking' | 'available' | 'taken'
+  >('idle');
 
-  const handleUpdateApiKey = (e: React.FormEvent) => {
-    e.preventDefault();
-    dispatch({ type: 'SET_API_KEY', payload: newApiKey });
-    setNewApiKey('');
-    alert('API Key updated successfully!');
-  };
+  const [form, setForm] = useState({
+    username: '',
+    display_name: '',
+    bio: '',
+    college: '',
+    year: '',
+    branch: '',
+    github_url: '',
+    linkedin_url: '',
+    twitter_url: '',
+    preferred_language: 'Python',
+    is_public: true,
+  });
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    dispatch({
-      type: 'UPDATE_USER',
-      payload: { name: username }
+  useEffect(() => {
+    if (!user) return;
+    getProfile(user.id).then(p => {
+      if (p) {
+        setProfile(p);
+        setForm({
+          username: p.username || '',
+          display_name: p.display_name || user.user_metadata?.full_name || '',
+          bio: p.bio || '',
+          college: p.college || '',
+          year: p.year?.toString() || '',
+          branch: p.branch || '',
+          github_url: p.github_url || '',
+          linkedin_url: p.linkedin_url || '',
+          twitter_url: p.twitter_url || '',
+          preferred_language: p.preferred_language || 'Python',
+          is_public: p.is_public ?? true,
+        });
+      } else {
+        setForm(f => ({
+          ...f,
+          display_name: user.user_metadata?.full_name || '',
+        }));
+      }
     });
-    setIsEditing(false);
+  }, [user]);
+
+  // Username availability check (debounced)
+  useEffect(() => {
+    if (!form.username || form.username === profile?.username) {
+      setUsernameStatus('idle');
+      return;
+    }
+    if (form.username.length < 3) return;
+
+    setUsernameStatus('checking');
+    const timer = setTimeout(async () => {
+      const available = await checkUsernameAvailable(form.username);
+      setUsernameStatus(available ? 'available' : 'taken');
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [form.username, profile?.username]);
+
+  const handleSave = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      await upsertProfile(user.id, {
+        ...form,
+        year: form.year ? parseInt(form.year) : null,
+        avatar_url: user.user_metadata?.avatar_url || null,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const publicUrl = form.username
+    ? `${window.location.origin}/u/${form.username}`
+    : null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-20">
-      <header className="flex flex-col md:flex-row items-center gap-8 p-8 glass-card border-white/5 rounded-3xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-success" />
-
-        <div className="relative">
-          {profile?.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt={profile.full_name}
-              className="w-32 h-32 rounded-3xl object-cover border-4 border-primary/20 shadow-2xl"
-            />
-          ) : (
-            <div className="w-32 h-32 rounded-3xl bg-gradient-to-tr from-primary to-accent p-1 shadow-2xl shadow-primary/20">
-              <div className="w-full h-full rounded-[20px] bg-black flex items-center justify-center text-4xl font-black">
-                {(profile?.full_name || state.user.name).charAt(0)}
-              </div>
-            </div>
-          )}
-          <button className="absolute -bottom-2 -right-2 p-2 rounded-xl bg-white text-black hover:bg-primary hover:text-white transition-all shadow-lg">
-            <Camera size={18} />
-          </button>
-        </div>
-
-        <div className="text-center md:text-left flex-1 space-y-3">
-          <div className="flex flex-col md:flex-row items-center gap-3">
-            <h1 className="text-3xl font-black">{profile?.full_name || state.user.name}</h1>
-            <Badge variant="primary" className="bg-primary/20 text-primary border-primary/20 px-3 py-1">Level {state.user.level} Coder</Badge>
-          </div>
-          <p className="text-text-muted flex items-center justify-center md:justify-start gap-2">
-            <Mail size={16} /> {profile?.email || 'student@university.edu'}
+    <div className="max-w-3xl mx-auto space-y-8 pb-20">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-display font-black gradient-text">
+            Your Profile
+          </h1>
+          <p className="text-text-muted text-sm mt-1">
+            Customize how others see you on Student Bytes
           </p>
-          <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-2">
-            <Badge variant="outline" className="border-white/10 text-text-muted">React</Badge>
-            <Badge variant="outline" className="border-white/10 text-text-muted">TypeScript</Badge>
-            <Badge variant="outline" className="border-white/10 text-text-muted">Algorithms</Badge>
-          </div>
         </div>
-
-        <div className="flex flex-col gap-2 min-w-[140px]">
-          <Button onClick={() => setIsEditing(true)} variant="outline" className="w-full">Edit Profile</Button>
-          <Button onClick={() => signOut()} variant="ghost" className="w-full text-error hover:bg-error/10">Log Out</Button>
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 space-y-8">
-          <section className="space-y-4">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Settings size={20} className="text-primary" />
-              Account Settings
-            </h2>
-            <Card className="p-6 border-white/5 space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold text-sm">Study Reminders</h4>
-                    <p className="text-xs text-text-muted">Get notifications for your daily streak</p>
-                  </div>
-                  <div className="w-12 h-6 bg-primary rounded-full relative p-1 cursor-pointer">
-                    <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-md" />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                  <div>
-                    <h4 className="font-bold text-sm">Public Profile</h4>
-                    <p className="text-xs text-text-muted">Show your achievements in the community</p>
-                  </div>
-                  <div className="w-12 h-6 bg-white/10 rounded-full relative p-1 cursor-pointer">
-                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md" />
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Key size={20} className="text-primary" />
-              AI Integration
-            </h2>
-            <Card className="p-6 border-white/5 space-y-6">
-              <div className="flex items-start gap-4 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                <Shield className="text-amber-500 shrink-0" size={20} />
-                <div>
-                  <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-1">Security Note</h4>
-                  <p className="text-xs text-text-muted leading-relaxed">
-                    Your Anthropic API key is stored locally in your browser and never touches our servers.
-                  </p>
-                </div>
-              </div>
-
-              <form onSubmit={handleUpdateApiKey} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Anthropic API Key</label>
-                  <div className="relative">
-                    <input
-                      type={showKey ? "text" : "password"}
-                      value={state.apiKey || ''}
-                      readOnly
-                      placeholder="sk-ant-..."
-                      className="w-full bg-black/40 border border-white/10 rounded-xl p-4 pr-12 text-sm font-mono focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowKey(!showKey)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-all"
-                    >
-                      {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Update Key</label>
-                  <input
-                    type="password"
-                    value={newApiKey}
-                    onChange={(e) => setNewApiKey(e.target.value)}
-                    placeholder="Paste new key here..."
-                    className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm font-mono focus:ring-1 focus:ring-primary outline-none"
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={!newApiKey}>Save Key</Button>
-              </form>
-            </Card>
-          </section>
-        </div>
-
-        <div className="space-y-8">
-          <section className="space-y-4">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <CheckCircle2 size={20} className="text-primary" />
-              Achievements
-            </h2>
-            <div className="grid grid-cols-1 gap-3">
-              <AchievementCard icon="🔥" title="7 Day Streak" desc="Active every day this week" completed />
-              <AchievementCard icon="🧠" title="Concept Master" desc="Completed 50 quizzes" completed />
-              <AchievementCard icon="⚡" title="Quick Thinker" desc="Answered 10 questions in 1 min" />
-              <AchievementCard icon="🚀" title="Early Adopter" desc="Joined Student Bytes Beta" completed />
-            </div>
-          </section>
-
-          <Card className="p-6 border-error/10 bg-error/5 space-y-4">
-            <h4 className="text-sm font-bold text-error flex items-center gap-2">
-              <Trash2 size={16} /> Danger Zone
-            </h4>
-            <p className="text-xs text-text-muted">Deleting your account will erase all study sessions, XP, and saved notes. This cannot be undone.</p>
-            <Button variant="outline" className="w-full border-error/20 text-error hover:bg-error/10">Delete Account</Button>
-          </Card>
-        </div>
+        {publicUrl && (
+          <a
+            href={publicUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl
+                       bg-primary/10 border border-primary/20 text-primary
+                       text-sm font-bold hover:bg-primary/20 transition-all"
+          >
+            <ExternalLink size={14} />
+            View Public Profile
+          </a>
+        )}
       </div>
 
-      {isEditing && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md p-8 border-white/10 glass-card">
-            <h3 className="text-2xl font-black mb-6">Edit Profile</h3>
-            <form onSubmit={handleUpdateProfile} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Display Name</label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl p-4 focus:ring-2 focus:ring-primary outline-none"
-                />
+      {/* Avatar + basic info */}
+      <Card className="p-6 space-y-6">
+        <div className="flex items-center gap-6">
+          <div className="relative">
+            {user?.user_metadata?.avatar_url ? (
+              <img
+                src={user.user_metadata.avatar_url}
+                alt=""
+                className="w-20 h-20 rounded-3xl object-cover ring-2
+                           ring-primary/20"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-3xl bg-primary/20 flex
+                              items-center justify-center text-primary
+                              text-3xl font-black">
+                {form.display_name[0]?.toUpperCase() || 'S'}
               </div>
-              <div className="flex gap-4">
-                <Button type="button" variant="outline" className="flex-1" onClick={() => setIsEditing(false)}>Cancel</Button>
-                <Button type="submit" className="flex-1">Save Changes</Button>
-              </div>
-            </form>
-          </Card>
+            )}
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full
+                            bg-success flex items-center justify-center
+                            ring-2 ring-bg">
+              <div className="w-2 h-2 rounded-full bg-white" />
+            </div>
+          </div>
+          <div>
+            <p className="font-black text-lg">
+              {form.display_name || 'Student'}
+            </p>
+            <p className="text-text-muted text-sm">
+              {user?.email}
+            </p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10
+                               text-primary font-bold border border-primary/20">
+                Level {state.user.level}
+              </span>
+              <span className="text-xs text-text-muted">
+                {state.user.xp} XP
+              </span>
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* Username */}
+        <div>
+          <label className="text-xs font-black uppercase tracking-widest
+                            text-text-muted mb-2 block">
+            Username *
+          </label>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2
+                             text-text-muted text-sm font-bold">
+              @
+            </span>
+            <input
+              value={form.username}
+              onChange={e => setForm(f => ({
+                ...f,
+                username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')
+              }))}
+              placeholder="yourname"
+              maxLength={20}
+              className="w-full pl-8 pr-10 py-3 rounded-xl bg-surface-2
+                         border border-border focus:border-primary/50
+                         focus:outline-none text-sm transition-all"
+            />
+            {usernameStatus !== 'idle' && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {usernameStatus === 'checking' && (
+                  <Loader2 size={16} className="text-text-muted animate-spin" />
+                )}
+                {usernameStatus === 'available' && (
+                  <CheckCircle2 size={16} className="text-success" />
+                )}
+                {usernameStatus === 'taken' && (
+                  <XCircle size={16} className="text-error" />
+                )}
+              </div>
+            )}
+          </div>
+          {publicUrl && (
+            <p className="text-[11px] text-text-muted mt-1.5">
+              Your profile: {publicUrl}
+            </p>
+          )}
+        </div>
+
+        {/* Display name */}
+        <div>
+          <label className="text-xs font-black uppercase tracking-widest
+                            text-text-muted mb-2 block">
+            Display Name
+          </label>
+          <input
+            value={form.display_name}
+            onChange={e => setForm(f => ({ ...f, display_name: e.target.value }))}
+            placeholder="Yatin Sharma"
+            className="w-full px-4 py-3 rounded-xl bg-surface-2 border
+                       border-border focus:border-primary/50 focus:outline-none
+                       text-sm transition-all"
+          />
+        </div>
+
+        {/* Bio */}
+        <div>
+          <label className="text-xs font-black uppercase tracking-widest
+                            text-text-muted mb-2 block">
+            Bio
+          </label>
+          <textarea
+            value={form.bio}
+            onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
+            placeholder="CS student @ Rishihood | DSA | Game Dev | Building cool stuff"
+            rows={2}
+            maxLength={160}
+            className="w-full px-4 py-3 rounded-xl bg-surface-2 border
+                       border-border focus:border-primary/50 focus:outline-none
+                       text-sm resize-none transition-all"
+          />
+          <p className="text-[10px] text-text-faint mt-1 text-right">
+            {form.bio.length}/160
+          </p>
+        </div>
+      </Card>
+
+      {/* Academic info */}
+      <Card className="p-6 space-y-4">
+        <h3 className="font-black text-sm flex items-center gap-2">
+          <GraduationCap size={16} className="text-primary" />
+          Academic Info
+        </h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-bold text-text-muted mb-2 block">
+              College / University
+            </label>
+            <input
+              value={form.college}
+              onChange={e => setForm(f => ({ ...f, college: e.target.value }))}
+              placeholder="Rishihood University"
+              className="w-full px-4 py-3 rounded-xl bg-surface-2 border
+                         border-border focus:border-primary/50 focus:outline-none
+                         text-sm transition-all"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-text-muted mb-2 block">
+              Branch / Major
+            </label>
+            <input
+              value={form.branch}
+              onChange={e => setForm(f => ({ ...f, branch: e.target.value }))}
+              placeholder="B.Tech CS & AI"
+              className="w-full px-4 py-3 rounded-xl bg-surface-2 border
+                         border-border focus:border-primary/50 focus:outline-none
+                         text-sm transition-all"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="text-xs font-bold text-text-muted mb-2 block">
+            Year
+          </label>
+          <div className="flex gap-2">
+            {['1', '2', '3', '4'].map(y => (
+              <button
+                key={y}
+                onClick={() => setForm(f => ({ ...f, year: y }))}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-bold
+                            border transition-all ${
+                  form.year === y
+                    ? 'bg-primary/10 border-primary/40 text-primary'
+                    : 'bg-surface-2 border-border text-text-muted hover:border-border-hover'
+                }`}
+              >
+                Year {y}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* Preferred language */}
+      <Card className="p-6 space-y-4">
+        <h3 className="font-black text-sm flex items-center gap-2">
+          <Code2 size={16} className="text-primary" />
+          Preferred Language
+        </h3>
+        <div className="grid grid-cols-3 gap-3">
+          {LANGUAGES.map(lang => (
+            <button
+              key={lang.id}
+              onClick={() => setForm(f => ({ ...f, preferred_language: lang.id }))}
+              className={`p-3 rounded-xl border text-left transition-all ${
+                form.preferred_language === lang.id
+                  ? 'border-primary/40 bg-primary/10'
+                  : 'border-border bg-surface-2 hover:border-border-hover'
+              }`}
+            >
+              <span className="text-lg">{lang.emoji}</span>
+              <p className="font-bold text-xs mt-1">{lang.label}</p>
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {/* Social links */}
+      <Card className="p-6 space-y-4">
+        <h3 className="font-black text-sm">Social Links</h3>
+        {[
+          { key: 'github_url', icon: GithubIcon, placeholder: 'github.com/username' },
+          { key: 'linkedin_url', icon: LinkedinIcon, placeholder: 'linkedin.com/in/username' },
+          { key: 'twitter_url', icon: TwitterIcon, placeholder: 'twitter.com/username' },
+        ].map(({ key, icon: Icon, placeholder }) => (
+          <div key={key} className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-surface-2 flex items-center
+                            justify-center border border-border shrink-0">
+              <Icon size={16} className="text-text-muted" />
+            </div>
+            <input
+              value={(form as any)[key]}
+              onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+              placeholder={placeholder}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-surface-2 border
+                         border-border focus:border-primary/50 focus:outline-none
+                         text-sm transition-all"
+            />
+          </div>
+        ))}
+      </Card>
+
+      {/* Privacy + Save */}
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <div
+            onClick={() => setForm(f => ({ ...f, is_public: !f.is_public }))}
+            className={`w-11 h-6 rounded-full transition-all ${
+              form.is_public ? 'bg-primary' : 'bg-surface-3'
+            } relative`}
+          >
+            <div className={`w-4 h-4 bg-white rounded-full absolute top-1
+                             transition-all ${
+              form.is_public ? 'left-6' : 'left-1'
+            }`} />
+          </div>
+          <span className="text-sm font-medium">
+            Public profile
+          </span>
+        </label>
+        <Button
+          onClick={handleSave}
+          loading={saving}
+          className="min-w-32"
+        >
+          {saved ? '✓ Saved!' : 'Save Profile'}
+        </Button>
+      </div>
     </div>
   );
 };
-
-const AchievementCard = ({ icon, title, desc, completed }: { icon: string, title: string, desc: string, completed?: boolean }) => (
-  <Card className={`p-4 border-white/5 flex items-center gap-4 transition-all ${!completed ? 'opacity-40 grayscale' : 'hover:border-primary/30'}`}>
-    <div className="text-2xl">{icon}</div>
-    <div>
-      <h4 className="text-xs font-bold">{title}</h4>
-      <p className="text-[10px] text-text-muted">{desc}</p>
-    </div>
-  </Card>
-);
 
 export default ProfilePage;

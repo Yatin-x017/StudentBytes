@@ -67,7 +67,7 @@ export interface CanvasAnnouncement {
 }
 
 export interface AppSettings {
-  defaultLanguage: 'Python' | 'JavaScript' | 'Java' | 'C++';
+  defaultLanguage: 'Python' | 'JavaScript' | 'Java' | 'C++' | 'TypeScript' | 'Go';
   provider: 'anthropic' | 'gemini';
   geminiApiKey: string;
 }
@@ -125,6 +125,36 @@ export interface ClassSlot {
   startTime: string; // "09:00"
   endTime: string;   // "10:30"
   color: string;     // tailwind color class e.g. "bg-primary/20 text-primary"
+}
+
+export interface Profile {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  college: string | null;
+  year: number | null;
+  branch: string | null;
+  github_url: string | null;
+  linkedin_url: string | null;
+  twitter_url: string | null;
+  preferred_language: string;
+  is_public: boolean;
+  custom_theme: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PerformanceScore {
+  id: string;
+  user_id: string;
+  subject: string;
+  score: number;
+  max_score: number;
+  type: 'quiz' | 'assignment' | 'test' | 'exam';
+  title: string | null;
+  recorded_at: string;
 }
 
 export interface AppState {

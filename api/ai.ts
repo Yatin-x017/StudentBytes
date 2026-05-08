@@ -1,127 +1,122 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Groq from 'groq-sdk';
 
-export const config = {
-  runtime: 'edge',
-};
+const GROQ_KEY = process.env.GROQ_API_KEY || '';
 
-import { createClient } from '@supabase/supabase-js';
+const SYSTEM_PROMPT = (language = 'Python') =>
+  `You are Byte — a sharp, friendly AI tutor for CS university students.
+Casual, precise, never condescending. Like a brilliant senior helping a junior.
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+TEACHING STYLE:
+- Use ${language} for ALL code examples unless the student specifies otherwise
+- Use markdown with fenced code blocks tagged with the language (e.g. \`\`\`${language.toLowerCase()}\`)
+- For complex topics: concept → analogy → example → common mistake → practice question
+- Adapt explanation depth to the student's apparent level from their messages
+- End every response with ONE follow-up question
 
-// Models tried in order — if one is rate-limited, the next is used
-const FALLBACK_MODELS = [
-  'llama-3.3-70b-versatile',   // Best quality
-  'llama-3.1-8b-instant',      // Fast, high rate limits
-  'gemma2-9b-it',              // Google model, separate quota
-];
+SUBJECTS: DSA, OS, DBMS, Computer Networks, OOP, System Design, Algorithms
 
-function friendlyError(err: any): { message: string; status: number } {
-  const status = err?.status ?? err?.error?.status ?? 500;
-  const raw = err?.message ?? err?.error?.message ?? '';
+IMPORTANT: Keep responses focused. No filler. No unnecessary repetition.`;
 
-  if (status === 429) {
-    // Try to extract retry time from the Groq message
-    const retryMatch = raw.match(/try again in ([^.]+)/i);
-    const retryIn = retryMatch ? ` Try again in ${retryMatch[1]}.` : '';
-    return {
-      message: `The built-in AI has hit its daily usage limit.${retryIn} Add your own API key in Settings for unlimited access.`,
-      status: 429,
-    };
-  }
-  if (status === 401) return { message: 'Invalid API key. Check your Groq key.', status: 401 };
-  if (status === 503) return { message: 'AI service is temporarily unavailable. Try again shortly.', status: 503 };
-  return { message: raw || 'AI provider error. Please try again.', status };
-}
-
-export default async function handler(req: Request) {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: CORS_HEADERS });
-  }
-
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405, headers: CORS_HEADERS });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!process.env.GROQ_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: 'Built-in AI is not configured. Please add your own API key in Settings.' }),
-      { status: 503, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
-    );
-  }
-
-  if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_ANON_KEY) {
-    return new Response(
-      JSON.stringify({ error: 'Server configuration error. Please try again later.' }),
-      { status: 503, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
-    );
-  }
-
-  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  const supabase = createClient(process.env.VITE_SUPABASE_URL!, process.env.VITE_SUPABASE_ANON_KEY!);
-
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: 'Authentication required. Please log in.' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+  if (!GROQ_KEY) {
+    return res.status(503).json({
+      error: 'GROQ_API_KEY not set in Vercel environment variables. Add it at vercel.com/dashboard.'
     });
   }
 
-  const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-  if (authError || !user) {
-    return new Response(JSON.stringify({ error: 'Invalid or expired session. Please log in again.' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-    });
+  let body: any;
+  try {
+    body = req.body;
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON body' });
   }
 
-  const { messages, system } = await req.json();
-  const formattedMessages = [
-    ...(system ? [{ role: 'system' as const, content: system }] : []),
-    ...messages,
+  const { messages, system, language, mode } = body;
+
+  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: 'messages array is required and must not be empty' });
+  }
+
+  // Build system prompt
+  const systemContent = system || SYSTEM_PROMPT(language || 'Python');
+
+  // Validate and clean messages
+  const cleanMessages = messages
+    .filter((m: any) => m && m.role && m.content && String(m.content).trim())
+    .map((m: any) => ({
+      role: (m.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
+      content: String(m.content).slice(0, 8000), // prevent token overflow
+    }));
+
+  if (cleanMessages.length === 0) {
+    return res.status(400).json({ error: 'No valid messages found' });
+  }
+
+  const groqMessages = [
+    { role: 'system' as const, content: systemContent },
+    ...cleanMessages,
   ];
 
-  let lastErr: any = null;
+  try {
+    const groq = new Groq({ apiKey: GROQ_KEY });
 
-  for (const model of FALLBACK_MODELS) {
-    try {
+    if (mode === 'generate') {
+      // Non-streaming for quiz/structured output
       const response = await groq.chat.completions.create({
-        model,
-        messages: formattedMessages,
-        stream: true,
+        model: 'llama-3.3-70b-versatile',
+        messages: groqMessages,
+        max_tokens: 3000,
+        temperature: 0.4,
+        stream: false,
       });
-
-      const stream = new ReadableStream({
-        async start(controller) {
-          for await (const chunk of response) {
-            const content = chunk.choices[0]?.delta?.content || '';
-            controller.enqueue(new TextEncoder().encode(content));
-          }
-          controller.close();
-        },
-      });
-
-      return new Response(stream, { headers: CORS_HEADERS });
-    } catch (err: any) {
-      const status = err?.status ?? err?.error?.status;
-      console.warn(`[ai] Model ${model} failed (${status}):`, err?.message);
-      lastErr = err;
-
-      // Only fall through to next model on rate-limit (429) or overload (503)
-      if (status !== 429 && status !== 503) break;
+      const text = response.choices[0]?.message?.content || '';
+      return res.status(200).json({ text });
     }
-  }
 
-  // All models exhausted — return a friendly error
-  const { message, status } = friendlyError(lastErr);
-  return new Response(JSON.stringify({ error: message }), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-  });
+    // Streaming (default)
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    if (res.flushHeaders) res.flushHeaders();
+
+    const stream = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: groqMessages,
+      max_tokens: 4096,
+      temperature: 0.7,
+      stream: true,
+    });
+
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content || '';
+      if (delta) {
+        res.write(`data: ${JSON.stringify({ delta })}\n\n`);
+      }
+    }
+
+    res.write('data: [DONE]\n\n');
+    res.end();
+  } catch (err: any) {
+    console.error('[api/ai]', err.status, err.message);
+    if (!res.headersSent) {
+      if (err.status === 429) {
+        return res.status(429).json({ error: 'Rate limit hit. Please wait a moment and try again.' });
+      }
+      return res.status(500).json({ error: err.message || 'AI request failed' });
+    }
+    res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+    res.end();
+  }
 }

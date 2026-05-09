@@ -12,19 +12,24 @@ import {
   ChevronRight,
   CalendarDays,
   Brain,
-  LogOut
+  LogOut,
+  User,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/hooks/useTheme';
 
 export const Sidebar: React.FC = () => {
   const { state } = useAppContext();
   const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme, toggle } = useTheme();
 
   const mainNav = [
     { label: 'Dashboard', icon: LayoutDashboard, path: ROUTES.DASHBOARD },
@@ -38,6 +43,7 @@ export const Sidebar: React.FC = () => {
   const secondaryNav = [
     { label: 'Analytics', icon: TrendingUp, path: ROUTES.ANALYTICS },
     { label: 'Community', icon: Users, path: ROUTES.COMMUNITY },
+    { label: 'Profile', icon: User, path: ROUTES.PROFILE },
     { label: 'Settings', icon: Settings, path: ROUTES.SETTINGS },
   ];
 
@@ -46,7 +52,7 @@ export const Sidebar: React.FC = () => {
     : !!state.apiKey;
 
   return (
-    <aside className="w-[240px] border-r border-white/5 h-screen sticky top-0 hidden lg:flex flex-col bg-[#0a0a0f]/95 backdrop-blur-xl z-30 overflow-hidden">
+    <aside className="w-[240px] border-r border-border h-screen sticky top-0 hidden lg:flex flex-col bg-bg/95 backdrop-blur-xl z-30 overflow-hidden">
       {/* Logo Area */}
       <div className="flex items-center gap-3 px-6 py-8">
         <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
@@ -56,6 +62,17 @@ export const Sidebar: React.FC = () => {
           <span className="font-display font-black text-base tracking-tight">Student</span>
           <span className="font-display font-black text-base tracking-tight text-primary">Bytes</span>
         </div>
+        <button
+          onClick={toggle}
+          className="p-2 rounded-xl hover:bg-surface-2 transition-all
+                     text-text-muted hover:text-text ml-auto"
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {theme === 'dark'
+            ? <Sun size={16} className="text-warning" />
+            : <Moon size={16} className="text-primary" />
+          }
+        </button>
       </div>
 
       <div className="flex-1 px-4 space-y-8 py-4 overflow-y-auto custom-scrollbar">
@@ -74,7 +91,7 @@ export const Sidebar: React.FC = () => {
                       'flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all group relative',
                       isActive
                         ? 'text-primary bg-primary/10 border border-primary/20'
-                        : 'text-text-muted hover:text-white hover:bg-white/5 border border-transparent'
+                        : 'text-text-muted hover:text-text hover:bg-surface-2 border border-transparent'
                     )
                   }
                 >
@@ -111,7 +128,7 @@ export const Sidebar: React.FC = () => {
                       'flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all group relative',
                       isActive
                         ? 'text-primary bg-primary/10 border border-primary/20'
-                        : 'text-text-muted hover:text-white hover:bg-white/5 border border-transparent'
+                        : 'text-text-muted hover:text-text hover:bg-surface-2 border border-transparent'
                     )
                   }
                 >
@@ -135,7 +152,7 @@ export const Sidebar: React.FC = () => {
 
         {/* Built-in AI Indicator */}
         {!hasKey && (
-          <div className="mx-2 p-4 rounded-xl bg-white/5 border border-white/5">
+          <div className="mx-2 p-4 rounded-xl bg-surface-2 border border-border">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               <p className="text-[10px] font-black uppercase tracking-widest text-primary">Built-in AI</p>
@@ -145,7 +162,7 @@ export const Sidebar: React.FC = () => {
             </p>
             <button
               onClick={() => navigate(ROUTES.SETTINGS)}
-              className="text-[10px] font-bold text-white hover:underline uppercase tracking-tighter"
+              className="text-[10px] font-bold text-text hover:underline uppercase tracking-tighter"
             >
               Add Key →
             </button>
@@ -154,10 +171,10 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* User Area */}
-      <div className="p-4 border-t border-white/5 bg-white/2 backdrop-blur-md">
+      <div className="p-4 border-t border-border bg-surface/50 backdrop-blur-md">
         {user ? (
-          <div className="flex items-center justify-between gap-2 p-2 rounded-xl hover:bg-white/5 transition-all group">
-            <Link to={ROUTES.PROFILE} className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 p-2 rounded-xl hover:bg-surface-2 transition-all group">
+            <Link to={ROUTES.PROFILE} className="flex items-center gap-3 flex-1 min-w-0" title="View Profile">
               <div className="relative">
                 {user.user_metadata?.avatar_url ? (
                   <img src={user.user_metadata.avatar_url} alt="" className="w-9 h-9 rounded-lg object-cover" />
@@ -166,7 +183,7 @@ export const Sidebar: React.FC = () => {
                     {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}
                   </div>
                 )}
-                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-[#0a0a0f]" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-bg" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold truncate">{user.user_metadata?.full_name || user.email?.split('@')[0]}</p>

@@ -121,3 +121,30 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- CREATE TRIGGER on_auth_user_created
 --   AFTER INSERT ON auth.users
 --   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- ─── GLOBAL CHAT ─────────────────────────────────────────────────────────────
+
+CREATE TABLE chat_messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users ON DELETE SET NULL,
+  anon_name TEXT NOT NULL,
+  anon_color TEXT NOT NULL DEFAULT '#7c6af7',
+  content TEXT NOT NULL CHECK (char_length(content) <= 500),
+  is_flagged BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+
+-- Anyone authenticated can read messages
+CREATE POLICY "Chat messages are viewable by authenticated users"
+  ON chat_messages FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+-- Authenticated users can insert their own messages
+CREATE POLICY "Users can send chat messages"
+  ON chat_messages FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Enable Realtime for chat_messages
+ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;

@@ -138,7 +138,7 @@ export function useDatabase(userId: string) {
       .eq('user_id', userId)
       .order('next_review_date', { ascending: true });
     if (error) throw error;
-    return data.map(d => ({
+    return data.map((d: any) => ({
       id: d.id,
       topic: d.topic,
       easeFactor: d.ease_factor,

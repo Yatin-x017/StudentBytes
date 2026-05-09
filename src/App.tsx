@@ -23,6 +23,7 @@ const TimetablePage = lazy(() => import('@/pages/TimetablePage'));
 const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'));
 const TermsPage = lazy(() => import('@/pages/TermsPage'));
 const SharedNotePage = lazy(() => import('@/pages/SharedNotePage'));
+const PublicProfilePage = lazy(() => import('@/pages/PublicProfilePage'));
 
 const App: React.FC = () => {
   return (
@@ -40,7 +41,7 @@ const AppContent: React.FC = () => {
   if (loading) {
     return (
       <div
-        style={{ backgroundColor: '#0f0f13' }}
+        style={{ backgroundColor: '#0a0a12' }}
         className="h-screen w-full flex items-center justify-center"
       >
         <Spinner size={32} className="text-primary" />
@@ -51,7 +52,7 @@ const AppContent: React.FC = () => {
   return (
     <Suspense fallback={
       <div
-        style={{ backgroundColor: '#0f0f13' }}
+        style={{ backgroundColor: '#0a0a12' }}
         className="h-screen w-full flex items-center justify-center"
       >
         <Spinner size={32} className="text-primary" />
@@ -63,6 +64,7 @@ const AppContent: React.FC = () => {
         <Route path={ROUTES.SHARED_NOTE} element={<SharedNotePage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/u/:username" element={<PublicProfilePage />} />
         <Route path="/login" element={
           user ? <Navigate to={ROUTES.DASHBOARD} replace /> : <LoginPage />
         } />

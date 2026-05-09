@@ -35,7 +35,7 @@ const PublicProfilePage: React.FC = () => {
         .select('*')
         .eq('username', username)
         .single()
-        .then(r => r.data),
+        .then((r: { data: any }) => r.data),
     ]).then(([p, lb]) => {
       if (!p || !p.is_public) {
         navigate('/community');

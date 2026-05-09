@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart3,
   TrendingUp,
@@ -10,11 +10,25 @@ import {
   Calendar
 } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { supabase } from '@/lib/supabase';
+import { getScoreTrend } from '@/lib/performanceUtils';
+import type { PerformanceScore } from '@/lib/types';
 
 const AnalyticsPage: React.FC = () => {
   const { state } = useAppContext();
+  const { user } = useAuth();
+
+  // Performance scores state
+  const [scores, setScores] = useState<PerformanceScore[]>([]);
+  const [showScoreModal, setShowScoreModal] = useState(false);
+  const [scoreForm, setScoreForm] = useState({
+    subject: '', score: '', max_score: '100',
+    type: 'quiz' as 'quiz' | 'assignment' | 'test' | 'exam', title: ''
+  });
 
   // Real stats
   const totalSessions = state.sessions.length;
@@ -76,6 +90,37 @@ const AnalyticsPage: React.FC = () => {
 
   const activeDays = last7Days.filter(d => d.sessions > 0).length;
 
+  // Fetch performance scores
+  useEffect(() => {
+    if (!supabase || !user) return;
+    supabase.from('performance_scores')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('recorded_at', { ascending: true })
+      .then(({ data }: { data: PerformanceScore[] | null }) => setScores(data || []));
+  }, [user]);
+
+  const handleAddScore = async () => {
+    if (!user || !supabase) return;
+    const newScore = {
+      user_id: user.id,
+      subject: scoreForm.subject,
+      score: parseFloat(scoreForm.score),
+      max_score: parseFloat(scoreForm.max_score),
+      type: scoreForm.type,
+      title: scoreForm.title,
+      recorded_at: new Date().toISOString(),
+    };
+    const { data } = await supabase
+      .from('performance_scores')
+      .insert(newScore)
+      .select()
+      .single();
+    if (data) setScores(prev => [...prev, data as PerformanceScore]);
+    setShowScoreModal(false);
+    setScoreForm({ subject: '', score: '', max_score: '100', type: 'quiz', title: '' });
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -90,7 +135,7 @@ const AnalyticsPage: React.FC = () => {
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-6 border-white/5 bg-surface-2 flex flex-col justify-between">
+        <Card className="p-6 border-border bg-surface-2 flex flex-col justify-between">
           <div className="bg-primary/10 w-10 h-10 rounded-xl flex items-center justify-center text-primary mb-4">
             <Activity size={20} />
           </div>
@@ -100,7 +145,7 @@ const AnalyticsPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-6 border-white/5 bg-surface-2 flex flex-col justify-between">
+        <Card className="p-6 border-border bg-surface-2 flex flex-col justify-between">
           <div className="bg-success/10 w-10 h-10 rounded-xl flex items-center justify-center text-success mb-4">
             <TrendingUp size={20} />
           </div>
@@ -110,7 +155,7 @@ const AnalyticsPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-6 border-white/5 bg-surface-2 flex flex-col justify-between">
+        <Card className="p-6 border-border bg-surface-2 flex flex-col justify-between">
           <div className="bg-amber-500/10 w-10 h-10 rounded-xl flex items-center justify-center text-amber-500 mb-4">
             <BookOpen size={20} />
           </div>
@@ -120,7 +165,7 @@ const AnalyticsPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-6 border-white/5 bg-surface-2 flex flex-col justify-between">
+        <Card className="p-6 border-border bg-surface-2 flex flex-col justify-between">
           <div className="bg-violet-500/10 w-10 h-10 rounded-xl flex items-center justify-center text-violet-500 mb-4">
             <Target size={20} />
           </div>
@@ -131,8 +176,99 @@ const AnalyticsPage: React.FC = () => {
         </Card>
       </div>
 
+      {/* SG/CG Projection */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-black text-sm flex items-center gap-2">
+            <TrendingUp size={16} className="text-primary" />
+            Performance & SG/CG Projection
+          </h3>
+          <Button size="sm" variant="secondary"
+                  onClick={() => setShowScoreModal(true)}>
+            + Add Score
+          </Button>
+        </div>
+
+        {scores.length === 0 ? (
+          <div className="py-12 text-center">
+            <p className="text-text-muted text-sm mb-3">
+              Add your quiz, test, and exam scores to see your projected SGPA/CGPA
+            </p>
+            <Button size="sm" onClick={() => setShowScoreModal(true)}>
+              Add First Score
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Summary row */}
+            <div className="grid grid-cols-3 gap-4">
+              {(() => {
+                const avg = scores.reduce(
+                  (s, q) => s + (q.score / q.max_score) * 100, 0
+                ) / scores.length;
+                const projected = (avg / 100) * 10;
+                const trend = getScoreTrend(scores);
+                return [
+                  { label: 'Avg Score', value: `${Math.round(avg)}%`, color: 'text-primary' },
+                  { label: 'Projected SGPA', value: projected.toFixed(2), color: 'text-accent-2' },
+                  {
+                    label: 'Trend',
+                    value: trend === 'improving' ? '↑ Improving' :
+                           trend === 'declining' ? '↓ Declining' : '→ Stable',
+                    color: trend === 'improving' ? 'text-success' :
+                           trend === 'declining' ? 'text-error' : 'text-text-muted'
+                  },
+                ].map(stat => (
+                  <div key={stat.label} className="p-4 rounded-2xl bg-surface-2
+                                                   border border-border text-center">
+                    <p className={`text-xl font-black ${stat.color}`}>
+                      {stat.value}
+                    </p>
+                    <p className="text-[10px] text-text-muted uppercase font-bold
+                                   tracking-widest mt-1">
+                      {stat.label}
+                    </p>
+                  </div>
+                ));
+              })()}
+            </div>
+
+            {/* Bar chart of scores */}
+            <div className="space-y-3">
+              {scores.slice(-8).map((score, i) => {
+                const pct = Math.round((score.score / score.max_score) * 100);
+                return (
+                  <div key={score.id || i}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-medium truncate max-w-[200px]">
+                        {score.title || score.subject}
+                      </span>
+                      <span className={`text-xs font-black ${
+                        pct >= 75 ? 'text-success' :
+                        pct >= 50 ? 'text-warning' : 'text-error'
+                      }`}>
+                        {score.score}/{score.max_score} ({pct}%)
+                      </span>
+                    </div>
+                    <div className="h-2 bg-surface-3 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          pct >= 75 ? 'bg-success' :
+                          pct >= 50 ? 'bg-warning' : 'bg-error'
+                        }`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="p-6 lg:col-span-2 border-white/5">
+        <Card className="p-6 lg:col-span-2 border-border">
           <h3 className="font-black text-sm mb-8 flex items-center gap-2 uppercase tracking-widest">
             <Calendar size={16} className="text-primary" />
             Study Activity — Last 7 Days
@@ -148,11 +284,11 @@ const AnalyticsPage: React.FC = () => {
                     <div
                       className={`w-full rounded-t-xl transition-all duration-700 ease-out group relative ${
                         isToday ? 'bg-primary' :
-                        day.sessions > 0 ? 'bg-primary/40' : 'bg-white/5'
+                        day.sessions > 0 ? 'bg-primary/40' : 'bg-surface-3'
                       }`}
                       style={{ height: `${Math.max(heightPct, day.sessions > 0 ? 8 : 4)}%` }}
                     >
-                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface border border-white/10 px-2 py-1 rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface border border-border px-2 py-1 rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                         {day.sessions} sessions
                       </div>
                     </div>
@@ -166,7 +302,7 @@ const AnalyticsPage: React.FC = () => {
               );
             })}
           </div>
-          <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+          <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
             <p className="text-xs font-bold text-text-muted uppercase tracking-widest">
               Weekly Engagement
             </p>
@@ -178,7 +314,7 @@ const AnalyticsPage: React.FC = () => {
 
         <div className="space-y-6">
           {topSubjects.length > 0 ? (
-            <Card className="p-6 border-white/5">
+            <Card className="p-6 border-border">
               <h3 className="font-black text-sm mb-6 flex items-center gap-2 uppercase tracking-widest">
                 <Target size={16} className="text-primary" />
                 Topics Studied
@@ -195,7 +331,7 @@ const AnalyticsPage: React.FC = () => {
                           {count} session{count !== 1 ? 's' : ''}
                         </span>
                       </div>
-                      <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-2 bg-surface-3 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-1000 ease-out"
                           style={{ width: `${pct}%` }}
@@ -207,15 +343,15 @@ const AnalyticsPage: React.FC = () => {
               </div>
             </Card>
           ) : (
-            <Card className="p-8 border-white/5 text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-text-muted mx-auto">
+            <Card className="p-8 border-border text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-surface-2 flex items-center justify-center text-text-muted mx-auto">
                 <BarChart3 size={24} />
               </div>
               <p className="text-xs font-bold text-text-muted uppercase tracking-widest">No topic data yet</p>
             </Card>
           )}
 
-          <Card className="p-6 border-white/5 bg-gradient-to-br from-primary/10 to-transparent">
+          <Card className="p-6 border-border bg-gradient-to-br from-primary/10 to-transparent">
             <div className="flex items-center gap-3 mb-4">
                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
                  <Brain size={20} />
@@ -230,7 +366,7 @@ const AnalyticsPage: React.FC = () => {
                 <span>{totalXP % 1000} / 1000 XP</span>
                 <span>{Math.round((totalXP % 1000) / 10)}%</span>
               </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-2 bg-surface-3 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-primary"
                   style={{ width: `${(totalXP % 1000) / 10}%` }}
@@ -243,6 +379,73 @@ const AnalyticsPage: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      {/* Add Score Modal */}
+      {showScoreModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm
+                        flex items-center justify-center p-4"
+             onClick={() => setShowScoreModal(false)}>
+          <div className="w-full max-w-md bg-surface rounded-3xl border border-border
+                          p-6 space-y-4 shadow-2xl"
+               onClick={e => e.stopPropagation()}>
+            <h3 className="font-black text-lg">Add Score</h3>
+            {(['title', 'subject'] as const).map(field => (
+              <input
+                key={field}
+                value={field === 'title' ? scoreForm.title : scoreForm.subject}
+                onChange={e => setScoreForm(f => ({ ...f, [field]: e.target.value }))}
+                placeholder={field === 'title' ? 'Title (e.g. "Mid Sem Exam")' : 'Subject (e.g. "DSA")'}
+                className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-border
+                           focus:border-primary/50 focus:outline-none text-sm"
+              />
+            ))}
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="number"
+                value={scoreForm.score}
+                onChange={e => setScoreForm(f => ({ ...f, score: e.target.value }))}
+                placeholder="Your score"
+                className="px-4 py-3 rounded-xl bg-surface-2 border border-border
+                           focus:border-primary/50 focus:outline-none text-sm"
+              />
+              <input
+                type="number"
+                value={scoreForm.max_score}
+                onChange={e => setScoreForm(f => ({ ...f, max_score: e.target.value }))}
+                placeholder="Max score"
+                className="px-4 py-3 rounded-xl bg-surface-2 border border-border
+                           focus:border-primary/50 focus:outline-none text-sm"
+              />
+            </div>
+            <div className="flex gap-2">
+              {(['quiz', 'assignment', 'test', 'exam'] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setScoreForm(f => ({ ...f, type: t }))}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold capitalize
+                              border transition-all ${
+                    scoreForm.type === t
+                      ? 'bg-primary/10 border-primary/40 text-primary'
+                      : 'bg-surface-2 border-border text-text-muted'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <Button variant="ghost" className="flex-1"
+                      onClick={() => setShowScoreModal(false)}>
+                Cancel
+              </Button>
+              <Button className="flex-1" onClick={handleAddScore}
+                      disabled={!scoreForm.score || !scoreForm.subject}>
+                Add Score
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

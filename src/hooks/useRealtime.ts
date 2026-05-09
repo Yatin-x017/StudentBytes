@@ -18,7 +18,7 @@ export function useRealtime(userId: string | undefined) {
         schema: 'public',
         table: 'sessions',
         filter: `user_id=eq.${userId}`,
-      }, (payload) => {
+      }, (payload: any) => {
         if (payload.eventType === 'DELETE') {
           dispatch({ type: 'DELETE_SESSION', payload: payload.old.id });
         } else {
@@ -41,7 +41,7 @@ export function useRealtime(userId: string | undefined) {
         schema: 'public',
         table: 'notes',
         filter: `user_id=eq.${userId}`,
-      }, (payload) => {
+      }, (payload: any) => {
         if (payload.eventType === 'DELETE') {
           dispatch({ type: 'DELETE_NOTE', payload: payload.old.id });
         } else if (payload.eventType === 'INSERT') {

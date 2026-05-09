@@ -14,7 +14,7 @@ export const ApiKeyBanner: React.FC = () => {
   if (hasKey) return null;
 
   return (
-    <div className="mx-3 mb-3 p-3 rounded-xl bg-white/5 border border-white/5">
+    <div className="mx-3 mb-3 p-3 rounded-xl bg-surface-2 border border-border">
       <p className="text-[10px] text-text-muted leading-relaxed">
         ✦ Using built-in AI. Add your own key in{' '}
         <button

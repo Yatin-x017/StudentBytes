@@ -78,7 +78,7 @@ const LoginPage: React.FC = () => {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/3" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/10 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/3" />
 
-      <Card className="w-full max-w-md p-8 border-white/10 shadow-2xl bg-surface/80 backdrop-blur-xl relative z-10">
+      <Card className="w-full max-w-md p-8 border-border shadow-2xl bg-surface/80 backdrop-blur-xl relative z-10">
         <div className="flex flex-col items-center text-center mb-8">
           <div className="bg-primary rounded-2xl p-3 shadow-lg shadow-primary/20 mb-4">
             <Terminal size={32} className="text-white" />
@@ -98,9 +98,9 @@ const LoginPage: React.FC = () => {
             onClick={handleGoogleSignIn}
             disabled={googleLoading || discordLoading || twitterLoading}
             className="w-full flex items-center justify-center gap-3 py-3.5 px-6
-                      rounded-2xl border border-white/10 bg-white/5 hover:bg-white/8
+                      rounded-2xl border border-border bg-surface hover:bg-surface-2
                       transition-all font-semibold text-sm disabled:opacity-50
-                      hover:border-white/15"
+                      hover:border-border-hover"
           >
             {googleLoading ? (
               <Loader2 size={18} className="animate-spin" />
@@ -121,7 +121,7 @@ const LoginPage: React.FC = () => {
               onClick={handleDiscordSignIn}
               disabled={googleLoading || discordLoading || twitterLoading}
               className="flex items-center justify-center gap-2 py-3.5
-                         rounded-2xl border border-white/10 bg-white/5
+                         rounded-2xl border border-border bg-surface
                          hover:bg-[#5865F2]/10 hover:border-[#5865F2]/30
                          transition-all font-semibold text-sm disabled:opacity-50"
             >
@@ -140,14 +140,14 @@ const LoginPage: React.FC = () => {
               onClick={handleTwitterSignIn}
               disabled={googleLoading || discordLoading || twitterLoading}
               className="flex items-center justify-center gap-2 py-3.5
-                         rounded-2xl border border-white/10 bg-white/5
-                         hover:bg-white/10 hover:border-white/20
+                         rounded-2xl border border-border bg-surface
+                         hover:bg-surface-2 hover:border-border-hover
                          transition-all font-semibold text-sm disabled:opacity-50"
             >
               {twitterLoading ? (
                 <Loader2 size={16} className="animate-spin" />
               ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                 </svg>
               )}
@@ -157,9 +157,9 @@ const LoginPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-white/5" />
+          <div className="flex-1 h-px bg-border" />
           <span className="text-[11px] text-text-muted font-black tracking-widest uppercase">OR</span>
-          <div className="flex-1 h-px bg-white/5" />
+          <div className="flex-1 h-px bg-border" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -174,7 +174,7 @@ const LoginPage: React.FC = () => {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="pl-12 bg-black/40 border-white/10"
+                className="pl-12 bg-surface-2 border-border"
                 required
               />
             </div>
@@ -191,7 +191,7 @@ const LoginPage: React.FC = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-12 bg-black/40 border-white/10"
+                className="pl-12 bg-surface-2 border-border"
                 required
               />
             </div>

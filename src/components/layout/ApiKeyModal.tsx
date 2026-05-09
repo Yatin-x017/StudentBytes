@@ -53,10 +53,10 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onSuc
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-md"
           >
-            <Card className="p-8 border-white/10 shadow-2xl bg-surface">
+            <Card className="p-8 border-border shadow-2xl bg-surface">
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 text-text-muted hover:text-white transition-all"
+                className="absolute top-4 right-4 text-text-muted hover:text-text transition-all"
               >
                 <X size={20} />
               </button>
@@ -81,7 +81,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onSuc
                     value={key}
                     onChange={(e) => setKey(e.target.value)}
                     placeholder={isGemini ? "AIza..." : "sk-ant-..."}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm font-mono focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                    className="w-full bg-surface-2 border border-border rounded-xl p-4 text-sm font-mono focus:ring-2 focus:ring-primary/50 outline-none transition-all"
                     autoFocus
                   />
                 </div>

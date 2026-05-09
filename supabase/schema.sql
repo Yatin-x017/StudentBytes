@@ -122,21 +122,21 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 --   AFTER INSERT ON auth.users
 --   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
--- ─── GLOBAL CHAT ─────────────────────────────────────────────────────────────
-
+-- Chat Messages Table
 CREATE TABLE chat_messages (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users ON DELETE SET NULL,
-  anon_name TEXT NOT NULL,
-  anon_color TEXT NOT NULL DEFAULT '#7c6af7',
+  anon_name TEXT NOT NULL,           -- "Anon-7f3a"
+  anon_color TEXT NOT NULL DEFAULT '#7c6af7', -- avatar bg color
   content TEXT NOT NULL CHECK (char_length(content) <= 500),
-  is_flagged BOOLEAN DEFAULT false,
+  is_flagged BOOLEAN DEFAULT false,  -- moderation flag
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Enable RLS
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
 
--- Anyone authenticated can read messages
+-- Anyone authenticated can read
 CREATE POLICY "Chat messages are viewable by authenticated users"
   ON chat_messages FOR SELECT
   USING (auth.role() = 'authenticated');
@@ -146,5 +146,5 @@ CREATE POLICY "Users can send chat messages"
   ON chat_messages FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
--- Enable Realtime for chat_messages
+-- Enable Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;

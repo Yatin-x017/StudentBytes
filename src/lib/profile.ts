@@ -56,5 +56,5 @@ export async function getTopProfiles(limit = 20): Promise<Profile[]> {
     .select('*, profiles(*)')
     .order('total_xp', { ascending: false })
     .limit(limit);
-  return data?.map((d: any) => d.profiles).filter(Boolean) || [];
+  return data?.map(d => (d as any).profiles).filter(Boolean) || [];
 }

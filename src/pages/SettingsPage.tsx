@@ -148,7 +148,7 @@ const SettingsPage: React.FC = () => {
                   "cursor-pointer p-5 rounded-2xl border-2 transition-all flex flex-col relative overflow-hidden group",
                   state.settings.provider === p.id
                     ? 'border-primary bg-primary/5'
-                    : 'border-white/5 bg-surface hover:border-white/10'
+                    : 'border-border bg-surface hover:border-border-hover'
                 )}
               >
                 <div className="flex items-center justify-between mb-3 relative z-10">
@@ -186,7 +186,7 @@ const SettingsPage: React.FC = () => {
             ))}
           </div>
 
-          <div className="pt-6 border-t border-white/5">
+          <div className="pt-6 border-t border-border">
             <div className="flex items-center gap-3 mb-6">
               <h3 className="font-bold text-sm uppercase tracking-widest text-text-muted">API Configuration</h3>
               {(state.settings.provider === 'gemini' ? state.settings.geminiApiKey : state.apiKey) && (
@@ -284,7 +284,7 @@ const SettingsPage: React.FC = () => {
                       "p-4 rounded-2xl border text-left transition-all",
                       currentLanguage === lang.id
                         ? 'border-primary/40 bg-primary/10'
-                        : 'border-white/5 bg-surface hover:border-white/10'
+                        : 'border-border bg-surface hover:border-border-hover'
                     )}
                   >
                     <div className="flex items-center gap-2 mb-1">
@@ -320,16 +320,16 @@ const SettingsPage: React.FC = () => {
           </Button>
         </Card>
 
-        <Card className="p-8 border-white/5 bg-surface">
+        <Card className="p-8 border-border bg-surface">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-white/5 rounded-lg text-text-muted">
+            <div className="p-2 bg-surface-2 rounded-lg text-text-muted">
               <LogOut size={20} />
             </div>
             <h2 className="text-xl font-bold">Session</h2>
           </div>
 
           <p className="text-sm text-text-muted mb-6 leading-relaxed">
-            Signed in as <span className="text-white font-bold">{user?.email}</span>
+            Signed in as <span className="text-text font-bold">{user?.email}</span>
           </p>
 
           <Button

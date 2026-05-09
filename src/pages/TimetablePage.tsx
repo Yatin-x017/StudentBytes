@@ -138,7 +138,7 @@ const TimetablePage: React.FC = () => {
                 ))
               }
               {slots.filter(s => s.day === day).length === 0 && (
-                <div className="h-24 rounded-2xl border border-dashed border-white/5 flex items-center justify-center">
+                <div className="h-24 rounded-2xl border border-dashed border-border flex items-center justify-center">
                    <p className="text-[10px] font-bold text-text-muted/30 uppercase">Free Day</p>
                 </div>
               )}
@@ -181,7 +181,7 @@ const TimetablePage: React.FC = () => {
                     <select
                       value={formData.day}
                       onChange={e => setFormData({...formData, day: parseInt(e.target.value) as any})}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all appearance-none"
+                      className="w-full bg-surface-2 border border-border rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all appearance-none"
                     >
                       {[1,2,3,4,5,6].map(d => (
                         <option key={d} value={d}>{DAYS[d]}</option>

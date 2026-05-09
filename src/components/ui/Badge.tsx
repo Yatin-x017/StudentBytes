@@ -12,8 +12,8 @@ export const Badge: React.FC<BadgeProps> = ({ children, variant = 'info', classN
     success: 'bg-success/10 text-success border-success/20',
     error: 'bg-error/10 text-error border-error/20',
     warning: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-    info: 'bg-white/5 text-text-muted border-white/10',
-    outline: 'bg-transparent border border-white/10 text-text-muted',
+    info: 'bg-surface-2 text-text-muted border-border',
+    outline: 'bg-transparent border border-border text-text-muted',
     primary: 'bg-primary/10 text-primary border-primary/20',
   };
 

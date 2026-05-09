@@ -46,7 +46,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-1 border',
           isUser
             ? 'bg-primary/10 border-primary/20 text-primary'
-            : 'bg-white/5 border-white/5 text-primary'
+            : 'bg-surface-2 border-border text-primary'
         )}>
           {isUser ? <User size={18} /> : <Terminal size={18} />}
         </div>
@@ -63,7 +63,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
             {isUser ? (
               <p className="whitespace-pre-wrap">{content}</p>
             ) : (
-              <div className="prose prose-invert max-w-none prose-sm">
+              <div className="prose prose-custom max-w-none prose-sm">
                 <ReactMarkdown
                   components={{
                     p({ children }) {
@@ -81,13 +81,13 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
                           style={vscDarkPlus}
                           language={match[1]}
                           PreTag="div"
-                          className="rounded-lg !my-4 !bg-bg border border-border"
+                          className="rounded-lg !my-4 border border-border"
                           {...props}
                         >
                           {String(children).replace(/\n$/, '')}
                         </SyntaxHighlighter>
                       ) : (
-                        <code className={cn("bg-bg px-1.5 py-0.5 rounded text-primary border border-border", className)} {...props}>
+                        <code className={cn("bg-surface-2 px-1.5 py-0.5 rounded text-primary border border-border", className)} {...props}>
                           {children}
                         </code>
                       );
@@ -118,7 +118,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
                 disabled={isSaved}
                 className={cn(
                   "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded transition-all",
-                  isSaved ? "bg-success/20 text-success" : "text-text-muted hover:text-text hover:bg-white/5"
+                  isSaved ? "bg-success/20 text-success" : "text-text-muted hover:text-text hover:bg-surface-2"
                 )}
               >
                 {isSaved ? (

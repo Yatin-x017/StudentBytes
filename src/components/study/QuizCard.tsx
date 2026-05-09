@@ -31,11 +31,11 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   const isAnswered = selectedOption !== null;
 
   return (
-    <Card className="p-8 space-y-8 animate-fade-in border-white/5">
+    <Card className="p-8 space-y-8 animate-fade-in border-border bg-surface">
       <h3 className="text-xl font-bold leading-tight">{question}</h3>
 
       {code && (
-        <div className="mb-4 rounded-xl overflow-hidden text-xs border border-white/5">
+        <div className="mb-4 rounded-xl overflow-hidden text-xs border border-border">
           <SyntaxHighlighter
             language={language.toLowerCase()}
             style={vscDarkPlus}
@@ -51,11 +51,11 @@ export const QuizCard: React.FC<QuizCardProps> = ({
           const isCorrect = idx === correctIndex;
           const isSelected = idx === selectedOption;
 
-          let buttonClass = 'border-white/5 hover:border-primary/40 hover:bg-surface-2';
+          let buttonClass = 'border-border hover:border-primary/40 hover:bg-surface-2';
           if (isAnswered) {
             if (isCorrect) buttonClass = 'border-success bg-success/10 text-success';
             else if (isSelected) buttonClass = 'border-error bg-error/10 text-error';
-            else buttonClass = 'opacity-50 grayscale border-white/5';
+            else buttonClass = 'opacity-50 grayscale border-border';
           }
 
           return (
@@ -77,7 +77,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
       </div>
 
       {isAnswered && (
-        <div className="pt-6 border-t border-white/5 animate-fade-in">
+        <div className="pt-6 border-t border-border animate-fade-in">
           <Badge variant={selectedOption === correctIndex ? 'success' : 'error'} className="mb-3">
             {selectedOption === correctIndex ? 'Correct!' : 'Incorrect'}
           </Badge>

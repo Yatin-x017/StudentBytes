@@ -10,8 +10,7 @@ export const ProtectedRoute: React.FC = () => {
   if (loading) {
     return (
       <div
-        style={{ backgroundColor: '#0f0f13' }}
-        className="h-screen w-full flex items-center justify-center"
+        className="h-screen w-full flex items-center justify-center bg-bg"
       >
         <Spinner size={32} className="text-primary" />
       </div>

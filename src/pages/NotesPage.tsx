@@ -184,7 +184,7 @@ const NotesPage: React.FC = () => {
                 placeholder="Search notes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-surface border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64 transition-all"
+                className="bg-surface border border-border rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64 transition-all"
               />
            </div>
            <Button
@@ -208,7 +208,7 @@ const NotesPage: React.FC = () => {
       {filteredNotes.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredNotes.map((note) => (
-            <Card key={note.id} className="p-6 border-white/5 glass-card flex flex-col h-full group hover:border-primary/20 transition-all">
+            <Card key={note.id} className="p-6 border-border bg-surface flex flex-col h-full group hover:border-primary/20 transition-all">
               <div className="flex justify-between items-start mb-4">
                 <div className="bg-primary/10 p-2 rounded-lg text-primary">
                   <FileText size={20} />
@@ -239,16 +239,16 @@ const NotesPage: React.FC = () => {
                     >
                       <Download size={14} />
                     </button>
-                    <div className="absolute right-0 top-full mt-1 bg-surface-2 border border-white/10 rounded-xl shadow-xl overflow-hidden opacity-0 group-hover/dl:opacity-100 pointer-events-none group-hover/dl:pointer-events-auto transition-all z-10 min-w-[120px]">
+                    <div className="absolute right-0 top-full mt-1 bg-surface-2 border border-border rounded-xl shadow-xl overflow-hidden opacity-0 group-hover/dl:opacity-100 pointer-events-none group-hover/dl:pointer-events-auto transition-all z-10 min-w-[120px]">
                       <button
                         onClick={() => handleDownloadNote(note, 'md')}
-                        className="block w-full px-4 py-2 text-[10px] font-bold text-left hover:bg-white/5 uppercase tracking-widest"
+                        className="block w-full px-4 py-2 text-[10px] font-bold text-left hover:bg-surface-2 uppercase tracking-widest"
                       >
                         Download .md
                       </button>
                       <button
                         onClick={() => handleDownloadNote(note, 'txt')}
-                        className="block w-full px-4 py-2 text-[10px] font-bold text-left hover:bg-white/5 uppercase tracking-widest"
+                        className="block w-full px-4 py-2 text-[10px] font-bold text-left hover:bg-surface-2 uppercase tracking-widest"
                       >
                         Download .txt
                       </button>
@@ -263,11 +263,11 @@ const NotesPage: React.FC = () => {
                 {note.content}
               </p>
 
-              <div className="flex items-center justify-between pt-4 border-t border-white/5">
+              <div className="flex items-center justify-between pt-4 border-t border-border">
                 <div className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase tracking-wider">
                   <Calendar size={12} /> {formatDate(note.createdAt)}
                 </div>
-                <Badge className="bg-white/5 text-text-muted border-white/10">{note.topic}</Badge>
+                <Badge className="bg-surface-2 text-text-muted border-border">{note.topic}</Badge>
               </div>
             </Card>
           ))}

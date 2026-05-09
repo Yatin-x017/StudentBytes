@@ -16,7 +16,7 @@ export const Layout: React.FC = () => {
 
   if (isLanding) {
     return (
-      <div className="min-h-screen bg-black text-white font-sans selection:bg-primary/30">
+      <div className="min-h-screen bg-bg text-text font-sans selection:bg-primary/30 transition-colors duration-300">
         <Navbar />
         <main className="pt-8">
           <AnimatePresence mode="wait">

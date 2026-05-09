@@ -156,7 +156,7 @@ const ProfilePage: React.FC = () => {
             )}
             <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full
                             bg-success flex items-center justify-center
-                            ring-2 ring-bg">
+                            ring-2 ring-surface">
               <div className="w-2 h-2 rounded-full bg-white" />
             </div>
           </div>

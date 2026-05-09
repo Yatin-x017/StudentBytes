@@ -35,7 +35,7 @@ const PublicProfilePage: React.FC = () => {
         .select('*')
         .eq('username', username)
         .single()
-        .then((r: { data: any }) => r.data),
+        .then(r => r.data),
     ]).then(([p, lb]) => {
       if (!p || !p.is_public) {
         navigate('/community');
@@ -63,7 +63,7 @@ const PublicProfilePage: React.FC = () => {
       <div className="max-w-2xl mx-auto px-4 py-16 space-y-8">
 
         {/* Profile header */}
-        <Card className="p-8">
+        <Card className="p-8 border-border bg-surface">
           <div className="flex items-start gap-6">
             {profile.avatar_url ? (
               <img
@@ -142,7 +142,7 @@ const PublicProfilePage: React.FC = () => {
               { label: 'Quizzes', value: leaderboard.quizzes_taken, icon: Brain, color: 'text-accent' },
               { label: 'Sessions', value: leaderboard.study_sessions, icon: BookOpen, color: 'text-accent-2' },
             ].map(stat => (
-              <Card key={stat.label} className="p-4 text-center">
+              <Card key={stat.label} className="p-4 text-center border-border bg-surface">
                 <stat.icon size={20} className={`${stat.color} mx-auto mb-2`} />
                 <p className="text-2xl font-black">{stat.value ?? 0}</p>
                 <p className="text-[11px] text-text-muted uppercase font-bold tracking-wider">
@@ -155,7 +155,7 @@ const PublicProfilePage: React.FC = () => {
 
         {/* Language badge */}
         {profile.preferred_language && (
-          <Card className="p-5 flex items-center gap-4">
+          <Card className="p-5 flex items-center gap-4 border-border bg-surface">
             <div className="text-2xl">
               {profile.preferred_language === 'Python' ? '🐍' :
                profile.preferred_language === 'JavaScript' ? '🟨' :

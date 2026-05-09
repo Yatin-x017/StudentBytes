@@ -80,7 +80,6 @@ export const ROUTES = {
   ANALYTICS: '/analytics',
   COMMUNITY: '/community',
   PROFILE: '/profile',
-  PUBLIC_PROFILE: '/u/:username',
   CANVAS: '/canvas',
   LOGIN: '/login',
   SHARED_NOTE: '/shared',

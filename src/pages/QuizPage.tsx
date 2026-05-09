@@ -210,15 +210,15 @@ const QuizPage: React.FC = () => {
           </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-            <Card className="p-6 border-white/5 bg-surface-2">
+            <Card className="p-6 border-border bg-surface">
               <p className="text-5xl font-black text-primary">{score}/{quizState.questions.length}</p>
               <p className="text-xs font-bold text-text-muted uppercase tracking-wider mt-2">Correct</p>
             </Card>
-            <Card className="p-6 border-white/5 bg-surface-2">
+            <Card className="p-6 border-border bg-surface">
               <p className="text-5xl font-black text-success">{percentage}%</p>
               <p className="text-xs font-bold text-text-muted uppercase tracking-wider mt-2">Accuracy</p>
             </Card>
-            <Card className="p-6 border-white/5 bg-surface-2 flex flex-col items-center justify-center">
+            <Card className="p-6 border-border bg-surface flex flex-col items-center justify-center">
               <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Suggested Next</p>
               <div className="flex flex-col items-center gap-2">
                 <span className={`font-black capitalize text-xl ${
@@ -249,12 +249,12 @@ const QuizPage: React.FC = () => {
             {quizState.questions.map((q, idx) => {
               const isCorrect = quizState.answers[idx] === q.correctIndex;
               return (
-                <div key={idx} className="p-4 rounded-2xl bg-surface border border-white/5 flex items-start gap-4">
+                <div key={idx} className="p-4 rounded-2xl bg-surface-2 border border-border flex items-start gap-4">
                   <div className={`mt-1 shrink-0 ${isCorrect ? 'text-success' : 'text-error'}`}>
                     {isCorrect ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-white mb-1">{q.question}</p>
+                    <p className="text-sm font-medium text-text mb-1">{q.question}</p>
                     <p className="text-xs text-text-muted leading-relaxed italic">{q.explanation}</p>
                   </div>
                 </div>
@@ -285,12 +285,12 @@ const QuizPage: React.FC = () => {
       <div className="max-w-3xl mx-auto animate-fade-in space-y-8">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-surface border border-white/5 flex items-center justify-center font-bold text-primary">
+            <div className="w-12 h-12 rounded-2xl bg-surface border border-border flex items-center justify-center font-bold text-primary">
               {quizState.currentIndex + 1}/{quizState.questions.length}
             </div>
             <div>
               <h2 className="font-bold text-sm">Testing: {quizState.topic}</h2>
-              <div className="w-48 h-1.5 bg-white/5 rounded-full mt-1 overflow-hidden">
+              <div className="w-48 h-1.5 bg-surface-2 rounded-full mt-1 overflow-hidden">
                 <div
                   className="h-full bg-primary transition-all duration-500"
                   style={{ width: `${((quizState.currentIndex + 1) / quizState.questions.length) * 100}%` }}
@@ -345,7 +345,7 @@ const QuizPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-        <Card className="p-8 border-white/5 glass-card order-2 md:order-1">
+        <Card className="p-8 border-border glass-card order-2 md:order-1">
           <form onSubmit={handleStartQuiz} className="space-y-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Topic to Master</label>
@@ -354,7 +354,7 @@ const QuizPage: React.FC = () => {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="e.g. Redux state management, Binary trees..."
-                className="w-full bg-black/40 border border-white/10 rounded-xl p-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                className="w-full bg-surface-2 border border-border rounded-xl p-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
                 disabled={loading}
               />
             </div>
@@ -403,7 +403,7 @@ const QuizPage: React.FC = () => {
         </Card>
 
         <div className="order-1 md:order-2 space-y-6">
-          <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/2 border border-white/5">
+          <div className="flex items-start gap-4 p-4 rounded-2xl bg-surface-2 border border-border">
             <div className="bg-primary/10 p-3 rounded-xl text-primary shrink-0">
               <BrainCircuit size={24} />
             </div>
@@ -412,7 +412,7 @@ const QuizPage: React.FC = () => {
               <p className="text-xs text-text-muted leading-relaxed">Byte analyzes your requested topic to create unique, challenging questions every time.</p>
             </div>
           </div>
-          <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/2 border border-white/5">
+          <div className="flex items-start gap-4 p-4 rounded-2xl bg-surface-2 border border-border">
             <div className="bg-success/10 p-3 rounded-xl text-success shrink-0">
               <Trophy size={24} />
             </div>
@@ -421,7 +421,7 @@ const QuizPage: React.FC = () => {
               <p className="text-xs text-text-muted leading-relaxed">Level up your profile as you correctly answer questions and prove your knowledge.</p>
             </div>
           </div>
-          <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/2 border border-white/5">
+          <div className="flex items-start gap-4 p-4 rounded-2xl bg-surface-2 border border-border">
             <div className="bg-amber-500/10 p-3 rounded-xl text-amber-500 shrink-0">
               <Clock size={24} />
             </div>
@@ -434,7 +434,7 @@ const QuizPage: React.FC = () => {
       </div>
 
       {!hasHistory && !quizState.quizStarted && (
-        <div className="pt-12 border-t border-white/5">
+        <div className="pt-12 border-t border-border">
           <EmptyState
             icon={Brain}
             title="No quizzes yet"

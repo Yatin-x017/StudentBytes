@@ -22,7 +22,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
   return (
     <div className="flex flex-col items-center justify-center py-20 px-6 text-center animate-fade-in">
-      <div className="bg-white/5 p-6 rounded-3xl mb-6">
+      <div className="bg-surface-2 p-6 rounded-3xl mb-6 border border-border">
         <Icon size={48} className="text-text-muted" />
       </div>
       <h3 className="text-2xl font-black mb-2">{title}</h3>

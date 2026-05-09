@@ -1,16 +1,15 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import {
   generateAnonName,
   generateAnonColor,
-  validateMessage,
-  RATE_LIMIT_MS,
+  containsProfanity
 } from '@/lib/chatUtils';
 
 export interface ChatMessage {
   id: string;
-  user_id: string;
+  user_id: string | null;
   anon_name: string;
   anon_color: string;
   content: string;
@@ -22,134 +21,91 @@ export function useChatRoom() {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rateLimited, setRateLimited] = useState(false);
-  const lastSentRef = useRef<number>(0);
-  const channelRef = useRef<any>(null);
+  const [lastSentAt, setLastSentAt] = useState<number>(0);
 
-  const anonName = user ? generateAnonName(user.id) : 'Anonymous';
-  const anonColor = user ? generateAnonColor(user.id) : '#7c6af7';
-
-  // ── Fetch recent messages ──
-  const fetchMessages = useCallback(async () => {
-    if (!isSupabaseConfigured || !supabase) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const { data, error: fetchError } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('is_flagged', false)
-        .order('created_at', { ascending: true })
-        .limit(200);
-
-      if (fetchError) throw fetchError;
-      setMessages(data ?? []);
-    } catch (err) {
-      console.error('Failed to fetch chat messages:', err);
-      setError('Failed to load messages');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // ── Setup realtime subscription ──
+  // Fetch initial messages
   useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) return;
+    if (!supabase) return;
+
+    const fetchMessages = async () => {
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100);
+
+        if (fetchError) throw fetchError;
+        // Show in ascending order for chat
+        setMessages((data || []).reverse());
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchMessages();
 
     // Subscribe to new messages
     const channel = supabase
-      .channel('global-chat')
+      .channel('public:chat_messages')
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_messages',
-        },
-        (payload: any) => {
-          const newMsg = payload.new as ChatMessage;
-          if (!newMsg.is_flagged) {
-            setMessages(prev => {
-              // Prevent duplicate
-              if (prev.some(m => m.id === newMsg.id)) return prev;
-              // Keep only last 200
-              const updated = [...prev, newMsg];
-              return updated.slice(-200);
-            });
-          }
+        { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+        (payload) => {
+          setMessages(prev => [...prev, payload.new as ChatMessage]);
         }
       )
       .subscribe();
 
-    channelRef.current = channel;
-
     return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-      }
+      supabase.removeChannel(channel);
     };
-  }, [fetchMessages]);
+  }, []);
 
-  // ── Send message ──
   const sendMessage = useCallback(async (content: string) => {
-    if (!user || !supabase || !isSupabaseConfigured) {
-      setError('You must be signed in to chat');
-      return false;
-    }
+    if (!user || !supabase) return;
 
-    // Rate limiting
+    // Validations
+    if (!content.trim()) return;
+    if (content.length > 500) throw new Error('Message too long (max 500 chars)');
+
+    // Rate limiting (3 seconds)
     const now = Date.now();
-    if (now - lastSentRef.current < RATE_LIMIT_MS) {
-      setRateLimited(true);
-      setTimeout(() => setRateLimited(false), RATE_LIMIT_MS - (now - lastSentRef.current));
-      return false;
+    if (now - lastSentAt < 3000) {
+      throw new Error('Please wait 3 seconds between messages');
     }
 
-    // Validate
-    const validationError = validateMessage(content);
-    if (validationError) {
-      setError(validationError);
-      setTimeout(() => setError(null), 3000);
-      return false;
+    // Profanity filter
+    if (containsProfanity(content)) {
+      throw new Error('Please keep the conversation respectful');
     }
-
-    setSending(true);
-    setError(null);
 
     try {
-      const { error: insertError } = await supabase.from('chat_messages').insert({
-        user_id: user.id,
-        anon_name: anonName,
-        anon_color: anonColor,
-        content: content.trim(),
-      });
+      const { error: sendError } = await supabase
+        .from('chat_messages')
+        .insert({
+          user_id: user.id,
+          anon_name: generateAnonName(user.id),
+          anon_color: generateAnonColor(user.id),
+          content: content.trim(),
+        });
 
-      if (insertError) throw insertError;
-      lastSentRef.current = Date.now();
-      return true;
-    } catch (err) {
-      console.error('Failed to send message:', err);
-      setError('Failed to send message');
-      return false;
-    } finally {
-      setSending(false);
+      if (sendError) throw sendError;
+      setLastSentAt(now);
+    } catch (err: any) {
+      console.error('Chat error:', err);
+      throw err;
     }
-  }, [user, anonName, anonColor]);
+  }, [user, lastSentAt]);
 
   return {
     messages,
     loading,
-    sending,
     error,
-    rateLimited,
     sendMessage,
-    anonName,
-    anonColor,
-    clearError: () => setError(null),
+    cooldown: Math.max(0, 3 - Math.floor((Date.now() - lastSentAt) / 1000))
   };
 }

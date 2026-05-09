@@ -15,8 +15,8 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav className={cn(
-      "border-b border-white/5 sticky top-0 z-50 transition-all duration-300",
-      isLanding ? "bg-black/50 backdrop-blur-xl" : "bg-bg/80 backdrop-blur-md"
+      "border-b border-border sticky top-0 z-50 transition-all duration-300",
+      isLanding ? "bg-bg/50 backdrop-blur-xl" : "bg-bg/80 backdrop-blur-md"
     )}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20">
@@ -34,7 +34,7 @@ export const Navbar: React.FC = () => {
               <NavLink to={ROUTES.COMMUNITY} label="Community" />
               <NavLink to={ROUTES.QUIZ} label="Quizzes" />
             </nav>
-            <div className="h-6 w-px bg-white/10" />
+            <div className="h-6 w-px bg-border" />
             <Button variant="ghost" className="font-bold gap-2" onClick={() => navigate(ROUTES.DASHBOARD)}>
               <LayoutDashboard size={18} /> Dashboard
             </Button>
@@ -45,7 +45,7 @@ export const Navbar: React.FC = () => {
               >
                 <div className="text-right hidden lg:block">
                   <p className="text-[10px] font-black uppercase tracking-tighter text-text-muted">Signed In</p>
-                  <p className="text-xs font-bold text-white group-hover:text-primary transition-colors">
+                  <p className="text-xs font-bold text-text group-hover:text-primary transition-colors">
                     {profile?.full_name || user.email}
                   </p>
                 </div>
@@ -53,7 +53,7 @@ export const Navbar: React.FC = () => {
                   <img
                     src={profile.avatar_url}
                     alt={profile.full_name}
-                    className="w-10 h-10 rounded-xl object-cover border border-white/10 group-hover:border-primary/50 transition-all"
+                    className="w-10 h-10 rounded-xl object-cover border border-border group-hover:border-primary/50 transition-all"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black shadow-lg shadow-primary/10 group-hover:bg-primary group-hover:text-white transition-all">
@@ -71,7 +71,7 @@ export const Navbar: React.FC = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-text-muted hover:text-text p-2 rounded-xl bg-white/5 border border-white/5"
+              className="text-text-muted hover:text-text p-2 rounded-xl bg-surface-2 border border-border"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -81,13 +81,13 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden border-t border-white/5 bg-black/95 backdrop-blur-2xl p-6 space-y-4 animate-slide-up">
+        <div className="md:hidden border-t border-border bg-bg/95 backdrop-blur-2xl p-6 space-y-4 animate-slide-up">
           <div className="grid grid-cols-1 gap-2">
              <MobileNavLink to={ROUTES.DASHBOARD} icon={<LayoutDashboard size={18} />} label="Dashboard" onClick={() => setIsOpen(false)} />
              <MobileNavLink to={ROUTES.STUDY} icon={<MessageSquare size={18} />} label="Study AI" onClick={() => setIsOpen(false)} />
              <MobileNavLink to={ROUTES.COMMUNITY} icon={<Zap size={18} />} label="Community" onClick={() => setIsOpen(false)} />
           </div>
-          <div className="h-px bg-white/10 my-4" />
+          <div className="h-px bg-border my-4" />
           <Button className="w-full py-6 text-base font-black rounded-2xl" onClick={() => { navigate(ROUTES.SETTINGS); setIsOpen(false); }}>
             Get Started
           </Button>
@@ -100,7 +100,7 @@ export const Navbar: React.FC = () => {
 const NavLink = ({ to, label }: { to: string, label: string }) => (
   <Link
     to={to}
-    className="text-sm font-bold text-text-muted hover:text-white transition-colors"
+    className="text-sm font-bold text-text-muted hover:text-text transition-colors"
   >
     {label}
   </Link>
@@ -110,7 +110,7 @@ const MobileNavLink = ({ to, label, icon, onClick }: any) => (
   <Link
     to={to}
     onClick={onClick}
-    className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 font-bold"
+    className="flex items-center gap-4 p-4 rounded-2xl bg-surface-2 border border-border font-bold"
   >
     <div className="text-primary">{icon}</div>
     {label}

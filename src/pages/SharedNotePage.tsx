@@ -60,8 +60,8 @@ const SharedNotePage = () => {
         </div>
 
         {/* Content */}
-        <div className="prose prose-invert prose-sm max-w-none
-                        bg-surface rounded-3xl p-8 md:p-12 border border-white/5 shadow-xl leading-relaxed">
+        <div className="prose prose-custom prose-sm max-w-none
+                        bg-surface rounded-3xl p-8 md:p-12 border border-border shadow-xl leading-relaxed">
           <ReactMarkdown
             components={{
               code({ node, inline, className, children, ...props }: any) {
@@ -71,7 +71,7 @@ const SharedNotePage = () => {
                     style={vscDarkPlus as any}
                     language={match[1]}
                     PreTag="div"
-                    className="rounded-xl border border-white/10"
+                    className="rounded-xl border border-border"
                     {...props}
                   >
                     {String(children).replace(/\n$/, '')}
@@ -89,7 +89,7 @@ const SharedNotePage = () => {
         </div>
 
         {/* Footer */}
-        <div className="pt-8 border-t border-white/5 text-center space-y-2">
+        <div className="pt-8 border-t border-border text-center space-y-2">
           <p className="text-xs text-text-muted font-medium">
             Shared via{' '}
             <a href="/" className="text-primary hover:underline font-bold">Student Bytes</a>

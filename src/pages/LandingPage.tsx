@@ -48,25 +48,25 @@ const LandingPage: React.FC = () => {
               <Sparkles size={14} className="fill-primary" /> For Computer Science Students
             </div>
 
-            <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter mb-8 leading-[0.9] bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent">
+            <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter mb-8 leading-[0.9] bg-gradient-to-b from-text to-text/60 bg-clip-text text-transparent">
               Master CS <br/> <span className="text-primary glow-text">10x faster.</span>
             </h1>
 
             <p className="text-lg md:text-xl text-text-muted max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
               The AI-powered study platform for the next generation of engineers.
               Understand complex concepts, sync Canvas assignments, and prove mastery.
-              <span className="block mt-2 text-white/40">No account required. Built for local privacy.</span>
+              <span className="block mt-2 text-text-faint">No account required. Built for local privacy.</span>
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
               <Button size="lg" className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl shadow-2xl shadow-primary/40 relative group overflow-hidden" onClick={() => navigate(ROUTES.DASHBOARD)}>
-                <span className="relative z-10 flex items-center gap-2">Get Started for Free <ArrowRight size={20} /></span>
+                <span className="relative z-10 flex items-center gap-2 text-white">Get Started for Free <ArrowRight size={20} /></span>
                 <div className="absolute inset-0 bg-gradient-to-r from-primary-hover to-accent opacity-0 group-hover:opacity-100 transition-opacity" />
               </Button>
               <Button
                 variant="secondary"
                 size="lg"
-                className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl glass border-white/10 gap-2 font-black uppercase tracking-widest text-xs"
+                className="w-full sm:w-auto text-lg h-16 px-10 rounded-2xl glass border-border gap-2 font-black uppercase tracking-widest text-xs"
                 onClick={() => {
                   document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
                 }}
@@ -76,10 +76,10 @@ const LandingPage: React.FC = () => {
             </div>
 
             <div className="flex flex-col items-center gap-4 mb-20">
-              <div className="flex items-center gap-3 text-xs text-text-muted font-bold tracking-tight bg-white/5 px-4 py-2 rounded-full border border-white/5">
+              <div className="flex items-center gap-3 text-xs text-text-muted font-bold tracking-tight bg-surface-2 px-4 py-2 rounded-full border border-border">
                 <ShieldCheck size={14} className="text-success" />
                 Secure authentication with Supabase
-                <div className="w-px h-3 bg-white/10 mx-1" />
+                <div className="w-px h-3 bg-border mx-1" />
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
                   Systems Online
@@ -90,8 +90,8 @@ const LandingPage: React.FC = () => {
             {/* Mock UI / Hero Image Area */}
             <div id="demo" className="relative max-w-5xl mx-auto scroll-mt-24">
                <div className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-success rounded-[2.5rem] blur-xl opacity-20" />
-               <Card className="relative overflow-hidden border-white/10 glass-card p-2 rounded-[2.5rem] shadow-3xl">
-                  <div className="rounded-[2rem] overflow-hidden bg-black/40 aspect-video md:aspect-[16/9] relative border border-white/5">
+               <Card className="relative overflow-hidden border-border glass-card p-2 rounded-[2.5rem] shadow-3xl">
+                  <div className="rounded-[2rem] overflow-hidden bg-bg-2 aspect-video md:aspect-[16/9] relative border border-border">
                     {/* Mock Content Placeholder */}
                     <div className="absolute inset-0 flex items-center justify-center">
                        <div className="w-full h-full p-8 flex flex-col gap-4 text-left">
@@ -100,15 +100,15 @@ const LandingPage: React.FC = () => {
                             <div className="w-3 h-3 rounded-full bg-amber-500/50" />
                             <div className="w-3 h-3 rounded-full bg-success/50" />
                           </div>
-                          <div className="w-[40%] h-4 bg-white/10 rounded-full" />
-                          <div className="w-[60%] h-4 bg-white/5 rounded-full" />
+                          <div className="w-[40%] h-4 bg-surface-3 rounded-full" />
+                          <div className="w-[60%] h-4 bg-surface-2 rounded-full" />
                           <div className="w-[80%] h-24 bg-primary/10 border border-primary/20 rounded-2xl mt-4 flex items-center justify-center">
                              <div className="text-primary font-mono text-xs opacity-50"># Byte: Generating Concept Visualization...</div>
                           </div>
                           <div className="grid grid-cols-3 gap-4 mt-auto">
-                             <div className="h-20 bg-white/5 rounded-xl" />
-                             <div className="h-20 bg-white/5 rounded-xl" />
-                             <div className="h-20 bg-white/5 rounded-xl" />
+                             <div className="h-20 bg-surface-3 rounded-xl" />
+                             <div className="h-20 bg-surface-3 rounded-xl" />
+                             <div className="h-20 bg-surface-3 rounded-xl" />
                           </div>
                        </div>
                     </div>
@@ -125,7 +125,7 @@ const LandingPage: React.FC = () => {
 
       {/* Trust bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 mb-12 relative z-20">
-        <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 py-8 px-12 rounded-[2rem] bg-surface/50 border border-white/5 backdrop-blur-xl">
+        <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 py-8 px-12 rounded-[2rem] bg-surface/50 border border-border backdrop-blur-xl">
            <div className="flex items-center gap-2 grayscale opacity-50">
               <ShieldCheck size={20} />
               <span className="text-xs font-bold uppercase tracking-widest">End-to-End Encrypted</span>
@@ -142,7 +142,7 @@ const LandingPage: React.FC = () => {
       </div>
 
       {/* Stats section */}
-      <section className="py-20 border-y border-white/5 bg-white/2">
+      <section className="py-20 border-y border-border bg-surface/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <StatItem label="Active Students" value="1,200+" />
@@ -224,7 +224,7 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Built by students */}
-      <section className="py-32 bg-primary/5 border-y border-primary/10">
+      <section className="py-32 bg-primary/5 border-y border-border">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-[10px] font-black uppercase tracking-widest mb-6">
             Our Mission
@@ -277,7 +277,7 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-20 border-t border-white/5">
+      <footer className="py-20 border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-2">
@@ -291,7 +291,7 @@ const LandingPage: React.FC = () => {
                  Transforming the CS student experience with AI. Built for the next generation of engineers.
                </p>
                <div className="flex items-center gap-4">
-                 <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all text-text-muted hover:text-white">
+                 <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="p-3 bg-surface-2 rounded-xl hover:bg-surface-3 transition-all text-text-muted hover:text-text">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
                  </a>
                </div>
@@ -299,22 +299,22 @@ const LandingPage: React.FC = () => {
             <div>
               <h4 className="font-bold mb-6 text-sm uppercase tracking-widest text-primary">Product</h4>
               <ul className="space-y-4 text-sm font-medium text-text-muted">
-                <li><button onClick={() => navigate(ROUTES.STUDY)} className="hover:text-white transition-all">AI Tutor</button></li>
-                <li><button onClick={() => navigate(ROUTES.QUIZ)} className="hover:text-white transition-all">Quiz Gen</button></li>
-                <li><button onClick={() => navigate(ROUTES.COMMUNITY)} className="hover:text-white transition-all">Community</button></li>
-                <li><button onClick={() => navigate(ROUTES.ANALYTICS)} className="hover:text-white transition-all">Analytics</button></li>
+                <li><button onClick={() => navigate(ROUTES.STUDY)} className="hover:text-text transition-all">AI Tutor</button></li>
+                <li><button onClick={() => navigate(ROUTES.QUIZ)} className="hover:text-text transition-all">Quiz Gen</button></li>
+                <li><button onClick={() => navigate(ROUTES.COMMUNITY)} className="hover:text-text transition-all">Community</button></li>
+                <li><button onClick={() => navigate(ROUTES.ANALYTICS)} className="hover:text-text transition-all">Analytics</button></li>
               </ul>
             </div>
             <div>
               <h4 className="font-bold mb-6 text-sm uppercase tracking-widest text-primary">Legal</h4>
               <ul className="space-y-4 text-sm font-medium text-text-muted">
-                <li><button onClick={() => navigate('/privacy')} className="hover:text-white transition-all">Privacy Policy</button></li>
-                <li><button onClick={() => navigate('/terms')} className="hover:text-white transition-all">Terms of Service</button></li>
-                <li><a href="#" className="hover:text-white transition-all">Security</a></li>
+                <li><button onClick={() => navigate('/privacy')} className="hover:text-text transition-all">Privacy Policy</button></li>
+                <li><button onClick={() => navigate('/terms')} className="hover:text-text transition-all">Terms of Service</button></li>
+                <li><a href="#" className="hover:text-text transition-all">Security</a></li>
               </ul>
             </div>
           </div>
-          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-bold text-text-muted uppercase tracking-widest">
+          <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-bold text-text-muted uppercase tracking-widest">
             <p>© 2024 Student Bytes. All rights reserved.</p>
             <p>Built with ❤️ by students, for students.</p>
           </div>
@@ -326,7 +326,7 @@ const LandingPage: React.FC = () => {
 
 const FeatureCard = ({ icon, title, description, variants }: any) => (
   <motion.div variants={variants}>
-    <Card className="h-full p-8 bg-surface-2/30 border-white/5 hover:border-primary/20 transition-all group relative overflow-hidden">
+    <Card className="h-full p-8 bg-surface-2/30 border-border hover:border-primary/20 transition-all group relative overflow-hidden">
       <div className="bg-primary/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-500">
         {React.cloneElement(icon as React.ReactElement)}
       </div>
@@ -340,14 +340,14 @@ const FeatureCard = ({ icon, title, description, variants }: any) => (
 
 const StatItem = ({ label, value }: { label: string, value: string }) => (
   <div className="text-center">
-    <p className="text-3xl md:text-5xl font-black text-white mb-2">{value}</p>
+    <p className="text-3xl md:text-5xl font-black text-text mb-2">{value}</p>
     <p className="text-xs md:text-sm font-bold text-text-muted uppercase tracking-widest">{label}</p>
   </div>
 );
 
 const TestimonialCard = ({ quote, author, role }: { quote: string, author: string, role: string }) => (
-  <Card className="p-8 border-white/5 bg-surface flex flex-col justify-between">
-    <p className="text-lg font-medium leading-relaxed mb-8 italic text-white/90">"{quote}"</p>
+  <Card className="p-8 border-border bg-surface flex flex-col justify-between">
+    <p className="text-lg font-medium leading-relaxed mb-8 italic text-text/90">"{quote}"</p>
     <div>
       <p className="font-bold text-primary">{author}</p>
       <p className="text-xs text-text-muted font-bold uppercase tracking-tighter mt-1">{role}</p>

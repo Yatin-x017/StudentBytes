@@ -256,7 +256,7 @@ const StudyPage: React.FC = () => {
 
   const renderChat = (hideHeaderOnMobile = false) => (
     <>
-        <header className={`p-4 border-b border-white/5 flex items-center justify-between bg-white/2 backdrop-blur-md ${hideHeaderOnMobile ? 'hidden lg:flex' : 'flex'}`}>
+        <header className={`p-4 border-b border-border flex items-center justify-between bg-surface-2/30 backdrop-blur-md ${hideHeaderOnMobile ? 'hidden lg:flex' : 'flex'}`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-black shadow-lg shadow-primary/20">
               B
@@ -280,8 +280,8 @@ const StudyPage: React.FC = () => {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading || !activeSessionId}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5
-                        hover:bg-white/10 border border-white/10 text-xs font-bold
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2
+                        hover:bg-surface-3 border border-border text-xs font-bold
                         transition-all disabled:opacity-50"
             >
               {uploading ? <Spinner size={12} /> : <Paperclip size={14} />}
@@ -292,8 +292,8 @@ const StudyPage: React.FC = () => {
               <button
                 onClick={handleImportFromDrive}
                 disabled={uploading || !activeSessionId}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5
-                          hover:bg-white/10 border border-white/10 text-xs font-bold
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2
+                          hover:bg-surface-3 border border-border text-xs font-bold
                           transition-all disabled:opacity-50"
               >
                 <HardDriveDownload size={14} />
@@ -308,8 +308,8 @@ const StudyPage: React.FC = () => {
                   payload: { defaultLanguage: e.target.value as any }
                 })}
                 className="appearance-none pl-3 pr-8 py-1.5 rounded-xl
-                           bg-white/5 border border-white/10 text-xs font-bold
-                           text-text-muted hover:text-white hover:border-white/20
+                           bg-surface-2 border border-border text-xs font-bold
+                           text-text-muted hover:text-text hover:border-border-hover
                            transition-all cursor-pointer outline-none"
               >
                 {LANGUAGES.map(lang => (
@@ -328,7 +328,7 @@ const StudyPage: React.FC = () => {
         </header>
 
         {activeSession?.attachedFile && !hideHeaderOnMobile && (
-          <div className="px-4 py-2 bg-primary/5 border-b border-white/5
+          <div className="px-4 py-2 bg-primary/5 border-b border-border
                           flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileText size={14} className="text-primary" />
@@ -363,7 +363,7 @@ const StudyPage: React.FC = () => {
         )}
 
         <div
-          className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar bg-gradient-to-b from-transparent to-black/10"
+          className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar bg-gradient-to-b from-transparent to-surface-2/30"
         >
           {!activeSession || activeSession.messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-6">
@@ -379,14 +379,14 @@ const StudyPage: React.FC = () => {
               <div className="grid grid-cols-1 gap-2 w-full">
                 <button
                   onClick={() => handleSendMessage("Explain Dijkstra's Algorithm using a real-world analogy")}
-                  className="p-3 text-xs font-medium text-left bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all flex items-center justify-between group"
+                  className="p-3 text-xs font-medium text-left bg-surface-2 hover:bg-surface-3 border border-border rounded-xl transition-all flex items-center justify-between group"
                 >
                   <span>"Explain Dijkstra's Algorithm with an analogy"</span>
                   <Zap size={14} className="text-amber-500 opacity-0 group-hover:opacity-100 transition-all" />
                 </button>
                 <button
                   onClick={() => handleSendMessage("How do B-Trees optimize database queries?")}
-                  className="p-3 text-xs font-medium text-left bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all flex items-center justify-between group"
+                  className="p-3 text-xs font-medium text-left bg-surface-2 hover:bg-surface-3 border border-border rounded-xl transition-all flex items-center justify-between group"
                 >
                   <span>"How do B-Trees optimize DB queries?"</span>
                   <Zap size={14} className="text-amber-500 opacity-0 group-hover:opacity-100 transition-all" />
@@ -432,7 +432,7 @@ const StudyPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="flex justify-start"
             >
-              <div className="bg-surface-2 border border-white/5 text-text p-5 rounded-3xl rounded-tl-none flex items-center gap-3">
+              <div className="bg-surface-2 border border-border text-text p-5 rounded-3xl rounded-tl-none flex items-center gap-3">
                 <Spinner size={16} />
                 <span className="text-xs font-bold text-text-muted animate-pulse">Byte is thinking...</span>
               </div>
@@ -465,7 +465,7 @@ const StudyPage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <footer className="p-4 border-t border-white/5 bg-white/2">
+        <footer className="p-4 border-t border-border bg-surface-2/30">
           {activeSession && activeSession.messages.length > 0 && (
             <div className="flex justify-center mb-4">
               <div className="bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2 shadow-sm">
@@ -502,7 +502,7 @@ const StudyPage: React.FC = () => {
           </div>
 
           {state.sessions.length === 0 ? (
-            <div className="px-4 py-8 text-center bg-surface rounded-2xl border border-dashed border-white/5">
+            <div className="px-4 py-8 text-center bg-surface rounded-2xl border border-dashed border-border">
               <p className="text-xs text-text-muted">No sessions yet. Ask Byte anything!</p>
             </div>
           ) : (
@@ -513,8 +513,8 @@ const StudyPage: React.FC = () => {
                 className={`
                   group relative flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all border
                   ${activeSessionId === session.id
-                    ? 'bg-primary/10 border-primary/20 text-white shadow-sm'
-                    : 'bg-surface border-transparent hover:border-white/10 text-text-muted hover:text-white'}
+                    ? 'bg-primary/10 border-primary/20 text-text shadow-sm'
+                    : 'bg-surface border-transparent hover:border-border-hover text-text-muted hover:text-text'}
                 `}
               >
                 <MessageSquare size={16} className={activeSessionId === session.id ? 'text-primary' : 'text-text-muted'} />
@@ -530,7 +530,7 @@ const StudyPage: React.FC = () => {
           )}
         </div>
 
-        <Card className="p-4 border-white/5 bg-gradient-to-br from-surface to-surface/50">
+        <Card className="p-4 border-border bg-gradient-to-br from-surface to-surface/50">
           <TopicSelector
             selectedTopic={selectedSubject}
             onSelect={setSelectedSubject}
@@ -539,13 +539,13 @@ const StudyPage: React.FC = () => {
       </aside>
 
       {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col glass-card border-white/5 overflow-hidden rounded-3xl relative">
+      <main className="flex-1 flex flex-col glass-card border-border overflow-hidden rounded-3xl relative">
         {activeSession?.attachedFile ? (
           <>
             {/* Desktop split */}
             <div className="hidden lg:grid lg:grid-cols-2 gap-0 h-full overflow-hidden">
               {/* Left: Document panel */}
-              <div className="border-r border-white/5 overflow-y-auto p-6 space-y-4 bg-black/20">
+              <div className="border-r border-border overflow-y-auto p-6 space-y-4 bg-surface-2/50">
                 <div className="flex items-center justify-between mb-4 sticky top-0 bg-bg/80 backdrop-blur-md py-2 z-10">
                   <div className="flex items-center gap-2">
                     <FileText size={16} className="text-primary" />
@@ -565,7 +565,7 @@ const StudyPage: React.FC = () => {
                     Remove
                   </button>
                 </div>
-                <div className="prose prose-invert prose-sm max-w-none text-xs leading-relaxed text-text-muted whitespace-pre-wrap">
+                <div className="prose prose-custom prose-sm max-w-none text-xs leading-relaxed text-text-muted whitespace-pre-wrap">
                   {activeSession.attachedFile.text.slice(0, 12000)}
                   {activeSession.attachedFile.text.length > 12000 && (
                     <p className="text-text-muted text-[10px] mt-4 font-bold">
@@ -583,13 +583,13 @@ const StudyPage: React.FC = () => {
 
             {/* Mobile tabs */}
             <div className="lg:hidden flex flex-col h-full overflow-hidden">
-              <div className="flex border-b border-white/5">
+              <div className="flex border-b border-border">
                 <button
                   onClick={() => setSplitTab('doc')}
                   className={`flex-1 py-4 text-xs font-black uppercase tracking-widest transition-all ${
                     splitTab === 'doc'
-                      ? 'text-white bg-white/5'
-                      : 'text-text-muted hover:text-white'
+                      ? 'text-text bg-surface-2'
+                      : 'text-text-muted hover:text-text'
                   }`}
                 >
                   <FileText size={14} className="inline mr-2" />
@@ -599,8 +599,8 @@ const StudyPage: React.FC = () => {
                   onClick={() => setSplitTab('chat')}
                   className={`flex-1 py-4 text-xs font-black uppercase tracking-widest transition-all ${
                     splitTab === 'chat'
-                      ? 'text-white bg-white/5'
-                      : 'text-text-muted hover:text-white'
+                      ? 'text-text bg-surface-2'
+                      : 'text-text-muted hover:text-text'
                   }`}
                 >
                   <MessageSquare size={14} className="inline mr-2" />
@@ -608,8 +608,8 @@ const StudyPage: React.FC = () => {
                 </button>
               </div>
               {splitTab === 'doc' ? (
-                <div className="overflow-y-auto p-4 text-xs text-text-muted whitespace-pre-wrap leading-relaxed bg-black/20 flex-1">
-                  <div className="mb-4 flex items-center justify-between border-b border-white/5 pb-2">
+                <div className="overflow-y-auto p-4 text-xs text-text-muted whitespace-pre-wrap leading-relaxed bg-surface-2/50 flex-1">
+                  <div className="mb-4 flex items-center justify-between border-b border-border pb-2">
                     <span className="font-bold text-primary truncate pr-4">{activeSession.attachedFile.name}</span>
                     <button
                       onClick={() => {

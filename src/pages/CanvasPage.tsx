@@ -128,7 +128,7 @@ const CanvasPage: React.FC = () => {
   if (!connected) {
     return (
       <div className="max-w-xl mx-auto py-12 px-4 animate-fade-in">
-        <Card className="p-8 text-center space-y-8 border-white/10 shadow-2xl bg-surface">
+        <Card className="p-8 text-center space-y-8 border-border shadow-2xl bg-surface">
           <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto border border-primary/20">
             <GraduationCap size={40} className="text-primary" />
           </div>
@@ -149,7 +149,7 @@ const CanvasPage: React.FC = () => {
                 placeholder="yourschool.instructure.com"
                 value={domain}
                 onChange={e => setDomain(e.target.value)}
-                className="bg-black/40 border-white/10"
+                className="bg-surface-2 border-border"
               />
               <p className="text-[10px] text-text-muted ml-1 italic">
                 Your university's Canvas URL, e.g. canvas.rishihood.edu.in
@@ -165,7 +165,7 @@ const CanvasPage: React.FC = () => {
                 placeholder="Canvas access token"
                 value={token}
                 onChange={e => setToken(e.target.value)}
-                className="bg-black/40 border-white/10"
+                className="bg-surface-2 border-border"
               />
               <p className="text-[10px] text-text-muted ml-1 italic leading-tight">
                 In Canvas: Account → Settings → "New Access Token" → copy and paste here.
@@ -248,12 +248,12 @@ const CanvasPage: React.FC = () => {
           ))}
         </div>
 
-        <div className="flex border-b border-white/5">
+        <div className="flex border-b border-border">
           <button
             onClick={() => setActiveTab('assignments')}
             className={cn(
               "px-6 py-4 text-sm font-black uppercase tracking-widest transition-all relative",
-              activeTab === 'assignments' ? "text-white" : "text-text-muted hover:text-white"
+              activeTab === 'assignments' ? "text-text" : "text-text-muted hover:text-text"
             )}
           >
             Assignments
@@ -265,7 +265,7 @@ const CanvasPage: React.FC = () => {
             onClick={() => setActiveTab('announcements')}
             className={cn(
               "px-6 py-4 text-sm font-black uppercase tracking-widest transition-all relative",
-              activeTab === 'announcements' ? "text-white" : "text-text-muted hover:text-white"
+              activeTab === 'announcements' ? "text-text" : "text-text-muted hover:text-text"
             )}
           >
             Announcements
@@ -280,11 +280,11 @@ const CanvasPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-3">
           {dataLoading ? (
             [1, 2, 3].map((i) => (
-              <Card key={i} className="p-6 h-24 animate-pulse bg-surface/50 border-white/5"> </Card>
+              <Card key={i} className="p-6 h-24 animate-pulse bg-surface-2 border-border"> </Card>
             ))
           ) : assignments.length === 0 ? (
             <div className="py-20 text-center space-y-4">
-              <div className="p-4 bg-white/5 rounded-full w-fit mx-auto text-text-muted">
+              <div className="p-4 bg-surface-2 rounded-full w-fit mx-auto text-text-muted">
                 <FileText size={32} />
               </div>
               <div>
@@ -307,11 +307,11 @@ const CanvasPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
                   className={`group relative p-5 rounded-2xl border transition-all
-                              hover:border-white/10 cursor-default ${
+                              hover:border-border-hover cursor-default ${
                     isOverdue
-                      ? 'bg-red-950/20 border-red-500/20'
+                      ? 'bg-red-500/5 border-error/20'
                       : isUrgent
-                      ? 'bg-amber-950/10 border-amber-500/15'
+                      ? 'bg-warning/5 border-warning/20'
                       : 'bg-surface border-border hover:bg-surface-2'
                   }`}
                 >
@@ -385,8 +385,8 @@ const CanvasPage: React.FC = () => {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                                     bg-white/5 hover:bg-white/10 border border-white/10
-                                     text-text-muted hover:text-white text-[11px] font-bold
+                                     bg-surface-2 hover:bg-surface-3 border border-border
+                                     text-text-muted hover:text-text text-[11px] font-bold
                                      transition-all ml-auto"
                         >
                           <ExternalLink size={12} />
@@ -404,11 +404,11 @@ const CanvasPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {dataLoading ? (
             [1, 2, 3].map((i) => (
-              <Card key={i} className="p-6 h-48 animate-pulse bg-surface/50 border-white/5"> </Card>
+              <Card key={i} className="p-6 h-48 animate-pulse bg-surface-2 border-border"> </Card>
             ))
           ) : announcements.length === 0 ? (
             <div className="col-span-full py-20 text-center space-y-4">
-              <div className="p-4 bg-white/5 rounded-full w-fit mx-auto text-text-muted">
+              <div className="p-4 bg-surface-2 rounded-full w-fit mx-auto text-text-muted">
                 <Bell size={32} />
               </div>
               <div>
@@ -442,7 +442,7 @@ const CanvasPage: React.FC = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="w-full text-[10px] font-black uppercase tracking-widest gap-1 py-5 border-white/10 hover:border-accent hover:text-accent"
+                    className="w-full text-[10px] font-black uppercase tracking-widest gap-1 py-5 border-border hover:border-accent hover:text-accent"
                     onClick={() => navigate(ROUTES.STUDY, { state: { prefillMessage: `Summarize and explain this announcement from my professor: "${announcement.title}". ${stripHtml(announcement.message).slice(0, 500)}` } })}
                   >
                     Explain this <ChevronRight size={14} />

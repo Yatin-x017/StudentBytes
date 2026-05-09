@@ -50,7 +50,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled, pl
         disabled={disabled || !value.trim()}
         className={cn(
           "flex items-center justify-center w-11 h-11 rounded-xl transition-all shrink-0",
-          value.trim() && !disabled ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-bg text-text-muted"
+          value.trim() && !disabled ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-text-muted"
         )}
       >
         <Send size={18} />

@@ -88,9 +88,9 @@ export const CommandPalette: React.FC = () => {
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="relative w-full max-w-xl bg-surface border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-xl bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden"
           >
-            <div className="flex items-center gap-3 px-6 py-4 border-b border-white/5">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-border">
               <Search size={20} className="text-text-muted shrink-0" />
               <input
                 ref={inputRef}
@@ -103,7 +103,7 @@ export const CommandPalette: React.FC = () => {
                 placeholder="Type a command or search..."
                 className="flex-1 bg-transparent text-lg outline-none font-medium placeholder:text-text-muted/50"
               />
-              <kbd className="text-[10px] font-black bg-white/5 text-text-muted px-2 py-1 rounded border border-white/10">ESC</kbd>
+              <kbd className="text-[10px] font-black bg-surface-2 text-text-muted px-2 py-1 rounded border border-border">ESC</kbd>
             </div>
 
             <div className="py-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
@@ -121,17 +121,17 @@ export const CommandPalette: React.FC = () => {
                     }}
                     onMouseEnter={() => setSelectedIndex(i)}
                     className={`w-full flex items-center justify-between px-6 py-4 transition-all text-left group
-                              ${selectedIndex === i ? 'bg-primary/10 text-white' : 'text-text-muted hover:text-text'}`}
+                              ${selectedIndex === i ? 'bg-primary/10 text-text' : 'text-text-muted hover:text-text'}`}
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-lg ${selectedIndex === i ? 'bg-primary/20 text-primary' : 'bg-white/5'}`}>
+                      <div className={`p-2 rounded-lg ${selectedIndex === i ? 'bg-primary/20 text-primary' : 'bg-surface-2'}`}>
                         <cmd.icon size={18} />
                       </div>
                       <span className="font-bold">{cmd.label}</span>
                     </div>
                     {cmd.shortcut && (
                       <kbd className={`text-[10px] font-black px-2 py-1 rounded border
-                                     ${selectedIndex === i ? 'bg-primary/20 border-primary/20 text-primary' : 'bg-white/5 border-white/10 text-text-muted'}`}>
+                                     ${selectedIndex === i ? 'bg-primary/20 border-primary/20 text-primary' : 'bg-surface-2 border-border text-text-muted'}`}>
                         {cmd.shortcut}
                       </kbd>
                     )}
@@ -140,10 +140,10 @@ export const CommandPalette: React.FC = () => {
               )}
             </div>
 
-            <div className="px-6 py-3 border-t border-white/5 bg-black/20 flex items-center justify-between text-[10px] font-black text-text-muted uppercase tracking-widest">
+            <div className="px-6 py-3 border-t border-border bg-surface-2 flex items-center justify-between text-[10px] font-black text-text-muted uppercase tracking-widest">
               <div className="flex gap-4">
-                <span className="flex items-center gap-1"><span className="text-white">↑↓</span> Navigate</span>
-                <span className="flex items-center gap-1"><span className="text-white">↵</span> Select</span>
+                <span className="flex items-center gap-1"><span className="text-text">↑↓</span> Navigate</span>
+                <span className="flex items-center gap-1"><span className="text-text">↵</span> Select</span>
               </div>
               <span>Command Palette</span>
             </div>

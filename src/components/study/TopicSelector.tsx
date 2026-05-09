@@ -23,7 +23,7 @@ export const TopicSelector: React.FC<TopicSelectorProps> = ({ selectedTopic, onS
               "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all focus-ring",
               selectedTopic === subject
                 ? "bg-primary/10 text-primary"
-                : "text-text-muted hover:text-text hover:bg-white/5"
+                : "text-text-muted hover:text-text hover:bg-surface-2"
             )}
           >
             <BookOpen size={16} />

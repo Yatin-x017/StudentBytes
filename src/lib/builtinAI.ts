@@ -1,5 +1,9 @@
 import type { Message } from './types';
 
+/**
+ * Stream a chat response from the built-in Groq AI.
+ * Properly parses SSE `data: {"delta":"..."}` events.
+ */
 export async function streamBuiltinAI(
   messages: Message[],
   onChunk: (fullText: string) => void,
@@ -11,7 +15,7 @@ export async function streamBuiltinAI(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       messages: messages.map(m => ({ role: m.role, content: m.content })),
-      system: systemPrompt,
+      ...(systemPrompt ? { system: systemPrompt } : {}),
       language: language || 'Python',
       mode: 'stream',
     }),
@@ -43,9 +47,12 @@ export async function streamBuiltinAI(
       buffer = lines.pop() ?? '';
 
       for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6).trim();
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data: ')) continue;
+
+        const data = trimmed.slice(6);
         if (data === '[DONE]') return fullText;
+
         try {
           const parsed = JSON.parse(data);
           if (parsed.error) throw new Error(parsed.error);
@@ -53,28 +60,33 @@ export async function streamBuiltinAI(
             fullText += parsed.delta;
             onChunk(fullText);
           }
-        } catch (e: any) {
-          if (e.message && !e.message.includes('JSON')) throw e;
+        } catch (parseErr: any) {
+          if (parseErr.message && !parseErr.message.includes('JSON')) {
+            throw parseErr;
+          }
         }
       }
     }
   } finally {
-    reader.releaseLock();
+    try { reader.releaseLock(); } catch {}
   }
 
   return fullText;
 }
 
+/**
+ * Generate structured content (quiz JSON, analysis) — non-streaming.
+ */
 export async function generateBuiltinQuiz(
   prompt: string,
-  language?: string
+  language = 'Python'
 ): Promise<string> {
   const response = await fetch('/api/ai', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       messages: [{ role: 'user', content: prompt }],
-      language: language || 'Python',
+      language,
       mode: 'generate',
     }),
   });
@@ -82,8 +94,8 @@ export async function generateBuiltinQuiz(
   if (!response.ok) {
     let errMsg = `Quiz generation failed (${response.status})`;
     try {
-      const errData = await response.json();
-      errMsg = errData.error || errMsg;
+      const d = await response.json();
+      errMsg = d.error || errMsg;
     } catch {}
     throw new Error(errMsg);
   }
@@ -92,33 +104,40 @@ export async function generateBuiltinQuiz(
   return data.text || '';
 }
 
+/**
+ * Analyze a Canvas assignment and provide structured help.
+ */
 export async function analyzeAssignment(
   name: string,
   description: string,
   course: string,
   language = 'Python'
 ): Promise<string> {
-  const prompt = `Analyze this university assignment and help the student understand it.
+  const cleanDesc = description
+    ? description.replace(/<[^>]*>/g, '').trim().slice(0, 1200)
+    : 'No description provided';
+
+  const prompt = `Analyze this university assignment and help the student understand how to approach it.
 
 Course: ${course}
 Assignment: ${name}
-Description: ${description?.replace(/<[^>]*>/g, '').trim().slice(0, 1200) || 'Not provided'}
+Description: ${cleanDesc}
+Preferred language: ${language}
 
-Provide a structured breakdown:
-
-## What This Assignment Requires
-(2-3 sentences summarizing the core task)
+Provide:
+## Summary
+2-3 sentences explaining what is required.
 
 ## Step-by-Step Plan
-(Numbered concrete steps to complete this)
+Numbered concrete steps to complete this.
 
 ## Key Concepts to Study First
-(Bullet list of prerequisites)
+Bullet list of prerequisites and concepts.
 
 ## Getting Started
-(Concrete first step + starter code outline in ${language} if applicable)
+A concrete first step or starter code outline in ${language} if applicable.
 
-Be specific. Calibrate depth to a university CS student.`;
+Be specific and practical. Match depth to a university CS student.`;
 
   const response = await fetch('/api/ai', {
     method: 'POST',
@@ -130,7 +149,11 @@ Be specific. Calibrate depth to a university CS student.`;
     }),
   });
 
-  if (!response.ok) throw new Error('Assignment analysis failed');
+  if (!response.ok) {
+    const d = await response.json().catch(() => ({}));
+    throw new Error(d.error || 'Assignment analysis failed');
+  }
+
   const data = await response.json();
   return data.text || '';
 }

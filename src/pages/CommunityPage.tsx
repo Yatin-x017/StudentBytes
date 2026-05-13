@@ -21,7 +21,7 @@ import { ChatRoom } from '@/components/chat/ChatRoom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { useAppContext } from '@/context/AppContext';
+// import { useAppContext } from '@/context/AppContext';
 import { ROUTES } from '@/lib/constants';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,7 +40,7 @@ type SortBy = 'xp' | 'quizzes' | 'sessions';
 
 const CommunityPage: React.FC = () => {
   const { user } = useAuth();
-  const { state } = useAppContext();
+  // const { state } = useAppContext();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<'chat' | 'leaderboard'>('leaderboard');

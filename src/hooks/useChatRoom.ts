@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import {
   generateAnonName,
   generateAnonColor,
-  containsProfanity,
+  containsProfanity
 } from '@/lib/chatUtils';
 
 export interface ChatMessage {
@@ -17,43 +17,27 @@ export interface ChatMessage {
   created_at: string;
 }
 
-const COOLDOWN_SECONDS = 3;
-
 export function useChatRoom() {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cooldown, setCooldown] = useState(0);
-  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [lastSentAt, setLastSentAt] = useState<number>(0);
 
-  // ── Fetch initial messages + realtime subscription ──────────────────
+  // Fetch initial messages
   useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      setError('Chat unavailable — Supabase not configured.');
-      return;
-    }
+    if (!supabase) return;
 
     const fetchMessages = async () => {
       try {
         const { data, error: fetchError } = await supabase
           .from('chat_messages')
           .select('*')
-          .eq('is_flagged', false)
           .order('created_at', { ascending: false })
           .limit(100);
 
-        if (fetchError) {
-          // Table likely doesn't exist yet
-          if (fetchError.code === '42P01') {
-            setError('Chat table not set up. Run the SQL schema in Supabase.');
-          } else {
-            setError(fetchError.message);
-          }
-          return;
-        }
-
+        if (fetchError) throw fetchError;
+        // Show in ascending order for chat
         setMessages((data || []).reverse());
       } catch (err: any) {
         setError(err.message);
@@ -64,21 +48,14 @@ export function useChatRoom() {
 
     fetchMessages();
 
-    // Realtime subscription
+    // Subscribe to new messages
     const channel = supabase
       .channel('public:chat_messages')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'chat_messages' },
-        payload => {
-          const msg = payload.new as ChatMessage;
-          if (!msg.is_flagged) {
-            setMessages(prev => {
-              // Avoid duplicate messages
-              if (prev.some(m => m.id === msg.id)) return prev;
-              return [...prev, msg];
-            });
-          }
+        (payload) => {
+          setMessages(prev => [...prev, payload.new as ChatMessage]);
         }
       )
       .subscribe();
@@ -88,50 +65,47 @@ export function useChatRoom() {
     };
   }, []);
 
-  // ── Cooldown timer ───────────────────────────────────────────────────
-  const startCooldown = useCallback(() => {
-    setCooldown(COOLDOWN_SECONDS);
-    if (cooldownRef.current) clearInterval(cooldownRef.current);
-    cooldownRef.current = setInterval(() => {
-      setCooldown(prev => {
-        if (prev <= 1) {
-          clearInterval(cooldownRef.current!);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, []);
+  const sendMessage = useCallback(async (content: string) => {
+    if (!user || !supabase) return;
 
-  useEffect(() => {
-    return () => {
-      if (cooldownRef.current) clearInterval(cooldownRef.current);
-    };
-  }, []);
+    // Validations
+    if (!content.trim()) return;
+    if (content.length > 500) throw new Error('Message too long (max 500 chars)');
 
-  // ── Send message ─────────────────────────────────────────────────────
-  const sendMessage = useCallback(
-    async (content: string) => {
-      if (!user) throw new Error('You must be signed in to chat.');
-      if (!supabase) throw new Error('Supabase not configured.');
-      if (!content.trim()) return;
-      if (content.length > 500) throw new Error('Message too long (max 500 chars).');
-      if (cooldown > 0) throw new Error(`Please wait ${cooldown}s before sending again.`);
-      if (containsProfanity(content)) throw new Error('Please keep the conversation respectful.');
+    // Rate limiting (3 seconds)
+    const now = Date.now();
+    if (now - lastSentAt < 3000) {
+      throw new Error('Please wait 3 seconds between messages');
+    }
 
-      const { error: sendError } = await supabase.from('chat_messages').insert({
-        user_id: user.id,
-        anon_name: generateAnonName(user.id),
-        anon_color: generateAnonColor(user.id),
-        content: content.trim(),
-        is_flagged: false,
-      });
+    // Profanity filter
+    if (containsProfanity(content)) {
+      throw new Error('Please keep the conversation respectful');
+    }
 
-      if (sendError) throw new Error(sendError.message);
-      startCooldown();
-    },
-    [user, cooldown, startCooldown]
-  );
+    try {
+      const { error: sendError } = await supabase
+        .from('chat_messages')
+        .insert({
+          user_id: user.id,
+          anon_name: generateAnonName(user.id),
+          anon_color: generateAnonColor(user.id),
+          content: content.trim(),
+        });
 
-  return { messages, loading, error, sendMessage, cooldown };
+      if (sendError) throw sendError;
+      setLastSentAt(now);
+    } catch (err: any) {
+      console.error('Chat error:', err);
+      throw err;
+    }
+  }, [user, lastSentAt]);
+
+  return {
+    messages,
+    loading,
+    error,
+    sendMessage,
+    cooldown: Math.max(0, 3 - Math.floor((Date.now() - lastSentAt) / 1000))
+  };
 }

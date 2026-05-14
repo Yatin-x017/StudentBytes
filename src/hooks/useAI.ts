@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { getAnthropicClient, buildSystemPromptWithFile, SYSTEM_PROMPT, QUIZ_PROMPT } from '@/lib/anthropic';
 import { streamGeminiMessage, generateGeminiQuiz } from '@/lib/gemini';
 import { truncateForContext } from '@/lib/pdfExtractor';
@@ -8,6 +9,7 @@ import { streamBuiltinAI, generateBuiltinQuiz } from '@/lib/builtinAI';
 
 export function useAI() {
   const { state, dispatch } = useAppContext();
+  const { profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -103,12 +105,19 @@ This takes 2 minutes and gives you unlimited usage.`;
       };
 
       try {
-        const systemPrompt = session.attachedFile
+        // Build academic context for the prompt
+        const academicContext = profile?.college && profile?.course
+          ? `\n\n[STUDENT CONTEXT]: The student is studying ${profile.course} at ${profile.college}${profile.year ? `, Year ${profile.year}` : ''}. Please tailor your explanations and examples to be relevant to this curriculum and level.`
+          : '';
+
+        const baseSystemPrompt = session.attachedFile
           ? buildSystemPromptWithFile(
               truncateForContext(session.attachedFile.text),
               session.attachedFile.name
             )
-          : undefined; // api/ai.ts builds the default prompt with language
+          : SYSTEM_PROMPT;
+
+        const finalSystemPrompt = baseSystemPrompt + academicContext;
 
         // Priority: Anthropic key → Gemini key → Built-in Groq (default)
         if (currentState.settings?.provider === 'anthropic' && hasAnthropicKey) {
@@ -118,7 +127,7 @@ This takes 2 minutes and gives you unlimited usage.`;
             model: 'claude-sonnet-4-5',
             max_tokens: 4096,
             temperature: 0.7,
-            system: systemPrompt || SYSTEM_PROMPT,
+            system: finalSystemPrompt,
             messages: messagesWithUser.map(m => ({
               role: m.role as 'user' | 'assistant',
               content: m.content,
@@ -140,13 +149,13 @@ This takes 2 minutes and gives you unlimited usage.`;
             updateAssistant
           );
         } else {
-          // Built-in Groq — default for everyone
-          await streamBuiltinAI(
-            messagesWithUser,
-            updateAssistant,
-            systemPrompt,
-            language
-          );
+        // Built-in Groq — default for everyone
+        await streamBuiltinAI(
+          messagesWithUser,
+          updateAssistant,
+          finalSystemPrompt,
+          language
+        );
         }
       } catch (err: any) {
         console.error('[useAI] streamMessage error:', err);
@@ -172,12 +181,16 @@ This takes 2 minutes and gives you unlimited usage.`;
     try {
       let raw = '';
 
+      const academicContext = profile?.college && profile?.course
+        ? ` for a student studying ${profile.course} at ${profile.college}${profile.year ? `, Year ${profile.year}` : ''}`
+        : '';
+
       if (stateRef.current.settings?.provider === 'anthropic' && hasAnthropicKey) {
         const client = getAnthropicClient(stateRef.current.apiKey);
         const res = await client.messages.create({
           model: 'claude-sonnet-4-5',
           max_tokens: 2048,
-          messages: [{ role: 'user', content: QUIZ_PROMPT(topic, difficulty) }],
+          messages: [{ role: 'user', content: QUIZ_PROMPT(topic, difficulty) + academicContext }],
         });
         raw = res.content[0].type === 'text' ? res.content[0].text : '';
       } else if (stateRef.current.settings?.provider === 'gemini' && hasGeminiKey) {
@@ -188,7 +201,7 @@ This takes 2 minutes and gives you unlimited usage.`;
         );
       } else {
         // Built-in Groq
-        raw = await generateBuiltinQuiz(QUIZ_PROMPT(topic, difficulty), language);
+        raw = await generateBuiltinQuiz(QUIZ_PROMPT(topic, difficulty) + academicContext, language);
       }
 
       const cleaned = raw.replace(/```json\n?/g, '').replace(/\n?```/g, '').trim();

@@ -13,7 +13,7 @@ export const Card: React.FC<CardProps> = ({ children, className, animate = true,
       whileHover={animate ? { y: -2, scale: 1.005 } : {}}
       transition={{ duration: 0.2, ease: "easeOut" }}
       className={cn(
-        'glass rounded-[2rem] overflow-hidden transition-all duration-300 hover:shadow-glow',
+        'm3-card-elevated overflow-hidden transition-all duration-300',
         className
       )}
       {...props}

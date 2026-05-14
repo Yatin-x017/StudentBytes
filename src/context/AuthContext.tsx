@@ -7,6 +7,11 @@ interface Profile {
   email: string;
   full_name: string;
   avatar_url: string;
+  age?: number;
+  course?: string;
+  college?: string;
+  branch?: string;
+  year?: number;
   created_at: string;
 }
 

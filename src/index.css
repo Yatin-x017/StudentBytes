@@ -2,62 +2,111 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  /* Light mode (default) */
-  --color-bg: #f8f7ff;
-  --color-bg-2: #f0effe;
-  --color-surface: #ffffff;
-  --color-surface-2: #f5f4ff;
-  --color-surface-3: #ede9ff;
-  --color-border: rgba(0,0,0,0.08);
-  --color-border-hover: rgba(0,0,0,0.15);
+  /* Material Design 3 Colors (Light) */
+  --md-sys-color-primary: #6750A4;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #EADDFF;
+  --md-sys-color-on-primary-container: #21005D;
+  --md-sys-color-secondary: #625B71;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #E8DEF8;
+  --md-sys-color-on-secondary-container: #1D192B;
+  --md-sys-color-tertiary: #7D5260;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #FFD8E4;
+  --md-sys-color-on-tertiary-container: #31111D;
+  --md-sys-color-error: #B3261E;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: #F9DEDC;
+  --md-sys-color-on-error-container: #410E0B;
+  --md-sys-color-outline: #79747E;
+  --md-sys-color-background: #FFFBFE;
+  --md-sys-color-on-background: #1C1B1F;
+  --md-sys-color-surface: #FFFBFE;
+  --md-sys-color-on-surface: #1C1B1F;
+  --md-sys-color-surface-variant: #E7E0EC;
+  --md-sys-color-on-surface-variant: #49454F;
 
-  /* Brand — coral-violet gradient (Claude-inspired) */
-  --color-primary: #7c6af7;
-  --color-primary-hover: #6b58f0;
-  --color-primary-light: rgba(124,106,247,0.1);
-  --color-primary-glow: rgba(124,106,247,0.2);
-  --color-accent: #f97066;
-  --color-accent-light: rgba(249,112,102,0.1);
-  --color-accent-2: #10b981;
+  /* Legacy variable mapping for compatibility */
+  --color-bg: var(--md-sys-color-background);
+  --color-bg-2: var(--md-sys-color-surface-variant);
+  --color-surface: var(--md-sys-color-surface);
+  --color-surface-2: var(--md-sys-color-surface-variant);
+  --color-surface-3: var(--md-sys-color-primary-container);
+  --color-border: var(--md-sys-color-outline);
+  --color-border-hover: var(--md-sys-color-primary);
 
-  /* Text */
-  --color-text: #1a1a2e;
-  --color-text-muted: #6666aa;
-  --color-text-faint: #aaaacc;
+  --color-primary: var(--md-sys-color-primary);
+  --color-primary-hover: #584192;
+  --color-primary-light: var(--md-sys-color-primary-container);
+  --color-primary-glow: rgba(103, 80, 164, 0.2);
+  --color-accent: var(--md-sys-color-tertiary);
+  --color-accent-light: var(--md-sys-color-tertiary-container);
+  --color-accent-2: var(--md-sys-color-secondary);
 
-  /* Semantic */
-  --color-success: #10b981;
-  --color-success-light: rgba(16,185,129,0.1);
-  --color-error: #f43f5e;
-  --color-error-light: rgba(244,63,94,0.1);
-  --color-warning: #f59e0b;
-  --color-warning-light: rgba(245,158,11,0.1);
+  --color-text: var(--md-sys-color-on-background);
+  --color-text-muted: var(--md-sys-color-on-surface-variant);
+  --color-text-faint: var(--md-sys-color-outline);
 
-  --font-display: "Syne", sans-serif;
-  --font-body: "DM Sans", sans-serif;
+  --color-success: #2E7D32;
+  --color-success-light: #E8F5E9;
+  --color-error: var(--md-sys-color-error);
+  --color-error-light: var(--md-sys-color-error-container);
+  --color-warning: #ED6C02;
+  --color-warning-light: #FFF3E0;
+
+  /* Typography */
+  --font-display: "Roboto", "Syne", sans-serif;
+  --font-body: "Roboto", "DM Sans", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  /* Material 3 Radius */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --radius-xl: 28px;
 
   --shadow-glow: 0 0 30px rgba(124, 106, 247, 0.15);
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
-/* Dark mode overrides */
+/* Dark mode overrides (Material 3 Dark) */
 :root[data-theme="dark"] {
-  --color-bg: #0a0a12;
-  --color-bg-2: #0f0f1a;
-  --color-surface: #13131f;
-  --color-surface-2: #1a1a2e;
-  --color-surface-3: #20203a;
-  --color-border: rgba(255,255,255,0.06);
-  --color-border-hover: rgba(255,255,255,0.12);
-  --color-text: #ededf5;
-  --color-text-muted: #8888aa;
-  --color-text-faint: #44445a;
+  --md-sys-color-primary: #D0BCFF;
+  --md-sys-color-on-primary: #381E72;
+  --md-sys-color-primary-container: #4F378B;
+  --md-sys-color-on-primary-container: #EADDFF;
+  --md-sys-color-secondary: #CCC2DC;
+  --md-sys-color-on-secondary: #332D41;
+  --md-sys-color-secondary-container: #4A4458;
+  --md-sys-color-on-secondary-container: #E8DEF8;
+  --md-sys-color-tertiary: #EFB8C8;
+  --md-sys-color-on-tertiary: #492532;
+  --md-sys-color-tertiary-container: #633B48;
+  --md-sys-color-on-tertiary-container: #FFD8E4;
+  --md-sys-color-error: #F2B8B5;
+  --md-sys-color-on-error: #601410;
+  --md-sys-color-error-container: #8C1D18;
+  --md-sys-color-on-error-container: #F9DEDC;
+  --md-sys-color-outline: #938F99;
+  --md-sys-color-background: #1C1B1F;
+  --md-sys-color-on-background: #E6E1E5;
+  --md-sys-color-surface: #1C1B1F;
+  --md-sys-color-on-surface: #E6E1E5;
+  --md-sys-color-surface-variant: #49454F;
+  --md-sys-color-on-surface-variant: #CAC4D0;
+
+  --color-bg: var(--md-sys-color-background);
+  --color-bg-2: var(--md-sys-color-surface-variant);
+  --color-surface: var(--md-sys-color-surface);
+  --color-surface-2: var(--md-sys-color-surface-variant);
+  --color-surface-3: var(--md-sys-color-primary-container);
+  --color-border: var(--md-sys-color-outline);
+  --color-border-hover: var(--md-sys-color-primary);
+  --color-text: var(--md-sys-color-on-background);
+  --color-text-muted: var(--md-sys-color-on-surface-variant);
+  --color-text-faint: var(--md-sys-color-outline);
 }
 
 @layer base {
@@ -117,15 +166,28 @@
 
 @layer components {
   .glass {
-    background: rgba(255, 255, 255, 0.7);
+    background: color-mix(in srgb, var(--color-surface) 70%, transparent);
     backdrop-filter: blur(20px) saturate(1.3);
     border: 1px solid var(--color-border);
     box-shadow: var(--shadow-card);
   }
 
-  [data-theme="dark"] .glass {
-    background: rgba(19,19,31,0.8);
-    backdrop-filter: blur(20px) saturate(1.3);
+  /* M3 Card Elevation */
+  .m3-card-elevated {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+  }
+
+  .m3-card-filled {
+    background: var(--color-surface-2);
+    border-radius: var(--radius-md);
+  }
+
+  .m3-card-outlined {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
   }
 
   .glass-light {

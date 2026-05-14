@@ -19,8 +19,8 @@ export const Input: React.FC<InputProps> = ({ label, error, className, ...props 
       <input
         id={id}
         className={cn(
-          'flex h-10 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-text placeholder:text-text-muted focus-ring disabled:cursor-not-allowed disabled:opacity-50 transition-colors',
-          error && 'border-error ring-error',
+          'flex h-12 w-full rounded-t-md border-b-2 border-border bg-surface-2 px-4 py-2 text-base text-text placeholder:text-text-muted focus:border-primary focus:bg-surface-3 outline-none disabled:cursor-not-allowed disabled:opacity-50 transition-all',
+          error && 'border-error focus:border-error',
           className
         )}
         {...props}

@@ -6,6 +6,8 @@ CREATE TABLE profiles (
   email TEXT UNIQUE NOT NULL,
   full_name TEXT,
   avatar_url TEXT,
+  age INTEGER,
+  course TEXT,
   xp INTEGER DEFAULT 0,
   level INTEGER DEFAULT 1,
   streak INTEGER DEFAULT 0,
@@ -65,8 +67,24 @@ CREATE TABLE user_settings (
   user_id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   default_language TEXT DEFAULT 'Python',
   provider TEXT DEFAULT 'anthropic',
+  curriculum_id TEXT,
+  preferred_learning_style TEXT DEFAULT 'practical',
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Curriculums: Store specific university/course mappings
+CREATE TABLE curriculums (
+  id TEXT PRIMARY KEY,
+  college TEXT NOT NULL,
+  course TEXT NOT NULL,
+  subjects JSONB DEFAULT '[]'::jsonb,
+  context_data TEXT, -- Additional background for AI
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS for curriculums
+ALTER TABLE curriculums ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Curriculums are viewable by everyone" ON curriculums FOR SELECT USING (true);
 
 -- RLS POLICIES
 

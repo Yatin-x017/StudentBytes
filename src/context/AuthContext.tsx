@@ -7,6 +7,7 @@ interface Profile {
   email: string;
   full_name: string;
   avatar_url: string;
+  username?: string | null; 
   age?: number;
   course?: string;
   college?: string;

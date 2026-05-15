@@ -25,8 +25,9 @@ export const ProtectedRoute: React.FC = () => {
   if (!user) return <Navigate to="/login" replace />;
 
   // Check for profile completeness (onboarding)
-  // We require college and course for the full experience
-  const isProfileIncomplete = !profile?.college || !profile?.course;
+  // We only require display_name for the profile to be considered complete
+  // This allows users to skip onboarding and fill in academic details later
+  const isProfileIncomplete = !profile?.display_name;
   const isOnOnboardingPage = location.pathname === ROUTES.ONBOARDING;
 
   if (isProfileIncomplete && !isOnOnboardingPage) {

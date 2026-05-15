@@ -63,8 +63,32 @@ const ProfileOnboardingPage: React.FC = () => {
     }
   };
 
-  const handleSkip = () => {
-    navigate(ROUTES.DASHBOARD, { replace: true });
+  const handleSkip = async () => {
+    if (!user) { navigate(ROUTES.LOGIN); return; }
+    
+    // Save a minimal profile with just display_name to unblock the user
+    try {
+      setLoading(true);
+      const baseUsername = (
+        user.email?.split('@')[0] ||
+        form.display_name.toLowerCase()
+      )
+        .replace(/[^a-z0-9_]/gi, '')
+        .toLowerCase()
+        .slice(0, 15);
+      const username = baseUsername + Math.floor(Math.random() * 900 + 100);
+
+      await upsertProfile(user.id, {
+        display_name: form.display_name.trim() || user.user_metadata?.full_name || 'Student',
+        username,
+      });
+    } catch (err) {
+      console.error('Skip profile save error:', err);
+      // Continue anyway — don't block the user
+    } finally {
+      setLoading(false);
+      navigate(ROUTES.DASHBOARD, { replace: true });
+    }
   };
 
   const inputClass = `

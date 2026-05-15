@@ -6,6 +6,7 @@ interface Profile {
   id: string;
   email: string;
   full_name: string;
+  display_name?: string | null;
   avatar_url: string;
   username?: string | null; 
   age?: number;

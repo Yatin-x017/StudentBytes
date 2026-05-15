@@ -31,7 +31,7 @@ const ProfileOnboardingPage: React.FC = () => {
         year: form.year ? parseInt(form.year) : null,
         avatar_url: user.user_metadata?.avatar_url || null,
         // Default username if not set
-        username: profile?.username || user.email?.split('@')[0].replace(/[^a-z0-9_]/g, '') + Math.floor(Math.random() * 1000),
+        username: (profile && profile.username) || user.email?.split('@')[0].replace(/[^a-z0-9_]/g, '') + Math.floor(Math.random() * 1000),
       });
       navigate(ROUTES.DASHBOARD);
     } catch (error) {

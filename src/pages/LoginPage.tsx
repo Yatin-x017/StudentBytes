@@ -29,7 +29,7 @@ const LoginPage: React.FC = () => {
       if (mode === 'signup') {
         const { error: err } = await signUp(email, password, '');
         if (err) throw err;
-        setError('Check your email to confirm your account.');
+        navigate(ROUTES.ONBOARDING);
       } else {
         const { error: err } = await signIn(email, password);
         if (err) throw err;

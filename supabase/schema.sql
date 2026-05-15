@@ -6,6 +6,8 @@ CREATE TABLE profiles (
   email TEXT UNIQUE NOT NULL,
   full_name TEXT,
   avatar_url TEXT,
+  age INTEGER,
+  course TEXT,
   xp INTEGER DEFAULT 0,
   level INTEGER DEFAULT 1,
   streak INTEGER DEFAULT 0,

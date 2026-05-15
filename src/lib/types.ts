@@ -142,6 +142,8 @@ export interface Profile {
   preferred_language: string;
   is_public: boolean;
   custom_theme: string;
+  age: number | null;
+  course: string | null;
   created_at: string;
   updated_at: string;
 }

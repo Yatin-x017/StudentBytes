@@ -5,6 +5,8 @@ import { Layout } from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { ROUTES } from '@/lib/constants';
 import { Spinner } from '@/components/ui/Spinner';
+import { useLocation } from 'react-router-dom';
+import ProfileOnboardingPage from './pages/ProfileOnboardingPage';
 import { useAuth } from '@/context/AuthContext';
 
 // Pages
@@ -24,6 +26,7 @@ const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'));
 const TermsPage = lazy(() => import('@/pages/TermsPage'));
 const SharedNotePage = lazy(() => import('@/pages/SharedNotePage'));
 
+
 const App: React.FC = () => {
   return (
     <AppProvider>
@@ -35,17 +38,23 @@ const App: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
+  const location = useLocation();
 
-  if (loading) {
-    return (
-      <div
-        className="h-screen w-full flex items-center justify-center bg-bg"
-      >
-        <Spinner size={32} className="text-primary" />
-      </div>
-    );
-  }
+    if (loading) {
+      return (
+        <div
+          className="h-screen w-full flex items-center justify-center bg-bg"
+        >
+          <Spinner size={32} className="text-primary" />
+        </div>
+      );
+    }
+
+    // Redirect to onboarding if profile is incomplete after login
+    if (user && !profile?.age && location.pathname !== ROUTES.ONBOARDING) {
+      return <Navigate to={ROUTES.ONBOARDING} replace />;
+    }
 
   return (
     <Suspense fallback={
@@ -64,6 +73,7 @@ const AppContent: React.FC = () => {
         <Route path="/login" element={
           user ? <Navigate to={ROUTES.DASHBOARD} replace /> : <LoginPage />
         } />
+        <Route path={ROUTES.ONBOARDING} element={<ProfileOnboardingPage />} />
 
         {/* All core features are protected if Supabase is configured */}
         <Route element={<ProtectedRoute />}>

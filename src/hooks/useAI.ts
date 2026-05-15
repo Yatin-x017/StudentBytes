@@ -5,9 +5,11 @@ import { streamGeminiMessage, generateGeminiQuiz } from '@/lib/gemini';
 import { truncateForContext } from '@/lib/pdfExtractor';
 import type { Message, QuizQuestion } from '@/lib/types';
 import { streamBuiltinAI, generateBuiltinQuiz } from '@/lib/builtinAI';
+import { useAuth } from '@/context/AuthContext';
 
 export function useAI() {
   const { state, dispatch } = useAppContext();
+  const { profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -145,7 +147,8 @@ This takes 2 minutes and gives you unlimited usage.`;
             messagesWithUser,
             updateAssistant,
             systemPrompt,
-            language
+            language,
+            profile
           );
         }
       } catch (err: any) {
@@ -188,7 +191,7 @@ This takes 2 minutes and gives you unlimited usage.`;
         );
       } else {
         // Built-in Groq
-        raw = await generateBuiltinQuiz(QUIZ_PROMPT(topic, difficulty), language);
+        raw = await generateBuiltinQuiz(QUIZ_PROMPT(topic, difficulty), language, profile);
       }
 
       const cleaned = raw.replace(/```json\n?/g, '').replace(/\n?```/g, '').trim();

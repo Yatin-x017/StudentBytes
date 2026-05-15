@@ -44,6 +44,21 @@
 
   --shadow-glow: 0 0 30px rgba(124, 106, 247, 0.15);
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04);
+
+  /* Material Design 3 Elevation Shadows */
+  --shadow-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-elevation-2: 0 3px 6px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12);
+  --shadow-elevation-3: 0 10px 20px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.10);
+  --shadow-elevation-4: 0 15px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.05);
+  --shadow-elevation-5: 0 20px 40px rgba(0, 0, 0, 0.2);
+
+  /* Material Design 3 Additional Semantic Colors */
+  --color-info: #0066cc;
+  --color-info-light: rgba(0, 102, 204, 0.1);
+  --color-on-primary: #ffffff;
+  --color-on-surface: var(--color-text);
+  --color-outline: rgba(0, 0, 0, 0.12);
+  --color-outline-variant: rgba(0, 0, 0, 0.08);
 }
 
 /* Dark mode overrides */
@@ -58,6 +73,11 @@
   --color-text: #ededf5;
   --color-text-muted: #8888aa;
   --color-text-faint: #44445a;
+  --color-info: #4d9cff;
+  --color-info-light: rgba(77, 156, 255, 0.1);
+  --color-on-surface: var(--color-text);
+  --color-outline: rgba(255, 255, 255, 0.12);
+  --color-outline-variant: rgba(255, 255, 255, 0.08);
 }
 
 @layer base {
@@ -202,4 +222,124 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--color-border-hover);
+}
+
+/* Material Design 3 Button Styles */
+@layer components {
+  .btn-filled {
+    @apply px-6 py-3 rounded-full font-semibold text-sm;
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    box-shadow: var(--shadow-elevation-1);
+    transition: all 0.2s ease;
+  }
+
+  .btn-filled:hover {
+    box-shadow: var(--shadow-elevation-2);
+    transform: translateY(-1px);
+  }
+
+  .btn-outlined {
+    @apply px-6 py-3 rounded-full font-semibold text-sm;
+    background-color: transparent;
+    color: var(--color-primary);
+    border: 1.5px solid var(--color-outline);
+    transition: all 0.2s ease;
+  }
+
+  .btn-outlined:hover {
+    background-color: var(--color-primary-light);
+    border-color: var(--color-primary);
+  }
+
+  .btn-text {
+    @apply px-4 py-2 rounded-lg font-semibold text-sm;
+    background-color: transparent;
+    color: var(--color-primary);
+    transition: all 0.2s ease;
+  }
+
+  .btn-text:hover {
+    background-color: var(--color-primary-light);
+  }
+
+  /* Material Design 3 Card Styles */
+  .card-elevated {
+    @apply rounded-xl p-4;
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-elevation-1);
+    border: 1px solid var(--color-outline-variant);
+  }
+
+  .card-filled {
+    @apply rounded-xl p-4;
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-outline-variant);
+  }
+
+  .card-outlined {
+    @apply rounded-xl p-4;
+    background-color: transparent;
+    border: 1px solid var(--color-outline);
+  }
+
+  /* Material Design 3 Input Styles */
+  .input-filled {
+    @apply w-full px-4 py-3 rounded-lg text-sm;
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-outline-variant);
+    color: var(--color-on-surface);
+    transition: all 0.2s ease;
+  }
+
+  .input-filled:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+  }
+
+  .input-outlined {
+    @apply w-full px-4 py-3 rounded-lg text-sm;
+    background-color: transparent;
+    border: 1.5px solid var(--color-outline);
+    color: var(--color-on-surface);
+    transition: all 0.2s ease;
+  }
+
+  .input-outlined:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+  }
+
+  /* Material Design 3 Chip Styles */
+  .chip {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold;
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-outline-variant);
+    color: var(--color-on-surface);
+  }
+
+  .chip-filled {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold;
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  /* Material Design 3 Transitions */
+  .transition-md3 {
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  /* Material Design 3 Focus States */
+  .focus-ring {
+    outline: 3px solid var(--color-primary-light);
+    outline-offset: 2px;
+  }
+
+  /* Material Design 3 Ripple Effect (placeholder for future JS implementation) */
+  .ripple {
+    position: relative;
+    overflow: hidden;
+  }
 }

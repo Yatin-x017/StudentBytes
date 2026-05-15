@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { User, AuthError } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { ROUTES } from '@/lib/constants';
 
 interface Profile {
   id: string;
@@ -14,6 +15,21 @@ interface Profile {
   branch?: string;
   year?: number;
   created_at: string;
+  age: number | null;
+  course: string | null;
+  username: string | null;
+  display_name: string | null;
+  bio: string | null;
+  college: string | null;
+  year: number | null;
+  branch: string | null;
+  github_url: string | null;
+  linkedin_url: string | null;
+  twitter_url: string | null;
+  preferred_language: string;
+  is_public: boolean;
+  custom_theme: string;
+  updated_at: string;
 }
 
 interface AuthContextType {
@@ -156,7 +172,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       options: {
         data: {
           full_name: fullName,
-        }
+        },
+        redirectTo: `${window.location.origin}${ROUTES.ONBOARDING}`
       }
     });
     return { error };

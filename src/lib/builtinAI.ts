@@ -1,17 +1,22 @@
-import type { Message } from './types';
+import type { Message, Profile } from './types';
+import { getPersonalizedSystemPrompt, getSubjectEnhancement } from './aiPersonalization';
 
 export async function streamBuiltinAI(
   messages: Message[],
   onChunk: (fullText: string) => void,
   systemPrompt?: string,
-  language?: string
+  language?: string,
+  profile?: Profile | null
 ): Promise<string> {
+  // Use personalized system prompt if profile is provided and no custom prompt is given
+  const finalSystemPrompt = systemPrompt || (profile ? getPersonalizedSystemPrompt(profile) : undefined);
+
   const response = await fetch('/api/ai', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       messages: messages.map(m => ({ role: m.role, content: m.content })),
-      system: systemPrompt,
+      system: finalSystemPrompt,
       language: language || 'Python',
       mode: 'stream',
     }),
@@ -67,13 +72,19 @@ export async function streamBuiltinAI(
 
 export async function generateBuiltinQuiz(
   prompt: string,
-  language?: string
+  language?: string,
+  profile?: Profile | null
 ): Promise<string> {
+  // Enhance prompt with profile-specific context
+  const enhancedPrompt = profile
+    ? `${prompt}\n\nContext: Student from ${profile.college} studying ${profile.branch} (Year ${profile.year})`
+    : prompt;
+
   const response = await fetch('/api/ai', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      messages: [{ role: 'user', content: prompt }],
+      messages: [{ role: 'user', content: enhancedPrompt }],
       language: language || 'Python',
       mode: 'generate',
     }),
@@ -96,8 +107,11 @@ export async function analyzeAssignment(
   name: string,
   description: string,
   course: string,
-  language = 'Python'
+  language = 'Python',
+  profile?: Profile | null
 ): Promise<string> {
+  const subjectEnhancement = profile ? getSubjectEnhancement(course, profile) : '';
+
   const prompt = `Analyze this university assignment and help the student understand it.
 
 Course: ${course}
@@ -117,6 +131,8 @@ Provide a structured breakdown:
 
 ## Getting Started
 (Concrete first step + starter code outline in ${language} if applicable)
+
+${subjectEnhancement}
 
 Be specific. Calibrate depth to a university CS student.`;
 

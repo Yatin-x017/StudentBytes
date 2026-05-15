@@ -80,6 +80,7 @@ export const ROUTES = {
   ANALYTICS: '/analytics',
   COMMUNITY: '/community',
   PROFILE: '/profile',
+  ONBOARDING: '/onboarding',
   CANVAS: '/canvas',
   LOGIN: '/login',
   ONBOARDING: '/onboarding',

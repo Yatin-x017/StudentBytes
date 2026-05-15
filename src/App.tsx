@@ -20,6 +20,7 @@ const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
 const AnalyticsPage = lazy(() => import('@/pages/AnalyticsPage'));
 const CommunityPage = lazy(() => import('@/pages/CommunityPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+const ProfileOnboardingPage = lazy(() => import('@/pages/ProfileOnboardingPage'));
 const CanvasPage = lazy(() => import('@/pages/CanvasPage'));
 const TimetablePage = lazy(() => import('@/pages/TimetablePage'));
 const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'));
@@ -75,8 +76,8 @@ const AppContent: React.FC = () => {
         } />
         <Route path={ROUTES.ONBOARDING} element={<ProfileOnboardingPage />} />
 
-        {/* All core features are protected if Supabase is configured */}
         <Route element={<ProtectedRoute />}>
+          <Route path={ROUTES.ONBOARDING} element={<ProfileOnboardingPage />} />
           <Route element={<Layout />}>
             <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
             <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />

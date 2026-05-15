@@ -1,21 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+
 import { useAuth } from '@/context/AuthContext';
 import { upsertProfile } from '@/lib/profile';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Loader2, GraduationCap } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { ROUTES } from '@/lib/constants';
+
+import {
+  GraduationCap,
+  User as UserIcon,
+  Sparkles,
+  AlertCircle,
+  ArrowRight,
+  Loader2,
+} from 'lucide-react';
 
 const ProfileOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
+
   const { user, profile } = useAuth();
-  const [saving, setSaving] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  const [error, setError] = useState('');
+
   const [form, setForm] = useState({
+    display_name: user?.user_metadata?.full_name || '',
     age: '',
     college: '',
-    branch: '', // Renamed from 'course' to match existing schema 'branch'
+    branch: '',
     year: '',
   });
 
@@ -24,140 +39,324 @@ const ProfileOnboardingPage: React.FC = () => {
       navigate(ROUTES.LOGIN);
       return;
     }
-    // If profile already exists and has required fields, redirect to dashboard
-    if (profile && profile.age && profile.college && profile.branch && profile.year) {
+
+    // If profile already completed
+    if (
+      profile &&
+      profile.college &&
+      profile.branch &&
+      profile.year
+    ) {
       navigate(ROUTES.DASHBOARD);
     }
   }, [user, profile, navigate]);
 
-  const handleSave = async () => {
-    if (!user) return;
-    setSaving(true);
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
+    e.preventDefault();
+
+    if (!user) {
+      navigate(ROUTES.LOGIN);
+      return;
+    }
+
+    if (!form.display_name.trim()) {
+      setError('Display name is required.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
     try {
+      // Generate safe username
+      const baseUsername = (
+        user.email?.split('@')[0] ||
+        form.display_name.toLowerCase()
+      )
+        .replace(/[^a-z0-9_]/gi, '')
+        .toLowerCase()
+        .slice(0, 15);
+
+      const username =
+        baseUsername +
+        Math.floor(Math.random() * 900 + 100);
+
       await upsertProfile(user.id, {
-        age: form.age ? parseInt(form.age) : null,
-        college: form.college,
-        branch: form.branch,
-        year: form.year ? parseInt(form.year) : null,
+        display_name: form.display_name.trim(),
+        age: form.age
+          ? parseInt(form.age)
+          : null,
+        college: form.college.trim() || null,
+        branch: form.branch.trim() || null,
+        year: form.year
+          ? parseInt(form.year)
+          : null,
+        avatar_url:
+          user.user_metadata?.avatar_url || null,
+        username,
       });
-      navigate(ROUTES.DASHBOARD);
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      // Optionally, display an error message to the user
+
+      navigate(ROUTES.DASHBOARD, {
+        replace: true,
+      });
+    } catch (err: any) {
+      console.error(
+        'Profile save error:',
+        err
+      );
+
+      if (
+        err?.code === '42P01' ||
+        err?.message?.includes('does not exist')
+      ) {
+        navigate(ROUTES.DASHBOARD, {
+          replace: true,
+        });
+      } else {
+        setError(
+          err.message ||
+            'Failed to save profile. You can update it later in Settings.'
+        );
+      }
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
+  const handleSkip = () => {
+    navigate(ROUTES.DASHBOARD, {
+      replace: true,
+    });
+  };
+
+  const inputClass = `
+    w-full px-4 py-3 rounded-xl text-sm outline-none transition-all
+    bg-surface-2 border border-border text-text
+    focus:border-primary/50 focus:ring-2 focus:ring-primary/10
+    placeholder:text-text-faint
+  `;
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4"
-         style={{ background: 'linear-gradient(135deg, #eef2ff 0%, #f5f3ff 50%, #faf5ff 100%)' }}>
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        background:
+          'linear-gradient(135deg, #eef2ff 0%, #f5f3ff 50%, #faf5ff 100%)',
+      }}
+    >
       <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        initial={{
+          opacity: 0,
+          y: 24,
+          scale: 0.97,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          scale: 1,
+        }}
+        transition={{
+          duration: 0.5,
+          ease: 'easeOut',
+        }}
         className="relative w-full max-w-md"
       >
-        <Card className="p-8 space-y-6">
-          <div className="text-center mb-6">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"
-                 style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', boxShadow: '0 8px 24px rgba(79,70,229,0.3)' }}>
-              <GraduationCap size={26} className="text-white fill-white" />
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4 border border-primary/20">
+              <Sparkles size={28} />
             </div>
-            <h1 className="text-2xl font-black tracking-tight" style={{ color: '#1e1b4b' }}>
-              Complete Your Profile
+
+            <h1 className="text-3xl font-display font-black gradient-text">
+              Welcome to StudentBytes!
             </h1>
-            <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
-              Tell us a bit about your academic background to personalize your experience.
+
+            <p className="text-text-muted mt-2 text-sm">
+              Set up your profile to personalize
+              your learning experience.
             </p>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest mb-2"
-                     style={{ color: '#6b7280' }}>
-                Age
-              </label>
-              <input
-                type="number"
-                value={form.age}
-                onChange={e => setForm(f => ({ ...f, age: e.target.value }))}
-                placeholder="18"
-                className="w-full px-4 py-3 rounded-xl bg-surface-2 border
-                           border-border focus:border-primary/50 focus:outline-none
-                           text-sm transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest mb-2"
-                     style={{ color: '#6b7280' }}>
-                College / University
-              </label>
-              <input
-                type="text"
-                value={form.college}
-                onChange={e => setForm(f => ({ ...f, college: e.target.value }))}
-                placeholder="Rishihood University"
-                className="w-full px-4 py-3 rounded-xl bg-surface-2 border
-                           border-border focus:border-primary/50 focus:outline-none
-                           text-sm transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest mb-2"
-                     style={{ color: '#6b7280' }}>
-                Branch / Major
-              </label>
-              <input
-                type="text"
-                value={form.branch}
-                onChange={e => setForm(f => ({ ...f, branch: e.target.value }))}
-                placeholder="B.Tech CS & AI"
-                className="w-full px-4 py-3 rounded-xl bg-surface-2 border
-                           border-border focus:border-primary/50 focus:outline-none
-                           text-sm transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest mb-2"
-                     style={{ color: '#6b7280' }}>
-                Year
-              </label>
-              <div className="flex gap-2">
-                {['1', '2', '3', '4'].map(y => (
-                  <button
-                    key={y}
-                    onClick={() => setForm(f => ({ ...f, year: y }))}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold
-                                border transition-all ${
-                      form.year === y
-                        ? 'bg-primary/10 border-primary/40 text-primary'
-                        : 'bg-surface-2 border-border text-text-muted hover:border-border-hover'
-                    }`}
-                  >
-                    Year {y}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          <Card className="p-8">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-6"
+            >
+              {/* Basic Info */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest">
+                  <UserIcon size={14} />
+                  Basic Information
+                </div>
 
-          <Button
-            onClick={handleSave}
-            disabled={saving || !form.age || !form.college || !form.branch || !form.year}
-            className="w-full py-4 rounded-2xl font-black text-sm text-white transition-all disabled:opacity-50"
-            style={{
-              background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-              boxShadow: '0 8px 24px rgba(79,70,229,0.3)',
-            }}
-          >
-            {saving ? (
-              <Loader2 size={18} className="animate-spin mx-auto" />
-            ) : (
-              'Complete Profile'
-            )}
-          </Button>
-        </Card>
+                <div>
+                  <label className="block text-xs font-bold text-text-muted mb-1.5 uppercase tracking-widest">
+                    Display Name *
+                  </label>
+
+                  <input
+                    value={form.display_name}
+                    onChange={e =>
+                      setForm(f => ({
+                        ...f,
+                        display_name:
+                          e.target.value,
+                      }))
+                    }
+                    placeholder="How should we call you?"
+                    required
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-text-muted mb-1.5 uppercase tracking-widest">
+                    Age
+                  </label>
+
+                  <input
+                    type="number"
+                    value={form.age}
+                    onChange={e =>
+                      setForm(f => ({
+                        ...f,
+                        age: e.target.value,
+                      }))
+                    }
+                    placeholder="18"
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              {/* Academic Info */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest">
+                  <GraduationCap size={14} />
+                  Academic Details
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-text-muted mb-1.5 uppercase tracking-widest">
+                    College / University
+                  </label>
+
+                  <input
+                    value={form.college}
+                    onChange={e =>
+                      setForm(f => ({
+                        ...f,
+                        college:
+                          e.target.value,
+                      }))
+                    }
+                    placeholder="Rishihood University"
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-text-muted mb-1.5 uppercase tracking-widest">
+                    Course / Branch
+                  </label>
+
+                  <input
+                    value={form.branch}
+                    onChange={e =>
+                      setForm(f => ({
+                        ...f,
+                        branch:
+                          e.target.value,
+                      }))
+                    }
+                    placeholder="B.Tech CS & AI"
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-text-muted mb-2 uppercase tracking-widest">
+                    Current Year
+                  </label>
+
+                  <div className="grid grid-cols-4 gap-2">
+                    {['1', '2', '3', '4'].map(
+                      y => (
+                        <button
+                          key={y}
+                          type="button"
+                          onClick={() =>
+                            setForm(f => ({
+                              ...f,
+                              year:
+                                f.year === y
+                                  ? ''
+                                  : y,
+                            }))
+                          }
+                          className={`py-2.5 rounded-xl text-sm font-black border transition-all ${
+                            form.year === y
+                              ? 'bg-primary text-white border-primary shadow-md shadow-primary/20'
+                              : 'bg-surface-2 border-border text-text-muted hover:border-primary/40 hover:text-primary'
+                          }`}
+                        >
+                          {y}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs">
+                  <AlertCircle
+                    size={14}
+                    className="shrink-0 mt-0.5"
+                  />
+                  {error}
+                </div>
+              )}
+
+              {/* Submit */}
+              <Button
+                type="submit"
+                className="w-full py-3.5"
+                loading={loading}
+                disabled={
+                  !form.display_name.trim()
+                }
+              >
+                {loading ? (
+                  <Loader2
+                    size={18}
+                    className="animate-spin"
+                  />
+                ) : (
+                  <>
+                    Complete Profile
+                    <ArrowRight size={16} />
+                  </>
+                )}
+              </Button>
+            </form>
+          </Card>
+
+          {/* Skip */}
+          <p className="text-center text-xs text-text-muted">
+            Want to explore first?{' '}
+            <button
+              onClick={handleSkip}
+              className="font-bold text-primary hover:underline"
+            >
+              Skip for now →
+            </button>
+          </p>
+        </div>
       </motion.div>
     </div>
   );

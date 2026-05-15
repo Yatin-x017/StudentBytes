@@ -18,9 +18,14 @@ export const Card: React.FC<CardProps> = ({
   ...props
 }) => {
   const variantStyles = {
-    elevated: 'bg-surface border border-outline-variant shadow-elevation-1 hover:shadow-elevation-2',
-    filled: 'bg-surface-2 border border-outline-variant',
-    outlined: 'bg-transparent border border-outline',
+    elevated:
+      'bg-surface border border-outline-variant shadow-elevation-1 hover:shadow-elevation-2',
+
+    filled:
+      'bg-surface-2 border border-outline-variant',
+
+    outlined:
+      'bg-transparent border border-outline',
   };
 
   const elevationStyles = {
@@ -34,11 +39,11 @@ export const Card: React.FC<CardProps> = ({
   return (
     <motion.div
       whileHover={animate ? { y: -2, scale: 1.005 } : {}}
-      transition={{ duration: 0.2, ease: "easeOut" }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
       className={cn(
-        'rounded-2xl overflow-hidden transition-md3',
+        'rounded-2xl overflow-hidden transition-all duration-300',
         variantStyles[variant],
-        elevation && variant === 'elevated' && elevationStyles[elevation],
+        variant === 'elevated' && elevationStyles[elevation],
         className
       )}
       {...props}

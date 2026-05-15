@@ -36,7 +36,9 @@ const ProfilePage: React.FC = () => {
     username: '',
     display_name: '',
     bio: '',
+    age: '',
     college: '',
+    course: '',
     year: '',
     branch: '',
     github_url: '',
@@ -55,7 +57,9 @@ const ProfilePage: React.FC = () => {
           username: p.username || '',
           display_name: p.display_name || user.user_metadata?.full_name || '',
           bio: p.bio || '',
+          age: p.age?.toString() || '',
           college: p.college || '',
+          course: p.course || '',
           year: p.year?.toString() || '',
           branch: p.branch || '',
           github_url: p.github_url || '',
@@ -95,6 +99,7 @@ const ProfilePage: React.FC = () => {
     try {
       await upsertProfile(user.id, {
         ...form,
+        age: form.age ? parseInt(form.age) : null,
         year: form.year ? parseInt(form.year) : null,
         avatar_url: user.user_metadata?.avatar_url || null,
       });
@@ -224,19 +229,36 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {/* Display name */}
-        <div>
-          <label className="text-xs font-black uppercase tracking-widest
-                            text-text-muted mb-2 block">
-            Display Name
-          </label>
-          <input
-            value={form.display_name}
-            onChange={e => setForm(f => ({ ...f, display_name: e.target.value }))}
-            placeholder="Yatin Sharma"
-            className="w-full px-4 py-3 rounded-xl bg-surface-2 border
-                       border-border focus:border-primary/50 focus:outline-none
-                       text-sm transition-all"
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-black uppercase tracking-widest
+                              text-text-muted mb-2 block">
+              Display Name
+            </label>
+            <input
+              value={form.display_name}
+              onChange={e => setForm(f => ({ ...f, display_name: e.target.value }))}
+              placeholder="Yatin Sharma"
+              className="w-full px-4 py-3 rounded-xl bg-surface-2 border
+                         border-border focus:border-primary/50 focus:outline-none
+                         text-sm transition-all"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-black uppercase tracking-widest
+                              text-text-muted mb-2 block">
+              Age
+            </label>
+            <input
+              type="number"
+              value={form.age}
+              onChange={e => setForm(f => ({ ...f, age: e.target.value }))}
+              placeholder="20"
+              className="w-full px-4 py-3 rounded-xl bg-surface-2 border
+                         border-border focus:border-primary/50 focus:outline-none
+                         text-sm transition-all"
+            />
+          </div>
         </div>
 
         {/* Bio */}
@@ -283,11 +305,11 @@ const ProfilePage: React.FC = () => {
           </div>
           <div>
             <label className="text-xs font-bold text-text-muted mb-2 block">
-              Branch / Major
+              Course / Major
             </label>
             <input
-              value={form.branch}
-              onChange={e => setForm(f => ({ ...f, branch: e.target.value }))}
+              value={form.course}
+              onChange={e => setForm(f => ({ ...f, course: e.target.value }))}
               placeholder="B.Tech CS & AI"
               className="w-full px-4 py-3 rounded-xl bg-surface-2 border
                          border-border focus:border-primary/50 focus:outline-none

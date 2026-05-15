@@ -8,6 +8,12 @@ interface Profile {
   email: string;
   full_name: string;
   avatar_url: string;
+  username?: string | null; 
+  age?: number;
+  course?: string;
+  college?: string;
+  branch?: string;
+  year?: number;
   created_at: string;
   age: number | null;
   course: string | null;

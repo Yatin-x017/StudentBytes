@@ -83,6 +83,7 @@ export const ROUTES = {
   ONBOARDING: '/onboarding',
   CANVAS: '/canvas',
   LOGIN: '/login',
+  ONBOARDING: '/onboarding',
   SHARED_NOTE: '/shared',
   TIMETABLE: '/timetable',
 };

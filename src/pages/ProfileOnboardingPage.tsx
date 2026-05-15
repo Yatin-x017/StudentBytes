@@ -8,7 +8,7 @@ import { ROUTES } from '@/lib/constants';
 import { GraduationCap, User as UserIcon, Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
 
 const ProfileOnboardingPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -47,6 +47,7 @@ const ProfileOnboardingPage: React.FC = () => {
         username,
       });
 
+      await refreshProfile();
       navigate(ROUTES.DASHBOARD, { replace: true });
     } catch (err: any) {
       console.error('Profile save error:', err);
@@ -82,6 +83,7 @@ const ProfileOnboardingPage: React.FC = () => {
         display_name: form.display_name.trim() || user.user_metadata?.full_name || 'Student',
         username,
       });
+      await refreshProfile();
     } catch (err) {
       console.error('Skip profile save error:', err);
       // Continue anyway — don't block the user

@@ -25,9 +25,9 @@ export const ProtectedRoute: React.FC = () => {
   if (!user) return <Navigate to="/login" replace />;
 
   // Check for profile completeness (onboarding)
-  // We only require display_name for the profile to be considered complete
+  // We check for display_name or full_name (from metadata) as a fallback
   // This allows users to skip onboarding and fill in academic details later
-  const isProfileIncomplete = !profile?.display_name;
+  const isProfileIncomplete = !profile?.display_name && !profile?.full_name && !user.user_metadata?.full_name;
   const isOnOnboardingPage = location.pathname === ROUTES.ONBOARDING;
 
   if (isProfileIncomplete && !isOnOnboardingPage) {

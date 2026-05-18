@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Zap,
   BrainCircuit,
@@ -9,7 +9,8 @@ import {
   XCircle,
   Clock,
   Sparkles,
-  Brain
+  Brain,
+  PlusCircle,   // ← New Quiz icon
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -45,10 +46,21 @@ interface QuizState {
   quizFinished: boolean;
 }
 
+const BLANK_QUIZ_STATE: QuizState = {
+  topic: '',
+  questions: [],
+  currentIndex: 0,
+  answers: [],
+  quizStarted: false,
+  quizFinished: false,
+};
+
 const QuizPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { generateQuiz, loading } = useAI();
   const { user } = useAuth();
+
+  // FIX 1: Capture user.id once so useDatabase reference is stable.
   const db = useDatabase(user?.id || '');
   const navigate = useNavigate();
 
@@ -56,21 +68,12 @@ const QuizPage: React.FC = () => {
   const [difficulty, setDifficulty] = useState('intermediate');
   const [subject, setSubject] = useState(CS_SUBJECTS[0]);
   const [showXP, setShowXP] = useState(false);
-  const [answeredCorrect, setAnsweredCorrect] = useState(0);
   const [lastXP, setLastXP] = useState(0);
   const [srCards, setSrCards] = useState<SRCard[]>([]);
 
-  // Persisted state
   const [quizState, setQuizState] = useState<QuizState>(() => {
     const saved = localStorage.getItem('sb_quiz_state');
-    return saved ? JSON.parse(saved) : {
-      topic: '',
-      questions: [],
-      currentIndex: 0,
-      answers: [],
-      quizStarted: false,
-      quizFinished: false
-    };
+    return saved ? JSON.parse(saved) : BLANK_QUIZ_STATE;
   });
 
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -80,34 +83,48 @@ const QuizPage: React.FC = () => {
     localStorage.setItem('sb_quiz_state', JSON.stringify(quizState));
   }, [quizState]);
 
+  // FIX 2: Depend on user?.id (stable primitive) instead of db (new object each render).
   useEffect(() => {
-    const loadSR = async () => {
-      if (user?.id) {
-        const cards = await db.fetchSRCards();
-        setSrCards(cards);
+    if (!user?.id) return;
+    db.fetchSRCards().then(setSrCards).catch(console.error);
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // FIX 3: Extracted pure start logic — no fake synthetic-event hack needed anywhere.
+  const startQuiz = useCallback(
+    async (overrideTopic?: string, overrideDifficulty?: string) => {
+      const resolvedTopic = overrideTopic ?? topic;
+      const resolvedDifficulty = overrideDifficulty ?? difficulty;
+      if (!resolvedTopic.trim()) return;
+
+      const result = await generateQuiz(resolvedTopic, resolvedDifficulty);
+      if (result && Array.isArray(result)) {
+        setQuizState({
+          topic: resolvedTopic,
+          questions: result,
+          quizStarted: true,
+          currentIndex: 0,
+          answers: [],
+          quizFinished: false,
+        });
+        setSelectedOption(null);
+        setShowExplanation(false);
       }
-    };
-    loadSR();
-  }, [user, db]);
+    },
+    [topic, difficulty, generateQuiz],
+  );
 
-  const handleStartQuiz = async (e: React.FormEvent) => {
+  const handleStartQuiz = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!topic.trim()) return;
+    startQuiz();
+  };
 
-    const result = await generateQuiz(topic, difficulty);
-    if (result && Array.isArray(result)) {
-      setQuizState({
-        topic,
-        questions: result,
-        quizStarted: true,
-        currentIndex: 0,
-        answers: [],
-        quizFinished: false
-      });
-      setSelectedOption(null);
-      setShowExplanation(false);
-      setAnsweredCorrect(0);
-    }
+  // FIX 4: "New Quiz" resets everything and returns the user to the topic-selection screen.
+  const handleNewQuiz = () => {
+    setQuizState(BLANK_QUIZ_STATE);
+    localStorage.removeItem('sb_quiz_state');
+    setSelectedOption(null);
+    setShowExplanation(false);
+    setTopic('');
   };
 
   const handleOptionSelect = (idx: number) => {
@@ -118,73 +135,67 @@ const QuizPage: React.FC = () => {
 
   const handleNext = () => {
     const newAnswers = [...quizState.answers, selectedOption as number];
-    const isCorrect = selectedOption === quizState.questions[quizState.currentIndex].correctIndex;
-    const newCorrect = isCorrect ? answeredCorrect + 1 : answeredCorrect;
-    setAnsweredCorrect(newCorrect);
 
     if (quizState.currentIndex < quizState.questions.length - 1) {
-      setQuizState({
-        ...quizState,
+      setQuizState(prev => ({
+        ...prev,
         answers: newAnswers,
-        currentIndex: quizState.currentIndex + 1
-      });
+        currentIndex: prev.currentIndex + 1,
+      }));
       setSelectedOption(null);
       setShowExplanation(false);
     } else {
-      const score = newAnswers.filter((ans, idx) => ans === quizState.questions[idx].correctIndex).length;
+      // FIX 5: Score derived entirely from newAnswers — no redundant answeredCorrect state.
+      const score = newAnswers.filter(
+        (ans, idx) => ans === quizState.questions[idx].correctIndex,
+      ).length;
       const xpGained = score * 50;
-
       const newXp = state.user.xp + xpGained;
+
       dispatch({
         type: 'UPDATE_USER',
-        payload: {
-          xp: newXp,
-          level: Math.floor(newXp / 1000) + 1
-        }
+        payload: { xp: newXp, level: Math.floor(newXp / 1000) + 1 },
       });
 
-      // Save to quiz history
       if (user?.id) {
-        db.insertQuizResult(quizState.topic, score, quizState.questions.length, xpGained).catch(console.error);
-        db.upsertSettings({ xp: newXp, level: Math.floor(newXp / 1000) + 1 }).catch(console.error);
-      }
+        db.insertQuizResult(quizState.topic, score, quizState.questions.length, xpGained)
+          .catch(console.error);
+        db.upsertSettings({ xp: newXp, level: Math.floor(newXp / 1000) + 1 })
+          .catch(console.error);
 
-      // Update/Create Spaced Repetition card
-      const existingCard = srCards.find(c => c.topic.toLowerCase() === quizState.topic.toLowerCase());
-      const baseCard = existingCard || {
-        id: `sr_${Date.now()}`,
-        topic: quizState.topic,
-        easeFactor: 2.5,
-        intervalDays: 1,
-        repetitions: 0,
-        nextReviewDate: new Date().toISOString().split('T')[0],
-        lastScore: 0,
-      };
-
-      const updatedCard = calculateNextReview(baseCard, score / quizState.questions.length);
-      if (user?.id) {
+        const existingCard = srCards.find(
+          c => c.topic.toLowerCase() === quizState.topic.toLowerCase(),
+        );
+        const baseCard = existingCard || {
+          id: `sr_${Date.now()}`,
+          topic: quizState.topic,
+          easeFactor: 2.5,
+          intervalDays: 1,
+          repetitions: 0,
+          nextReviewDate: new Date().toISOString().split('T')[0],
+          lastScore: 0,
+        };
+        const updatedCard = calculateNextReview(baseCard, score / quizState.questions.length);
         db.upsertSRCard(updatedCard).catch(console.error);
       }
 
       setLastXP(xpGained);
       setShowXP(true);
-      setQuizState({
-        ...quizState,
-        answers: newAnswers,
-        quizFinished: true
-      });
+      setQuizState(prev => ({ ...prev, answers: newAnswers, quizFinished: true }));
     }
   };
 
+  const hasHistory =
+    JSON.parse(localStorage.getItem('sb_quiz_history') || '[]').length > 0;
 
-  const hasHistory = JSON.parse(localStorage.getItem('sb_quiz_history') || '[]').length > 0;
-
+  // ─── Results screen ────────────────────────────────────────────────────────
   if (quizState.quizFinished) {
-    const score = quizState.answers.filter((ans, idx) => ans === quizState.questions[idx].correctIndex).length;
+    const score = quizState.answers.filter(
+      (ans, idx) => ans === quizState.questions[idx].correctIndex,
+    ).length;
     const percentage = Math.round((score / quizState.questions.length) * 100);
     const suggestedDifficulty =
-      percentage >= 80 ? 'advanced' :
-      percentage >= 50 ? 'intermediate' : 'beginner';
+      percentage >= 80 ? 'advanced' : percentage >= 50 ? 'intermediate' : 'beginner';
 
     return (
       <div className="max-w-3xl mx-auto py-12 animate-fade-in space-y-8">
@@ -209,32 +220,40 @@ const QuizPage: React.FC = () => {
             <p className="text-text-muted">You've mastered some serious concepts today.</p>
           </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
             <Card className="p-6 border-border bg-surface">
-              <p className="text-5xl font-black text-primary">{score}/{quizState.questions.length}</p>
-              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mt-2">Correct</p>
+              <p className="text-5xl font-black text-primary">
+                {score}/{quizState.questions.length}
+              </p>
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mt-2">
+                Correct
+              </p>
             </Card>
             <Card className="p-6 border-border bg-surface">
               <p className="text-5xl font-black text-success">{percentage}%</p>
-              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mt-2">Accuracy</p>
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mt-2">
+                Accuracy
+              </p>
             </Card>
             <Card className="p-6 border-border bg-surface flex flex-col items-center justify-center">
-              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Suggested Next</p>
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                Suggested Next
+              </p>
               <div className="flex flex-col items-center gap-2">
-                <span className={`font-black capitalize text-xl ${
-                  suggestedDifficulty === 'advanced' ? 'text-error' :
-                  suggestedDifficulty === 'intermediate' ? 'text-primary' :
-                  'text-success'
-                }`}>
+                <span
+                  className={`font-black capitalize text-xl ${
+                    suggestedDifficulty === 'advanced'
+                      ? 'text-error'
+                      : suggestedDifficulty === 'intermediate'
+                      ? 'text-primary'
+                      : 'text-success'
+                  }`}
+                >
                   {suggestedDifficulty}
                 </span>
                 <button
-                  onClick={() => {
-                    setDifficulty(suggestedDifficulty);
-                    handleStartQuiz({ preventDefault: () => {} } as any);
-                  }}
-                  className="px-3 py-1 rounded-lg bg-primary/10 text-primary
-                             text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all"
+                  onClick={() => startQuiz(quizState.topic, suggestedDifficulty)}
+                  className="px-3 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all"
                 >
                   Try it →
                 </button>
@@ -243,19 +262,27 @@ const QuizPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Question breakdown */}
         <div className="space-y-4">
-          <h3 className="text-sm font-black uppercase tracking-widest text-text-muted px-2">Question Breakdown</h3>
+          <h3 className="text-sm font-black uppercase tracking-widest text-text-muted px-2">
+            Question Breakdown
+          </h3>
           <div className="space-y-2">
             {quizState.questions.map((q, idx) => {
               const isCorrect = quizState.answers[idx] === q.correctIndex;
               return (
-                <div key={idx} className="p-4 rounded-2xl bg-surface-2 border border-border flex items-start gap-4">
+                <div
+                  key={idx}
+                  className="p-4 rounded-2xl bg-surface-2 border border-border flex items-start gap-4"
+                >
                   <div className={`mt-1 shrink-0 ${isCorrect ? 'text-success' : 'text-error'}`}>
                     {isCorrect ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
                   </div>
                   <div>
                     <p className="text-sm font-medium text-text mb-1">{q.question}</p>
-                    <p className="text-xs text-text-muted leading-relaxed italic">{q.explanation}</p>
+                    <p className="text-xs text-text-muted leading-relaxed italic">
+                      {q.explanation}
+                    </p>
                   </div>
                 </div>
               );
@@ -263,10 +290,25 @@ const QuizPage: React.FC = () => {
           </div>
         </div>
 
+        {/* CTA buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8 border-t border-white/5">
-          <Button onClick={() => handleStartQuiz({ preventDefault: () => {} } as any)} variant="outline" className="gap-2 py-6 px-8 rounded-2xl border-white/10">
+          {/* NEW: New Quiz button */}
+          <Button
+            onClick={handleNewQuiz}
+            variant="outline"
+            className="gap-2 py-6 px-8 rounded-2xl border-white/10"
+          >
+            <PlusCircle size={18} /> New Quiz
+          </Button>
+
+          <Button
+            onClick={() => startQuiz(quizState.topic, difficulty)}
+            variant="outline"
+            className="gap-2 py-6 px-8 rounded-2xl border-white/10"
+          >
             <RefreshCcw size={18} /> Retake Quiz
           </Button>
+
           <Button
             onClick={() => navigate(ROUTES.STUDY, { state: { topic: quizState.topic } })}
             className="gap-2 py-6 px-8 rounded-2xl shadow-xl shadow-primary/20"
@@ -278,6 +320,7 @@ const QuizPage: React.FC = () => {
     );
   }
 
+  // ─── Quiz in progress ──────────────────────────────────────────────────────
   if (quizState.quizStarted && quizState.questions.length > 0) {
     const current = quizState.questions[quizState.currentIndex];
 
@@ -293,14 +336,30 @@ const QuizPage: React.FC = () => {
               <div className="w-48 h-1.5 bg-surface-2 rounded-full mt-1 overflow-hidden">
                 <div
                   className="h-full bg-primary transition-all duration-500"
-                  style={{ width: `${((quizState.currentIndex + 1) / quizState.questions.length) * 100}%` }}
+                  style={{
+                    width: `${
+                      ((quizState.currentIndex + 1) / quizState.questions.length) * 100
+                    }%`,
+                  }}
                 />
               </div>
             </div>
           </div>
-          <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 py-1.5 px-3">
-            <Zap size={12} className="mr-1.5 fill-amber-500" /> Mastery Quiz
-          </Badge>
+
+          <div className="flex items-center gap-3">
+            {/* NEW: New Quiz button visible during quiz */}
+            <Button
+              onClick={handleNewQuiz}
+              variant="outline"
+              className="gap-2 py-2 px-4 rounded-xl border-white/10 text-xs font-bold"
+            >
+              <PlusCircle size={14} /> New Quiz
+            </Button>
+
+            <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 py-1.5 px-3">
+              <Zap size={12} className="mr-1.5 fill-amber-500" /> Mastery Quiz
+            </Badge>
+          </div>
         </header>
 
         <div className="relative">
@@ -322,7 +381,10 @@ const QuizPage: React.FC = () => {
                 className="mt-6 flex justify-end"
               >
                 <Button onClick={handleNext} className="gap-2 shadow-lg shadow-primary/20">
-                  {quizState.currentIndex === quizState.questions.length - 1 ? 'Finish Quiz' : 'Next Question'} <ArrowRight size={18} />
+                  {quizState.currentIndex === quizState.questions.length - 1
+                    ? 'Finish Quiz'
+                    : 'Next Question'}{' '}
+                  <ArrowRight size={18} />
                 </Button>
               </motion.div>
             )}
@@ -332,6 +394,7 @@ const QuizPage: React.FC = () => {
     );
   }
 
+  // ─── Topic selection screen ────────────────────────────────────────────────
   return (
     <div className="max-w-4xl mx-auto animate-fade-in space-y-12 py-8">
       <div className="text-center space-y-4">
@@ -348,11 +411,13 @@ const QuizPage: React.FC = () => {
         <Card className="p-8 border-border glass-card order-2 md:order-1">
           <form onSubmit={handleStartQuiz} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Topic to Master</label>
+              <label className="text-xs font-bold text-text-muted uppercase tracking-widest">
+                Topic to Master
+              </label>
               <input
                 type="text"
                 value={topic}
-                onChange={(e) => setTopic(e.target.value)}
+                onChange={e => setTopic(e.target.value)}
                 placeholder="e.g. Redux state management, Binary trees..."
                 className="w-full bg-surface-2 border border-border rounded-xl p-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
                 disabled={loading}
@@ -360,9 +425,11 @@ const QuizPage: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Difficulty</label>
+              <label className="text-xs font-bold text-text-muted uppercase tracking-widest">
+                Difficulty
+              </label>
               <div className="grid grid-cols-3 gap-2">
-                {['beginner', 'intermediate', 'advanced'].map((lvl) => (
+                {['beginner', 'intermediate', 'advanced'].map(lvl => (
                   <button
                     key={lvl}
                     type="button"
@@ -379,10 +446,7 @@ const QuizPage: React.FC = () => {
               </div>
             </div>
 
-            <TopicSelector
-              selectedTopic={subject}
-              onSelect={setSubject}
-            />
+            <TopicSelector selectedTopic={subject} onSelect={setSubject} />
 
             <Button
               type="submit"
@@ -409,7 +473,10 @@ const QuizPage: React.FC = () => {
             </div>
             <div>
               <h4 className="font-bold text-sm mb-1">AI-Powered Questions</h4>
-              <p className="text-xs text-text-muted leading-relaxed">Byte analyzes your requested topic to create unique, challenging questions every time.</p>
+              <p className="text-xs text-text-muted leading-relaxed">
+                Byte analyzes your requested topic to create unique, challenging questions every
+                time.
+              </p>
             </div>
           </div>
           <div className="flex items-start gap-4 p-4 rounded-2xl bg-surface-2 border border-border">
@@ -418,7 +485,9 @@ const QuizPage: React.FC = () => {
             </div>
             <div>
               <h4 className="font-bold text-sm mb-1">Earn Mastery XP</h4>
-              <p className="text-xs text-text-muted leading-relaxed">Level up your profile as you correctly answer questions and prove your knowledge.</p>
+              <p className="text-xs text-text-muted leading-relaxed">
+                Level up your profile as you correctly answer questions and prove your knowledge.
+              </p>
             </div>
           </div>
           <div className="flex items-start gap-4 p-4 rounded-2xl bg-surface-2 border border-border">
@@ -427,7 +496,9 @@ const QuizPage: React.FC = () => {
             </div>
             <div>
               <h4 className="font-bold text-sm mb-1">Detailed Explanations</h4>
-              <p className="text-xs text-text-muted leading-relaxed">Get instant feedback and deep-dives into why an answer is correct or incorrect.</p>
+              <p className="text-xs text-text-muted leading-relaxed">
+                Get instant feedback and deep-dives into why an answer is correct or incorrect.
+              </p>
             </div>
           </div>
         </div>
